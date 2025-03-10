@@ -1,12 +1,14 @@
 "use client";
-import { useRouter } from "next/router";
+import { usePathname, useSearchParams } from "next/navigation";
 import Script from "next/script";
 import { useEffect } from "react";
 
 const FacebookPixel = () => {
-  const router = useRouter();
+  const pathname = usePathname();
+  const searchParams = useSearchParams();
 
   useEffect(() => {
+    if (process.env.NODE_ENV === "development") return;
     // Initialize Facebook Pixel when component mounts
     if (typeof window !== "undefined") {
       void import("react-facebook-pixel")
@@ -14,14 +16,21 @@ const FacebookPixel = () => {
         .then((ReactPixel) => {
           ReactPixel.init("1009808854280120"); // Replace with your Pixel ID
           ReactPixel.pageView();
-
-          // Track page views on route changes
-          router.events.on("routeChangeComplete", () => {
-            ReactPixel.pageView();
-          });
         });
     }
-  }, [router.events]);
+  }, []);
+
+  // Track page views on route changes
+  useEffect(() => {
+    if (process.env.NODE_ENV === "development") return;
+    if (typeof window !== "undefined") {
+      void import("react-facebook-pixel")
+        .then((x) => x.default)
+        .then((ReactPixel) => {
+          ReactPixel.pageView();
+        });
+    }
+  }, [pathname, searchParams]);
 
   return (
     <>
