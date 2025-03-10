@@ -28,7 +28,6 @@ import { db } from "~/server/db";
  */
 export const createTRPCContext = async (opts: { headers: Headers }) => {
   const session = await auth();
-
   return {
     db,
     session,
@@ -129,5 +128,19 @@ export const protectedProcedure = t.procedure
         // infers the `session` as non-nullable
         session: { ...ctx.session, user: ctx.session.user },
       },
+    });
+  });
+
+export const adminProcedure = t.procedure
+  .use(timingMiddleware)
+  .use(({ ctx, next }) => {
+    if (!ctx.session || !ctx.session.user) {
+      throw new TRPCError({ code: "UNAUTHORIZED" });
+    }
+    if (!ctx.session.user.isAdmin) {
+      throw new TRPCError({ code: "FORBIDDEN" });
+    }
+    return next({
+      ctx: { session: { ...ctx.session, user: ctx.session.user } },
     });
   });
