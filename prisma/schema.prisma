@@ -1,0 +1,272 @@
+// This is your Prisma schema file,
+// learn more about it in the docs: https://pris.ly/d/prisma-schema
+
+generator client {
+    provider = "prisma-client-js"
+}
+
+datasource db {
+    provider = "postgresql"
+    // NOTE: When using mysql or sqlserver, uncomment the @db.Text annotations in model Account below
+    // Further reading:
+    // https://next-auth.js.org/adapters/prisma#create-the-prisma-schema
+    // https://www.prisma.io/docs/reference/api-reference/prisma-schema-reference#string
+    url      = env("DATABASE_URL")
+}
+
+model Post {
+    id        Int      @id @default(autoincrement())
+    name      String
+    createdAt DateTime @default(now())
+    updatedAt DateTime @updatedAt
+
+    createdBy   User   @relation(fields: [createdById], references: [id])
+    createdById String
+
+    @@index([name])
+}
+
+// Necessary for Next auth
+model Account {
+    id                       String  @id @default(cuid())
+    userId                   String
+    type                     String
+    provider                 String
+    providerAccountId        String
+    refresh_token            String? // @db.Text
+    access_token             String? // @db.Text
+    expires_at               Int?
+    token_type               String?
+    scope                    String?
+    id_token                 String? // @db.Text
+    session_state            String?
+    user                     User    @relation(fields: [userId], references: [id], onDelete: Cascade)
+    refresh_token_expires_in Int?
+
+    @@unique([provider, providerAccountId])
+}
+
+model Session {
+    id           String   @id @default(cuid())
+    sessionToken String   @unique
+    userId       String
+    expires      DateTime
+    user         User     @relation(fields: [userId], references: [id], onDelete: Cascade)
+}
+
+model User {
+    id            String    @id @default(cuid())
+    name          String?
+    email         String?   @unique
+    emailVerified DateTime?
+    image         String?
+    accounts      Account[]
+    sessions      Session[]
+    posts         Post[]
+}
+
+model VerificationToken {
+    identifier String
+    token      String   @unique
+    expires    DateTime
+
+    @@unique([identifier, token])
+}
+
+model Car {
+  id         String       @id @default(cuid())
+  make       String
+  series     String
+  generation String
+  model      String
+  body       String?
+  Donor      Donor[]
+  parts      PartDetail[]
+}
+
+model Donor {
+  vin            String    @id @unique
+  cost           Float
+  car            Car       @relation(fields: [carId], references: [id])
+  year           Int
+  mileage        Int
+  carId          String
+  createdAt      DateTime  @default(now())
+  updatedAt      DateTime  @updatedAt
+  parts          Part[]
+  imageUrl       String?
+  images         Image[]
+  hideFromSearch Boolean   @default(false)
+  dateInStock    DateTime?
+}
+
+model Listing {
+  id               String             @id @default(cuid())
+  title            String
+  description      String             @db.Text
+  condition        String
+  price            Float
+  parts            Part[]
+  createdAt        DateTime           @default(now())
+  updatedAt        DateTime           @updatedAt
+  images           Image[]
+  active           Boolean            @default(true)
+  listedOnEbay     Boolean            @default(false)
+  ebayOfferId      String?
+  OrderItem        OrderItem[]
+  ListingAnalytics ListingAnalytics[]
+}
+
+model Part {
+  id                  String              @id @default(cuid())
+  partDetails         PartDetail          @relation(fields: [partDetailsId], references: [partNo])
+  partDetailsId       String
+  inventoryLocation   InventoryLocations? @relation(fields: [inventoryLocationId], references: [id])
+  listing             Listing[]
+  donorVin            String?
+  donor               Donor?              @relation(fields: [donorVin], references: [vin])
+  sold                Boolean             @default(false)
+  soldPrice           Int?
+  soldParentPrice     Int?
+  inventoryLocationId String?
+  variant             String?
+  quantity            Int                 @default(1)
+  createdAt           DateTime            @default(now())
+  updatedAt           DateTime            @updatedAt
+}
+
+model PartDetail {
+  partNo               String      @id @unique
+  alternatePartNumbers String?
+  name                 String
+  weight               Float
+  length               Float
+  width                Float
+  height               Float
+  costPrice            Float?      @default(0)
+  createdAt            DateTime    @default(now())
+  updatedAt            DateTime    @updatedAt
+  cars                 Car[]
+  parts                Part[]
+  partTypes            PartTypes[]
+}
+
+model Image {
+  id        String   @id @default(cuid())
+  url       String
+  listingId String?
+  listing   Listing? @relation(fields: [listingId], references: [id], onDelete: Cascade)
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+  Donor     Donor?   @relation(fields: [donorVin], references: [vin])
+  donorVin  String?
+  order     Int
+}
+
+model XeroCreds {
+  id           String   @id @default(cuid())
+  refreshToken String
+  tokenSet     Json?
+  createdAt    DateTime @default(now())
+  updatedAt    DateTime @updatedAt
+}
+
+model EbayCreds {
+  id           String   @id @default(cuid())
+  refreshToken Json
+  createdAt    DateTime @default(now())
+  updatedAt    DateTime @updatedAt
+}
+
+model InventoryLocations {
+  id        String   @id @default(cuid())
+  name      String
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+  parts     Part[]
+}
+
+model Order {
+  id              String        @id @default(cuid())
+  xeroInvoiceRef  String?
+  xeroInvoiceId   String?       @unique
+  name            String
+  email           String
+  phoneNumber     String?
+  subtotal        Float
+  shippingRateId  String?
+  shipping        Float?
+  status          String
+  shippingMethod  String?
+  shippingAddress String?
+  trackingNumber  String?
+  carrier         String?
+  paymentIntentId String?
+  createdAt       DateTime      @default(now())
+  updatedAt       DateTime      @updatedAt
+  orderItems      OrderItem[]
+  FailedOrder     FailedOrder[]
+}
+
+model OrderItem {
+  id        String   @id @default(cuid())
+  order     Order    @relation(fields: [orderId], references: [id])
+  orderId   String
+  listing   Listing  @relation(fields: [listingId], references: [id], onDelete: Cascade)
+  listingId String
+  quantity  Int
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+}
+
+model PartTypes {
+  id        String       @id @default(cuid())
+  name      String
+  createdAt DateTime     @default(now())
+  updatedAt DateTime     @updatedAt
+  parts     PartDetail[]
+  parent    PartTypes?   @relation("PartTypeToParent", fields: [parentId], references: [id], onDelete: Restrict, onUpdate: Restrict)
+  parentId  String?
+  children  PartTypes[]  @relation("PartTypeToParent")
+}
+
+model FailedOrder {
+  id          String   @id @default(cuid())
+  order       Order    @relation(fields: [orderId], references: [id])
+  orderId     String   @unique
+  stripeEvent Json
+  lineItems   Json
+  createdAt   DateTime @default(now())
+  updatedAt   DateTime @updatedAt
+}
+
+model ListingAnalytics {
+  id        String   @id @default(cuid())
+  listingId String
+  createdAt DateTime @default(now())
+  listing   Listing  @relation(fields: [listingId], references: [id], onDelete: Cascade)
+}
+
+model HomepageImage {
+  id        String   @id @default(cuid())
+  url       String
+  order     Int
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+}
+
+// model Notification {
+//   id        String   @id @default(cuid())
+//   message   String
+//   read      Boolean  @default(false)
+//   createdAt DateTime @default(now())
+//   updatedAt DateTime @updatedAt
+// }
+
+// model HomePageImage {
+//   id        String   @id @default(cuid())
+//   url       String
+//   order     Int
+//   createdAt DateTime @default(now())
+//   updatedAt DateTime @updatedAt
+// }
