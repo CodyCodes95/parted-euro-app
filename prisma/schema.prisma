@@ -14,18 +14,6 @@ datasource db {
     url      = env("DATABASE_URL")
 }
 
-model Post {
-    id        Int      @id @default(autoincrement())
-    name      String
-    createdAt DateTime @default(now())
-    updatedAt DateTime @updatedAt
-
-    createdBy   User   @relation(fields: [createdById], references: [id])
-    createdById String
-
-    @@index([name])
-}
-
 // Necessary for Next auth
 model Account {
     id                       String  @id @default(cuid())
@@ -62,7 +50,7 @@ model User {
     image         String?
     accounts      Account[]
     sessions      Session[]
-    posts         Post[]
+    isAdmin       Boolean   @default(false)
 }
 
 model VerificationToken {
@@ -74,185 +62,185 @@ model VerificationToken {
 }
 
 model Car {
-  id         String       @id @default(cuid())
-  make       String
-  series     String
-  generation String
-  model      String
-  body       String?
-  Donor      Donor[]
-  parts      PartDetail[]
+    id         String       @id @default(cuid())
+    make       String
+    series     String
+    generation String
+    model      String
+    body       String?
+    Donor      Donor[]
+    parts      PartDetail[]
 }
 
 model Donor {
-  vin            String    @id @unique
-  cost           Float
-  car            Car       @relation(fields: [carId], references: [id])
-  year           Int
-  mileage        Int
-  carId          String
-  createdAt      DateTime  @default(now())
-  updatedAt      DateTime  @updatedAt
-  parts          Part[]
-  imageUrl       String?
-  images         Image[]
-  hideFromSearch Boolean   @default(false)
-  dateInStock    DateTime?
+    vin            String    @id @unique
+    cost           Float
+    car            Car       @relation(fields: [carId], references: [id])
+    year           Int
+    mileage        Int
+    carId          String
+    createdAt      DateTime  @default(now())
+    updatedAt      DateTime  @updatedAt
+    parts          Part[]
+    imageUrl       String?
+    images         Image[]
+    hideFromSearch Boolean   @default(false)
+    dateInStock    DateTime?
 }
 
 model Listing {
-  id               String             @id @default(cuid())
-  title            String
-  description      String             @db.Text
-  condition        String
-  price            Float
-  parts            Part[]
-  createdAt        DateTime           @default(now())
-  updatedAt        DateTime           @updatedAt
-  images           Image[]
-  active           Boolean            @default(true)
-  listedOnEbay     Boolean            @default(false)
-  ebayOfferId      String?
-  OrderItem        OrderItem[]
-  ListingAnalytics ListingAnalytics[]
+    id               String             @id @default(cuid())
+    title            String
+    description      String             @db.Text
+    condition        String
+    price            Float
+    parts            Part[]
+    createdAt        DateTime           @default(now())
+    updatedAt        DateTime           @updatedAt
+    images           Image[]
+    active           Boolean            @default(true)
+    listedOnEbay     Boolean            @default(false)
+    ebayOfferId      String?
+    OrderItem        OrderItem[]
+    ListingAnalytics ListingAnalytics[]
 }
 
 model Part {
-  id                  String              @id @default(cuid())
-  partDetails         PartDetail          @relation(fields: [partDetailsId], references: [partNo])
-  partDetailsId       String
-  inventoryLocation   InventoryLocations? @relation(fields: [inventoryLocationId], references: [id])
-  listing             Listing[]
-  donorVin            String?
-  donor               Donor?              @relation(fields: [donorVin], references: [vin])
-  sold                Boolean             @default(false)
-  soldPrice           Int?
-  soldParentPrice     Int?
-  inventoryLocationId String?
-  variant             String?
-  quantity            Int                 @default(1)
-  createdAt           DateTime            @default(now())
-  updatedAt           DateTime            @updatedAt
+    id                  String              @id @default(cuid())
+    partDetails         PartDetail          @relation(fields: [partDetailsId], references: [partNo])
+    partDetailsId       String
+    inventoryLocation   InventoryLocations? @relation(fields: [inventoryLocationId], references: [id])
+    listing             Listing[]
+    donorVin            String?
+    donor               Donor?              @relation(fields: [donorVin], references: [vin])
+    sold                Boolean             @default(false)
+    soldPrice           Int?
+    soldParentPrice     Int?
+    inventoryLocationId String?
+    variant             String?
+    quantity            Int                 @default(1)
+    createdAt           DateTime            @default(now())
+    updatedAt           DateTime            @updatedAt
 }
 
 model PartDetail {
-  partNo               String      @id @unique
-  alternatePartNumbers String?
-  name                 String
-  weight               Float
-  length               Float
-  width                Float
-  height               Float
-  costPrice            Float?      @default(0)
-  createdAt            DateTime    @default(now())
-  updatedAt            DateTime    @updatedAt
-  cars                 Car[]
-  parts                Part[]
-  partTypes            PartTypes[]
+    partNo               String      @id @unique
+    alternatePartNumbers String?
+    name                 String
+    weight               Float
+    length               Float
+    width                Float
+    height               Float
+    costPrice            Float?      @default(0)
+    createdAt            DateTime    @default(now())
+    updatedAt            DateTime    @updatedAt
+    cars                 Car[]
+    parts                Part[]
+    partTypes            PartTypes[]
 }
 
 model Image {
-  id        String   @id @default(cuid())
-  url       String
-  listingId String?
-  listing   Listing? @relation(fields: [listingId], references: [id], onDelete: Cascade)
-  createdAt DateTime @default(now())
-  updatedAt DateTime @updatedAt
-  Donor     Donor?   @relation(fields: [donorVin], references: [vin])
-  donorVin  String?
-  order     Int
+    id        String   @id @default(cuid())
+    url       String
+    listingId String?
+    listing   Listing? @relation(fields: [listingId], references: [id], onDelete: Cascade)
+    createdAt DateTime @default(now())
+    updatedAt DateTime @updatedAt
+    Donor     Donor?   @relation(fields: [donorVin], references: [vin])
+    donorVin  String?
+    order     Int
 }
 
 model XeroCreds {
-  id           String   @id @default(cuid())
-  refreshToken String
-  tokenSet     Json?
-  createdAt    DateTime @default(now())
-  updatedAt    DateTime @updatedAt
+    id           String   @id @default(cuid())
+    refreshToken String
+    tokenSet     Json?
+    createdAt    DateTime @default(now())
+    updatedAt    DateTime @updatedAt
 }
 
 model EbayCreds {
-  id           String   @id @default(cuid())
-  refreshToken Json
-  createdAt    DateTime @default(now())
-  updatedAt    DateTime @updatedAt
+    id           String   @id @default(cuid())
+    refreshToken Json
+    createdAt    DateTime @default(now())
+    updatedAt    DateTime @updatedAt
 }
 
 model InventoryLocations {
-  id        String   @id @default(cuid())
-  name      String
-  createdAt DateTime @default(now())
-  updatedAt DateTime @updatedAt
-  parts     Part[]
+    id        String   @id @default(cuid())
+    name      String
+    createdAt DateTime @default(now())
+    updatedAt DateTime @updatedAt
+    parts     Part[]
 }
 
 model Order {
-  id              String        @id @default(cuid())
-  xeroInvoiceRef  String?
-  xeroInvoiceId   String?       @unique
-  name            String
-  email           String
-  phoneNumber     String?
-  subtotal        Float
-  shippingRateId  String?
-  shipping        Float?
-  status          String
-  shippingMethod  String?
-  shippingAddress String?
-  trackingNumber  String?
-  carrier         String?
-  paymentIntentId String?
-  createdAt       DateTime      @default(now())
-  updatedAt       DateTime      @updatedAt
-  orderItems      OrderItem[]
-  FailedOrder     FailedOrder[]
+    id              String        @id @default(cuid())
+    xeroInvoiceRef  String?
+    xeroInvoiceId   String?       @unique
+    name            String
+    email           String
+    phoneNumber     String?
+    subtotal        Float
+    shippingRateId  String?
+    shipping        Float?
+    status          String
+    shippingMethod  String?
+    shippingAddress String?
+    trackingNumber  String?
+    carrier         String?
+    paymentIntentId String?
+    createdAt       DateTime      @default(now())
+    updatedAt       DateTime      @updatedAt
+    orderItems      OrderItem[]
+    FailedOrder     FailedOrder[]
 }
 
 model OrderItem {
-  id        String   @id @default(cuid())
-  order     Order    @relation(fields: [orderId], references: [id])
-  orderId   String
-  listing   Listing  @relation(fields: [listingId], references: [id], onDelete: Cascade)
-  listingId String
-  quantity  Int
-  createdAt DateTime @default(now())
-  updatedAt DateTime @updatedAt
+    id        String   @id @default(cuid())
+    order     Order    @relation(fields: [orderId], references: [id])
+    orderId   String
+    listing   Listing  @relation(fields: [listingId], references: [id], onDelete: Cascade)
+    listingId String
+    quantity  Int
+    createdAt DateTime @default(now())
+    updatedAt DateTime @updatedAt
 }
 
 model PartTypes {
-  id        String       @id @default(cuid())
-  name      String
-  createdAt DateTime     @default(now())
-  updatedAt DateTime     @updatedAt
-  parts     PartDetail[]
-  parent    PartTypes?   @relation("PartTypeToParent", fields: [parentId], references: [id], onDelete: Restrict, onUpdate: Restrict)
-  parentId  String?
-  children  PartTypes[]  @relation("PartTypeToParent")
+    id        String       @id @default(cuid())
+    name      String
+    createdAt DateTime     @default(now())
+    updatedAt DateTime     @updatedAt
+    parts     PartDetail[]
+    parent    PartTypes?   @relation("PartTypeToParent", fields: [parentId], references: [id], onDelete: Restrict, onUpdate: Restrict)
+    parentId  String?
+    children  PartTypes[]  @relation("PartTypeToParent")
 }
 
 model FailedOrder {
-  id          String   @id @default(cuid())
-  order       Order    @relation(fields: [orderId], references: [id])
-  orderId     String   @unique
-  stripeEvent Json
-  lineItems   Json
-  createdAt   DateTime @default(now())
-  updatedAt   DateTime @updatedAt
+    id          String   @id @default(cuid())
+    order       Order    @relation(fields: [orderId], references: [id])
+    orderId     String   @unique
+    stripeEvent Json
+    lineItems   Json
+    createdAt   DateTime @default(now())
+    updatedAt   DateTime @updatedAt
 }
 
 model ListingAnalytics {
-  id        String   @id @default(cuid())
-  listingId String
-  createdAt DateTime @default(now())
-  listing   Listing  @relation(fields: [listingId], references: [id], onDelete: Cascade)
+    id        String   @id @default(cuid())
+    listingId String
+    createdAt DateTime @default(now())
+    listing   Listing  @relation(fields: [listingId], references: [id], onDelete: Cascade)
 }
 
 model HomepageImage {
-  id        String   @id @default(cuid())
-  url       String
-  order     Int
-  createdAt DateTime @default(now())
-  updatedAt DateTime @updatedAt
+    id        String   @id @default(cuid())
+    url       String
+    order     Int
+    createdAt DateTime @default(now())
+    updatedAt DateTime @updatedAt
 }
 
 // model Notification {
