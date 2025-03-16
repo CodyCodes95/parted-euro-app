@@ -27,11 +27,15 @@ export function DeleteCarDialog({
   car,
 }: DeleteCarDialogProps) {
   const router = useRouter();
+  const utils = api.useUtils();
 
   const deleteCar = api.car.delete.useMutation({
     onSuccess: () => {
       toast.success("Car deleted successfully");
       onOpenChange(false);
+      // Invalidate the car queries to trigger a refetch
+      utils.car.getAll.invalidate();
+      utils.car.getAllSeries.invalidate();
       router.refresh();
     },
     onError: (error) => {

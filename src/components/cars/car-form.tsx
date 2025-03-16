@@ -49,6 +49,7 @@ export function CarForm({
   isEditing = false,
 }: CarFormProps) {
   const router = useRouter();
+  const utils = api.useUtils();
 
   // Convert the Car type to CarFormValues
   const formDefaultValues: CarFormValues = defaultValues
@@ -78,6 +79,9 @@ export function CarForm({
       toast.success("Car created successfully");
       form.reset();
       onOpenChange(false);
+      // Invalidate the car queries to trigger a refetch
+      utils.car.getAll.invalidate();
+      utils.car.getAllSeries.invalidate();
       router.refresh();
     },
     onError: (error) => {
@@ -90,6 +94,9 @@ export function CarForm({
       toast.success("Car updated successfully");
       form.reset();
       onOpenChange(false);
+      // Invalidate the car queries to trigger a refetch
+      utils.car.getAll.invalidate();
+      utils.car.getAllSeries.invalidate();
       router.refresh();
     },
     onError: (error) => {

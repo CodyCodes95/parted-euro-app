@@ -1,7 +1,6 @@
 import { z } from "zod";
-
-import { adminProcedure, createTRPCRouter } from "../trpc";
 import { type Prisma } from "@prisma/client";
+import { adminProcedure, createTRPCRouter } from "../trpc";
 
 // Define car input validation schema
 const carSchema = z.object({
@@ -18,32 +17,36 @@ export const carRouter = createTRPCRouter({
   getAll: adminProcedure
     .input(
       z.object({
-        limit: z.number().min(1).max(1000).optional().default(50),
+        limit: z.number().min(1).max(1000).optional().default(100),
         cursor: z.string().optional(),
         search: z.string().optional(),
         sortBy: z.string().optional(),
         sortOrder: z.enum(["asc", "desc"]).optional(),
+        series: z.string().optional(),
       }),
     )
     .query(async ({ ctx, input }) => {
-      const { limit, cursor, search, sortBy, sortOrder } = input;
+      const { limit, cursor, search, sortBy, sortOrder, series } = input;
 
       // Create the base query
       const query = {
         take: limit + 1,
         ...(cursor ? { cursor: { id: cursor } } : {}),
         orderBy: sortBy ? { [sortBy]: sortOrder ?? "asc" } : { make: "asc" },
-        where: search
-          ? {
-              OR: [
-                { make: { contains: search, mode: "insensitive" } },
-                { model: { contains: search, mode: "insensitive" } },
-                { series: { contains: search, mode: "insensitive" } },
-                { generation: { contains: search, mode: "insensitive" } },
-                { body: { contains: search, mode: "insensitive" } },
-              ],
-            }
-          : {},
+        where: {
+          ...(search
+            ? {
+                OR: [
+                  { make: { contains: search, mode: "insensitive" } },
+                  { model: { contains: search, mode: "insensitive" } },
+                  { series: { contains: search, mode: "insensitive" } },
+                  { generation: { contains: search, mode: "insensitive" } },
+                  { body: { contains: search, mode: "insensitive" } },
+                ],
+              }
+            : {}),
+          ...(series ? { series } : {}),
+        },
       } as Prisma.CarFindManyArgs;
 
       // Execute the query
@@ -61,6 +64,26 @@ export const carRouter = createTRPCRouter({
         nextCursor,
       };
     }),
+
+  // Get all unique series
+  getAllSeries: adminProcedure.query(async ({ ctx }) => {
+    // Use Prisma's distinct query to get all unique series values
+    const uniqueSeries = await ctx.db.car.findMany({
+      select: {
+        series: true,
+      },
+      distinct: ["series"],
+      orderBy: {
+        series: "asc",
+      },
+    });
+
+    // Format the response as an array of options for the filter dropdown
+    return uniqueSeries.map((item) => ({
+      label: item.series,
+      value: item.series,
+    }));
+  }),
 
   // Get a car by ID
   getById: adminProcedure

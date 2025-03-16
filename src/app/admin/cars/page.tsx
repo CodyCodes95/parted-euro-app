@@ -12,50 +12,22 @@ export default function CarsAdminPage() {
   const [isEditCarOpen, setIsEditCarOpen] = useState(false);
   const [isDeleteCarOpen, setIsDeleteCarOpen] = useState(false);
   const [selectedCar, setSelectedCar] = useState<Car | null>(null);
-  const [generationOptions, setGenerationOptions] = useState<
-    { label: string; value: string }[]
-  >([]);
-  const [seriesOptions, setSeriesOptions] = useState<
-    { label: string; value: string }[]
-  >([]);
-  const [modelOptions, setModelOptions] = useState<
-    { label: string; value: string }[]
-  >([]);
   const [searchTerm, setSearchTerm] = useState("");
+  const [seriesFilter, setSeriesFilter] = useState<string | undefined>(
+    undefined,
+  );
 
-  // Ignore TypeScript errors for now - will be fixed when proper types are set up
-  // eslint-disable-next-line @typescript-eslint/no-unsafe-assignment, @typescript-eslint/no-unsafe-member-access, @typescript-eslint/no-unsafe-call
+  // Fetch all unique series for the filter
+  const { data: seriesOptions = [] } = api.car.getAllSeries.useQuery();
+
+  // Fetch cars with pagination, search, and series filter
   const { data, isLoading } = api.car.getAll.useQuery({
-    limit: 1000,
+    limit: 100,
     search: searchTerm,
+    series: seriesFilter,
   });
 
-  // eslint-disable-next-line @typescript-eslint/no-unsafe-assignment, @typescript-eslint/no-unsafe-member-access
   const cars = data?.items ?? [];
-
-  // Extract unique values for filter options
-  useEffect(() => {
-    if (cars && cars.length > 0) {
-      // Extract unique generations
-      const uniqueGenerations = Array.from(
-        new Set(cars.map((car: Car) => car.generation)),
-      ).map((gen) => ({ label: gen, value: gen }));
-
-      // Extract unique series
-      const uniqueSeries = Array.from(
-        new Set(cars.map((car: Car) => car.series)),
-      ).map((series) => ({ label: series, value: series }));
-
-      // Extract unique models
-      const uniqueModels = Array.from(
-        new Set(cars.map((car: Car) => car.model)),
-      ).map((model) => ({ label: model, value: model }));
-
-      setGenerationOptions(uniqueGenerations);
-      setSeriesOptions(uniqueSeries);
-      setModelOptions(uniqueModels);
-    }
-  }, [cars]);
 
   const handleAddCar = () => {
     setIsAddCarOpen(true);
@@ -99,28 +71,22 @@ export default function CarsAdminPage() {
         </p>
       </div>
 
-      <DataTable
-        columns={columns}
-        data={cars}
-        filterableColumns={[
-          // {
-          //   id: "generation",
-          //   title: "Generation",
-          //   options: generationOptions,
-          // },
-          {
-            id: "series",
-            title: "Series",
-            options: seriesOptions,
-          },
-          // {
-          //   id: "model",
-          //   title: "Model",
-          //   options: modelOptions,
-          // },
-        ]}
-        onAddClick={handleAddCar}
-      />
+      <div className="mb-4">
+        <select
+          className="h-9 w-64 rounded-md border border-input bg-background px-3 py-1 text-sm ring-offset-background"
+          value={seriesFilter ?? ""}
+          onChange={(e) => setSeriesFilter(e.target.value || undefined)}
+        >
+          <option value="">All Series</option>
+          {seriesOptions.map((option) => (
+            <option key={option.value} value={option.value}>
+              {option.label}
+            </option>
+          ))}
+        </select>
+      </div>
+
+      <DataTable columns={columns} data={cars} onAddClick={handleAddCar} />
 
       <CarForm open={isAddCarOpen} onOpenChange={setIsAddCarOpen} />
 
