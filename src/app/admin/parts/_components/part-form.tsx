@@ -401,7 +401,7 @@ export function PartForm({
                       <Command>
                         <CommandInput placeholder="Search cars..." />
                         <CommandEmpty>No car found.</CommandEmpty>
-                        <CommandGroup className="max-h-64 overflow-y-auto">
+                        <CommandGroup className="relative max-h-64 overflow-y-auto">
                           <CommandList>
                             {carOptions.map((car) => (
                               <CommandItem
@@ -426,7 +426,7 @@ export function PartForm({
                     </PopoverContent>
                   </Popover>
                   {selectedCars.length > 0 && (
-                    <div className="mt-1 flex flex-wrap border p-2 gap-1 max-h-40 overflow-y-auto">
+                    <div className="mt-1 flex max-h-40 flex-wrap gap-1 overflow-y-auto border p-2">
                       {selectedCars.map((id) => {
                         const car = carOptions.find((c) => c.value === id);
                         return (
