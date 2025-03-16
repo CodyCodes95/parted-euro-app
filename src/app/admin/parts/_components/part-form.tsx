@@ -29,6 +29,7 @@ import {
   CommandGroup,
   CommandInput,
   CommandItem,
+  CommandList,
 } from "~/components/ui/command";
 import {
   Popover,
@@ -401,29 +402,31 @@ export function PartForm({
                         <CommandInput placeholder="Search cars..." />
                         <CommandEmpty>No car found.</CommandEmpty>
                         <CommandGroup className="max-h-64 overflow-y-auto">
-                          {carOptions.map((car) => (
-                            <CommandItem
-                              key={car.value}
-                              value={car.value}
-                              onSelect={() => handleCarSelect(car.value)}
-                            >
-                              <Check
-                                className={cn(
-                                  "mr-2 h-4 w-4",
-                                  selectedCars.includes(car.value)
-                                    ? "opacity-100"
-                                    : "opacity-0",
-                                )}
-                              />
-                              {car.label}
-                            </CommandItem>
-                          ))}
+                          <CommandList>
+                            {carOptions.map((car) => (
+                              <CommandItem
+                                key={car.value}
+                                value={car.value}
+                                onSelect={() => handleCarSelect(car.value)}
+                              >
+                                <Check
+                                  className={cn(
+                                    "mr-2 h-4 w-4",
+                                    selectedCars.includes(car.value)
+                                      ? "opacity-100"
+                                      : "opacity-0",
+                                  )}
+                                />
+                                {car.label}
+                              </CommandItem>
+                            ))}
+                          </CommandList>
                         </CommandGroup>
                       </Command>
                     </PopoverContent>
                   </Popover>
                   {selectedCars.length > 0 && (
-                    <div className="mt-1 flex flex-wrap gap-1">
+                    <div className="mt-1 flex flex-wrap border p-2 gap-1 max-h-40 overflow-y-auto">
                       {selectedCars.map((id) => {
                         const car = carOptions.find((c) => c.value === id);
                         return (
@@ -485,23 +488,27 @@ export function PartForm({
                         <CommandInput placeholder="Search categories..." />
                         <CommandEmpty>No category found.</CommandEmpty>
                         <CommandGroup className="max-h-64 overflow-y-auto">
-                          {partTypeOptions.map((type) => (
-                            <CommandItem
-                              key={type.value}
-                              value={type.value}
-                              onSelect={() => handlePartTypeSelect(type.value)}
-                            >
-                              <Check
-                                className={cn(
-                                  "mr-2 h-4 w-4",
-                                  selectedPartTypes.includes(type.value)
-                                    ? "opacity-100"
-                                    : "opacity-0",
-                                )}
-                              />
-                              {type.label}
-                            </CommandItem>
-                          ))}
+                          <CommandList>
+                            {partTypeOptions.map((type) => (
+                              <CommandItem
+                                key={type.value}
+                                value={type.value}
+                                onSelect={() =>
+                                  handlePartTypeSelect(type.value)
+                                }
+                              >
+                                <Check
+                                  className={cn(
+                                    "mr-2 h-4 w-4",
+                                    selectedPartTypes.includes(type.value)
+                                      ? "opacity-100"
+                                      : "opacity-0",
+                                  )}
+                                />
+                                {type.label}
+                              </CommandItem>
+                            ))}
+                          </CommandList>
                         </CommandGroup>
                       </Command>
                     </PopoverContent>
