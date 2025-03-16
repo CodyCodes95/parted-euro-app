@@ -9,7 +9,6 @@ import {
   DropdownMenuItem,
   DropdownMenuTrigger,
 } from "~/components/ui/dropdown-menu";
-import { Badge } from "~/components/ui/badge";
 
 // Define the Part type based on the schema
 export type Part = {
@@ -75,8 +74,8 @@ export const getPartColumns = ({
     accessorKey: "alternatePartNumbers",
     header: "Alt. Part Numbers",
     cell: ({ row }) => {
-      const value = row.getValue("alternatePartNumbers") as string | null;
-      return value || "-";
+      const value = row.getValue<string | null>("alternatePartNumbers");
+      return value ?? "-";
     },
   },
   {
@@ -99,7 +98,7 @@ export const getPartColumns = ({
       </Button>
     ),
     cell: ({ row }) => {
-      const value = row.getValue("weight") as number;
+      const value = row.getValue<number>("weight");
       return `${value} kg`;
     },
   },
@@ -115,53 +114,8 @@ export const getPartColumns = ({
       </Button>
     ),
     cell: ({ row }) => {
-      const value = row.getValue("costPrice") as number | null;
+      const value = row.getValue<number | null>("costPrice");
       return value ? `$${value.toFixed(2)}` : "-";
-    },
-  },
-  {
-    accessorKey: "compatibleCars",
-    header: "Compatible Cars",
-    cell: ({ row }) => {
-      const cars = row.original.cars;
-      if (!cars.length) return "-";
-
-      // Show first car and count if more than one
-      const firstCar = cars[0];
-      const label = `${firstCar.make} ${firstCar.model}`;
-
-      return cars.length > 1 ? (
-        <div className="flex flex-col gap-1">
-          <span>{label}</span>
-          <Badge variant="outline" className="w-fit">
-            +{cars.length - 1} more
-          </Badge>
-        </div>
-      ) : (
-        label
-      );
-    },
-  },
-  {
-    accessorKey: "categories",
-    header: "Categories",
-    cell: ({ row }) => {
-      const partTypes = row.original.partTypes;
-      if (!partTypes.length) return "-";
-
-      // Show first category and count if more than one
-      const firstType = partTypes[0];
-
-      return partTypes.length > 1 ? (
-        <div className="flex flex-col gap-1">
-          <span>{firstType.name}</span>
-          <Badge variant="outline" className="w-fit">
-            +{partTypes.length - 1} more
-          </Badge>
-        </div>
-      ) : (
-        firstType.name
-      );
     },
   },
   {
