@@ -2,7 +2,7 @@ import { type ColumnDef } from "@tanstack/react-table";
 import { Button } from "~/components/ui/button";
 import { type Car, type Donor } from "@prisma/client";
 import { formatDate, formatCurrency } from "~/lib/utils";
-import { MoreHorizontal, Pencil, Trash } from "lucide-react";
+import { MoreHorizontal, Pencil, Trash, ArrowUpDown } from "lucide-react";
 import {
   DropdownMenu,
   DropdownMenuContent,
@@ -30,13 +30,20 @@ export function getDonorColumns({
   return [
     {
       accessorKey: "vin",
-      header: "VIN",
-      cell: ({ row }) => (
-        <div className="font-medium">{row.getValue("vin")}</div>
+      header: ({ column }) => (
+        <Button
+          variant="ghost"
+          onClick={() => column.toggleSorting(column.getIsSorted() === "asc")}
+          className="p-0 hover:bg-transparent"
+        >
+          VIN
+          <ArrowUpDown className="ml-2 h-4 w-4" />
+        </Button>
       ),
+      cell: ({ row }) => <div className="font-medium">{row.original.vin}</div>,
     },
     {
-      accessorKey: "car",
+      id: "car",
       header: "Car",
       cell: ({ row }) => {
         const car = row.original.car;
@@ -50,31 +57,66 @@ export function getDonorColumns({
     },
     {
       accessorKey: "year",
-      header: "Year",
-      cell: ({ row }) => <div>{row.getValue("year")}</div>,
+      header: ({ column }) => (
+        <Button
+          variant="ghost"
+          onClick={() => column.toggleSorting(column.getIsSorted() === "asc")}
+          className="p-0 hover:bg-transparent"
+        >
+          Year
+          <ArrowUpDown className="ml-2 h-4 w-4" />
+        </Button>
+      ),
+      cell: ({ row }) => <div>{row.original.year}</div>,
     },
     {
       accessorKey: "mileage",
-      header: "Mileage",
-      cell: ({ row }) => (
-        <div>{row.getValue<number>("mileage").toLocaleString()}</div>
+      header: ({ column }) => (
+        <Button
+          variant="ghost"
+          onClick={() => column.toggleSorting(column.getIsSorted() === "asc")}
+          className="p-0 hover:bg-transparent"
+        >
+          Mileage
+          <ArrowUpDown className="ml-2 h-4 w-4" />
+        </Button>
       ),
+      cell: ({ row }) => <div>{row.original.mileage.toLocaleString()}</div>,
     },
     {
       accessorKey: "cost",
-      header: "Cost",
-      cell: ({ row }) => <div>{formatCurrency(row.getValue("cost"))}</div>,
+      header: ({ column }) => (
+        <Button
+          variant="ghost"
+          onClick={() => column.toggleSorting(column.getIsSorted() === "asc")}
+          className="p-0 hover:bg-transparent"
+        >
+          Cost
+          <ArrowUpDown className="ml-2 h-4 w-4" />
+        </Button>
+      ),
+      cell: ({ row }) => <div>{formatCurrency(row.original.cost)}</div>,
     },
     {
       accessorKey: "dateInStock",
-      header: "Date In Stock",
+      header: ({ column }) => (
+        <Button
+          variant="ghost"
+          onClick={() => column.toggleSorting(column.getIsSorted() === "asc")}
+          className="p-0 hover:bg-transparent"
+        >
+          Date In Stock
+          <ArrowUpDown className="ml-2 h-4 w-4" />
+        </Button>
+      ),
       cell: ({ row }) => {
-        const date = row.getValue<Date | null>("dateInStock");
+        const date = row.original.dateInStock;
         return date ? <div>{formatDate(date)}</div> : <div>-</div>;
       },
     },
     {
       id: "actions",
+      header: "Actions",
       cell: ({ row }) => {
         const donor = row.original;
 
@@ -87,10 +129,14 @@ export function getDonorColumns({
               </Button>
             </DropdownMenuTrigger>
             <DropdownMenuContent align="end">
+              <DropdownMenuLabel>Actions</DropdownMenuLabel>
+              <DropdownMenuSeparator />
               <DropdownMenuItem onClick={() => onEdit(donor)}>
+                <Pencil className="mr-2 h-4 w-4" />
                 Edit
               </DropdownMenuItem>
               <DropdownMenuItem onClick={() => onDelete(donor)}>
+                <Trash className="mr-2 h-4 w-4" />
                 Delete
               </DropdownMenuItem>
             </DropdownMenuContent>
