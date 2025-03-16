@@ -1,12 +1,20 @@
 "use client";
 
-import { useState, useEffect } from "react";
+import { useState } from "react";
 import { api } from "~/trpc/react";
 import { DataTable } from "~/components/data-table/data-table";
 import { getCarColumns, type Car } from "~/components/cars/columns";
 import { CarForm } from "~/components/cars/car-form";
 import { DeleteCarDialog } from "~/components/cars/delete-car-dialog";
 import { keepPreviousData } from "@tanstack/react-query";
+import { Input } from "~/components/ui/input";
+import {
+  Select,
+  SelectContent,
+  SelectItem,
+  SelectTrigger,
+  SelectValue,
+} from "~/components/ui/select";
 
 export default function CarsAdminPage() {
   const [isAddCarOpen, setIsAddCarOpen] = useState(false);
@@ -53,6 +61,11 @@ export default function CarsAdminPage() {
     setSearchTerm(term);
   };
 
+  const handleSeriesChange = (value: string) => {
+    // If the value is "all", set the filter to undefined to show all series
+    setSeriesFilter(value === "all" ? undefined : value);
+  };
+
   const columns = getCarColumns({
     onEdit: handleEditCar,
     onDelete: handleDeleteCar,
@@ -65,10 +78,10 @@ export default function CarsAdminPage() {
       </div>
 
       <div className="mb-4">
-        <input
+        <Input
           type="text"
           placeholder="Search cars..."
-          className="w-full rounded-md border border-input bg-background px-3 py-2 text-sm ring-offset-background"
+          className="w-full"
           value={searchTerm}
           onChange={(e) => handleSearch(e.target.value)}
         />
@@ -78,18 +91,22 @@ export default function CarsAdminPage() {
       </div>
 
       <div className="mb-4">
-        <select
-          className="h-9 w-64 rounded-md border border-input bg-background px-3 py-1 text-sm ring-offset-background"
-          value={seriesFilter ?? ""}
-          onChange={(e) => setSeriesFilter(e.target.value || undefined)}
+        <Select
+          value={seriesFilter ?? "all"}
+          onValueChange={handleSeriesChange}
         >
-          <option value="">All Series</option>
-          {seriesOptions.map((option) => (
-            <option key={option.value} value={option.value}>
-              {option.label}
-            </option>
-          ))}
-        </select>
+          <SelectTrigger className="w-[280px]">
+            <SelectValue placeholder="Select series" />
+          </SelectTrigger>
+          <SelectContent>
+            <SelectItem value="all">All Series</SelectItem>
+            {seriesOptions.map((option) => (
+              <SelectItem key={option.value} value={option.value}>
+                {option.label}
+              </SelectItem>
+            ))}
+          </SelectContent>
+        </Select>
       </div>
 
       <DataTable columns={columns} data={cars} onAddClick={handleAddCar} />
