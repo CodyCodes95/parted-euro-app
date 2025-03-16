@@ -56,7 +56,9 @@ export function getDonorColumns({
     {
       accessorKey: "mileage",
       header: "Mileage",
-      cell: ({ row }) => <div>{row.getValue("mileage").toLocaleString()}</div>,
+      cell: ({ row }) => (
+        <div>{row.getValue<number>("mileage").toLocaleString()}</div>
+      ),
     },
     {
       accessorKey: "cost",
@@ -67,7 +69,7 @@ export function getDonorColumns({
       accessorKey: "dateInStock",
       header: "Date In Stock",
       cell: ({ row }) => {
-        const date = row.getValue("dateInStock");
+        const date = row.getValue<Date | null>("dateInStock");
         return date ? <div>{formatDate(date)}</div> : <div>-</div>;
       },
     },
@@ -85,14 +87,10 @@ export function getDonorColumns({
               </Button>
             </DropdownMenuTrigger>
             <DropdownMenuContent align="end">
-              <DropdownMenuLabel>Actions</DropdownMenuLabel>
-              <DropdownMenuSeparator />
               <DropdownMenuItem onClick={() => onEdit(donor)}>
-                <Pencil className="mr-2 h-4 w-4" />
                 Edit
               </DropdownMenuItem>
               <DropdownMenuItem onClick={() => onDelete(donor)}>
-                <Trash className="mr-2 h-4 w-4" />
                 Delete
               </DropdownMenuItem>
             </DropdownMenuContent>

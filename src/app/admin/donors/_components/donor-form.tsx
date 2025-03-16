@@ -1,3 +1,5 @@
+"use client";
+
 import { useState } from "react";
 import { api } from "~/trpc/react";
 import { z } from "zod";
@@ -22,16 +24,9 @@ import {
 } from "~/components/ui/form";
 import { Input } from "~/components/ui/input";
 import { Button } from "~/components/ui/button";
-import {
-  Select,
-  SelectContent,
-  SelectItem,
-  SelectTrigger,
-  SelectValue,
-} from "~/components/ui/select";
 import { Checkbox } from "~/components/ui/checkbox";
 import { type DonorWithCar } from "./columns";
-import { CalendarIcon } from "lucide-react";
+import { CalendarIcon, Check, ChevronsUpDown } from "lucide-react";
 import { Calendar } from "~/components/ui/calendar";
 import {
   Popover,
@@ -39,6 +34,13 @@ import {
   PopoverTrigger,
 } from "~/components/ui/popover";
 import { cn, formatDate } from "~/lib/utils";
+import {
+  Command,
+  CommandEmpty,
+  CommandGroup,
+  CommandInput,
+  CommandItem,
+} from "~/components/ui/command";
 
 // Define the form schema
 const donorFormSchema = z.object({
@@ -68,6 +70,7 @@ export function DonorForm({
   isEditing = false,
 }: DonorFormProps) {
   const [isSaving, setIsSaving] = useState(false);
+  const [carOpen, setCarOpen] = useState(false);
 
   // Set up the form with default values
   const form = useForm<DonorFormValues>({
@@ -96,7 +99,8 @@ export function DonorForm({
   });
 
   // Fetch car options for the select input
-  const { data: carOptions = [] } = api.donor.getAllCars.useQuery();
+  const carOptionsQuery = api.donor.getAllCars.useQuery();
+  const carOptions = carOptionsQuery.data ?? [];
 
   // TRPC mutations for creating and updating donors
   const utils = api.useUtils();
@@ -127,6 +131,12 @@ export function DonorForm({
     },
   });
 
+  // Helper function to get the car label from its ID
+  const getCarLabel = (carId: string) => {
+    const car = carOptions.find((c) => c.value === carId);
+    return car?.label ?? "";
+  };
+
   // Form submission handler
   function onSubmit(data: DonorFormValues) {
     setIsSaving(true);
@@ -152,7 +162,7 @@ export function DonorForm({
           </DialogTitle>
           <DialogDescription>
             {isEditing
-              ? "Update this donor's information"
+              ? "Update this donor&apos;s information"
               : "Add a new donor to your inventory"}
           </DialogDescription>
         </DialogHeader>
@@ -181,30 +191,61 @@ export function DonorForm({
               )}
             />
 
-            {/* Car Selection */}
+            {/* Car Selection with Command */}
             <FormField
               control={form.control}
               name="carId"
               render={({ field }) => (
-                <FormItem>
+                <FormItem className="flex flex-col">
                   <FormLabel>Car</FormLabel>
-                  <Select
-                    onValueChange={field.onChange}
-                    defaultValue={field.value}
-                  >
-                    <FormControl>
-                      <SelectTrigger>
-                        <SelectValue placeholder="Select a car model" />
-                      </SelectTrigger>
-                    </FormControl>
-                    <SelectContent>
-                      {carOptions.map((option) => (
-                        <SelectItem key={option.value} value={option.value}>
-                          {option.label}
-                        </SelectItem>
-                      ))}
-                    </SelectContent>
-                  </Select>
+                  <Popover open={carOpen} onOpenChange={setCarOpen}>
+                    <PopoverTrigger asChild>
+                      <FormControl>
+                        <Button
+                          variant="outline"
+                          role="combobox"
+                          aria-expanded={carOpen}
+                          className={cn(
+                            "w-full justify-between",
+                            !field.value && "text-muted-foreground",
+                          )}
+                        >
+                          {field.value
+                            ? getCarLabel(field.value)
+                            : "Select a car..."}
+                          <ChevronsUpDown className="ml-2 h-4 w-4 shrink-0 opacity-50" />
+                        </Button>
+                      </FormControl>
+                    </PopoverTrigger>
+                    <PopoverContent className="w-[400px] p-0">
+                      <Command>
+                        <CommandInput placeholder="Search cars..." />
+                        <CommandEmpty>No car found.</CommandEmpty>
+                        <CommandGroup className="max-h-[300px] overflow-y-auto">
+                          {(carOptions ?? []).map((car) => (
+                            <CommandItem
+                              key={car.value}
+                              value={car.label}
+                              onSelect={() => {
+                                form.setValue("carId", car.value);
+                                setCarOpen(false);
+                              }}
+                            >
+                              <Check
+                                className={cn(
+                                  "mr-2 h-4 w-4",
+                                  car.value === field.value
+                                    ? "opacity-100"
+                                    : "opacity-0",
+                                )}
+                              />
+                              {car.label}
+                            </CommandItem>
+                          ))}
+                        </CommandGroup>
+                      </Command>
+                    </PopoverContent>
+                  </Popover>
                   <FormMessage />
                 </FormItem>
               )}
@@ -343,7 +384,7 @@ export function DonorForm({
                   <div className="space-y-1 leading-none">
                     <FormLabel>Hide from search</FormLabel>
                     <p className="text-sm text-muted-foreground">
-                      This donor won't appear in searches if checked.
+                      This donor won&apos;t appear in searches if checked.
                     </p>
                   </div>
                 </FormItem>
