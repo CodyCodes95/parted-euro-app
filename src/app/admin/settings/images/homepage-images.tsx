@@ -1,6 +1,6 @@
 "use client";
 
-import { Suspense } from "react";
+
 import { HomepageImageList } from "~/components/HomepageImageList";
 import { HomepageImageUploadZone } from "~/components/UploadThing";
 import { api } from "~/trpc/react";

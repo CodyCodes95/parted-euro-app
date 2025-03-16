@@ -1,3 +1,4 @@
+"use client";
 import { Separator } from "~/components/ui/separator";
 import { HomepageImageManager } from "./homepage-images";
 import { Card } from "~/components/ui/card";
