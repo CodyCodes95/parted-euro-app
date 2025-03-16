@@ -26,7 +26,7 @@ export default function CarsAdminPage() {
   // Ignore TypeScript errors for now - will be fixed when proper types are set up
   // eslint-disable-next-line @typescript-eslint/no-unsafe-assignment, @typescript-eslint/no-unsafe-member-access, @typescript-eslint/no-unsafe-call
   const { data, isLoading } = api.car.getAll.useQuery({
-    limit: 100,
+    limit: 1000,
     search: searchTerm,
   });
 

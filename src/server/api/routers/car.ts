@@ -1,6 +1,7 @@
 import { z } from "zod";
 
 import { adminProcedure, createTRPCRouter } from "../trpc";
+import { type Prisma } from "@prisma/client";
 
 // Define car input validation schema
 const carSchema = z.object({
@@ -17,7 +18,7 @@ export const carRouter = createTRPCRouter({
   getAll: adminProcedure
     .input(
       z.object({
-        limit: z.number().min(1).max(100).optional().default(50),
+        limit: z.number().min(1).max(1000).optional().default(50),
         cursor: z.string().optional(),
         search: z.string().optional(),
         sortBy: z.string().optional(),
@@ -31,7 +32,7 @@ export const carRouter = createTRPCRouter({
       const query = {
         take: limit + 1,
         ...(cursor ? { cursor: { id: cursor } } : {}),
-        orderBy: sortBy ? { [sortBy]: sortOrder || "asc" } : { make: "asc" },
+        orderBy: sortBy ? { [sortBy]: sortOrder ?? "asc" } : { make: "asc" },
         where: search
           ? {
               OR: [
@@ -43,7 +44,7 @@ export const carRouter = createTRPCRouter({
               ],
             }
           : {},
-      };
+      } as Prisma.CarFindManyArgs;
 
       // Execute the query
       const cars = await ctx.db.car.findMany(query);
