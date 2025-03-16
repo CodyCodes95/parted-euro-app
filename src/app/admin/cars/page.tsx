@@ -6,6 +6,7 @@ import { DataTable } from "~/components/data-table/data-table";
 import { getCarColumns, type Car } from "~/components/cars/columns";
 import { CarForm } from "~/components/cars/car-form";
 import { DeleteCarDialog } from "~/components/cars/delete-car-dialog";
+import { keepPreviousData } from "@tanstack/react-query";
 
 export default function CarsAdminPage() {
   const [isAddCarOpen, setIsAddCarOpen] = useState(false);
@@ -21,11 +22,16 @@ export default function CarsAdminPage() {
   const { data: seriesOptions = [] } = api.car.getAllSeries.useQuery();
 
   // Fetch cars with pagination, search, and series filter
-  const { data, isLoading } = api.car.getAll.useQuery({
-    limit: 100,
-    search: searchTerm,
-    series: seriesFilter,
-  });
+  const { data, isLoading, isError } = api.car.getAll.useQuery(
+    {
+      limit: 100,
+      search: searchTerm,
+      series: seriesFilter,
+    },
+    {
+      placeholderData: keepPreviousData,
+    },
+  );
 
   const cars = data?.items ?? [];
 
