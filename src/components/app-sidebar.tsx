@@ -105,6 +105,28 @@ export function AppSidebar({
       url: "/admin/settings",
       icon: Settings2,
       isActive: pathname.startsWith("/admin/settings"),
+      items: [
+        {
+          title: "General",
+          url: "/admin/settings",
+          isActive: pathname === "/admin/settings",
+        },
+        {
+          title: "Ebay",
+          url: "/admin/settings/ebay",
+          isActive: pathname === "/admin/settings/ebay",
+        },
+        {
+          title: "Xero",
+          url: "/admin/settings/xero",
+          isActive: pathname === "/admin/settings/xero",
+        },
+        {
+          title: "Images",
+          url: "/admin/settings/images",
+          isActive: pathname === "/admin/settings/images",
+        },
+      ],
     },
   ];
 
