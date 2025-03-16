@@ -15,6 +15,7 @@ import {
   SelectTrigger,
   SelectValue,
 } from "~/components/ui/select";
+import { type SortingState } from "@tanstack/react-table";
 
 export default function CarsAdminPage() {
   const [isAddCarOpen, setIsAddCarOpen] = useState(false);
@@ -25,19 +26,32 @@ export default function CarsAdminPage() {
   const [seriesFilter, setSeriesFilter] = useState<string | undefined>(
     undefined,
   );
+  const [sorting, setSorting] = useState<SortingState>([]);
+
+  // Get the current sort parameters from the sorting state
+  const sortConfig =
+    sorting.length > 0
+      ? {
+          sortBy: sorting[0]?.id,
+          sortOrder: sorting[0]?.desc ? ("desc" as const) : ("asc" as const),
+        }
+      : null;
 
   // Fetch all unique series for the filter
   const { data: seriesOptions = [] } = api.car.getAllSeries.useQuery();
 
-  // Fetch cars with pagination, search, and series filter
+  // Fetch cars with pagination, search, series filter, and sorting
   const { data, isLoading, isError } = api.car.getAll.useQuery(
     {
       limit: 100,
       search: searchTerm,
       series: seriesFilter,
+      ...(sortConfig ?? {}),
     },
     {
       placeholderData: keepPreviousData,
+      // Add refetchOnWindowFocus: false to prevent unwanted refetches
+      refetchOnWindowFocus: false,
     },
   );
 
@@ -109,7 +123,21 @@ export default function CarsAdminPage() {
         </Select>
       </div>
 
-      <DataTable columns={columns} data={cars} onAddClick={handleAddCar} />
+      {isLoading && (
+        <div className="flex h-20 items-center justify-center">
+          <div className="text-sm text-muted-foreground">Loading...</div>
+        </div>
+      )}
+
+      {!isLoading && (
+        <DataTable
+          columns={columns}
+          data={cars}
+          onAddClick={handleAddCar}
+          sorting={sorting}
+          onSortingChange={setSorting}
+        />
+      )}
 
       <CarForm open={isAddCarOpen} onOpenChange={setIsAddCarOpen} />
 

@@ -10,7 +10,6 @@ import {
   getCoreRowModel,
   getFilteredRowModel,
   getPaginationRowModel,
-  getSortedRowModel,
   useReactTable,
 } from "@tanstack/react-table";
 
@@ -35,6 +34,8 @@ interface DataTableProps<TData, TValue> {
     options: { label: string; value: string }[];
   }[];
   onAddClick?: () => void;
+  sorting?: SortingState;
+  onSortingChange?: React.Dispatch<React.SetStateAction<SortingState>>;
 }
 
 export function DataTable<TData, TValue>({
@@ -43,8 +44,12 @@ export function DataTable<TData, TValue>({
   searchKey,
   filterableColumns = [],
   onAddClick,
+  sorting,
+  onSortingChange,
 }: DataTableProps<TData, TValue>) {
-  const [sorting, setSorting] = React.useState<SortingState>([]);
+  const [internalSorting, setInternalSorting] = React.useState<SortingState>(
+    [],
+  );
   const [columnFilters, setColumnFilters] = React.useState<ColumnFiltersState>(
     [],
   );
@@ -52,23 +57,26 @@ export function DataTable<TData, TValue>({
     React.useState<VisibilityState>({});
   const [rowSelection, setRowSelection] = React.useState({});
 
+  const sortingState = sorting !== undefined ? sorting : internalSorting;
+  const sortingChangeHandler = onSortingChange ?? setInternalSorting;
+
   const table = useReactTable({
     data,
     columns,
-    onSortingChange: setSorting,
+    onSortingChange: sortingChangeHandler,
     onColumnFiltersChange: setColumnFilters,
     getCoreRowModel: getCoreRowModel(),
     getPaginationRowModel: getPaginationRowModel(),
-    getSortedRowModel: getSortedRowModel(),
     getFilteredRowModel: getFilteredRowModel(),
     onColumnVisibilityChange: setColumnVisibility,
     onRowSelectionChange: setRowSelection,
     state: {
-      sorting,
+      sorting: sortingState,
       columnFilters,
       columnVisibility,
       rowSelection,
     },
+    manualSorting: true,
   });
 
   return (
