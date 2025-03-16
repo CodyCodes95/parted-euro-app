@@ -18,6 +18,7 @@ alwaysApply: false
     - Use lowercase with dashes for directory names (e.g., `components/auth-wizard`).
     - Inline simple callbacks in jsx, only breaking out to a separate function when it is complex
     - Use types, not interfaces
+    - use flex and gap over margin
 
     ### Optimization and Best Practices
     - Minimize the use of `'use client'`, `useEffect`, and `setState`; favor React Server Components (RSC) and Next.js SSR features.
