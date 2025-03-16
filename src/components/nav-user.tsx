@@ -25,6 +25,7 @@ import {
   SidebarMenuItem,
   useSidebar,
 } from "~/components/ui/sidebar";
+import { ThemeToggle } from "~/components/theme-toggle";
 
 export function NavUser({
   user,
@@ -75,6 +76,13 @@ export function NavUser({
                 </div>
               </div>
             </DropdownMenuLabel>
+            <DropdownMenuSeparator />
+            <DropdownMenuItem className="cursor-default p-0">
+              <div className="flex w-full items-center justify-between px-2 py-1.5">
+                <span>Theme</span>
+                <ThemeToggle />
+              </div>
+            </DropdownMenuItem>
             <DropdownMenuSeparator />
             <DropdownMenuItem>
               <LogOut />

@@ -7,6 +7,7 @@ import { TRPCReactProvider } from "~/trpc/react";
 import FacebookPixel from "./_components/fb-pixel";
 import { NuqsAdapter } from "nuqs/adapters/next";
 import { Toaster } from "~/components/ui/sonner";
+import { ThemeProvider } from "~/components/theme-provider";
 
 export const metadata: Metadata = {
   title: "Parted Euro",
@@ -18,13 +19,24 @@ export default function RootLayout({
   children,
 }: Readonly<{ children: React.ReactNode }>) {
   return (
-    <html lang="en" className={`${GeistSans.variable}`}>
+    <html
+      lang="en"
+      className={`${GeistSans.variable}`}
+      suppressHydrationWarning
+    >
       <body>
-        <TRPCReactProvider>
-          <NuqsAdapter>{children}</NuqsAdapter>
-        </TRPCReactProvider>
-        <Toaster />
-        <FacebookPixel />
+        <ThemeProvider
+          attribute="class"
+          defaultTheme="system"
+          enableSystem
+          disableTransitionOnChange
+        >
+          <TRPCReactProvider>
+            <NuqsAdapter>{children}</NuqsAdapter>
+          </TRPCReactProvider>
+          <Toaster />
+          <FacebookPixel />
+        </ThemeProvider>
       </body>
     </html>
   );

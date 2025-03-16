@@ -26,7 +26,16 @@ import {
   SidebarRail,
 } from "~/components/ui/sidebar";
 
-export function AppSidebar({ ...props }: React.ComponentProps<typeof Sidebar>) {
+export function AppSidebar({
+  user,
+  ...props
+}: React.ComponentProps<typeof Sidebar> & {
+  user?: {
+    name: string;
+    email: string;
+    image?: string;
+  };
+}) {
   const pathname = usePathname();
 
   // Admin navigation items
@@ -99,11 +108,11 @@ export function AppSidebar({ ...props }: React.ComponentProps<typeof Sidebar>) {
     },
   ];
 
-  // Sample user data
-  const userData = {
+  // Default user data as fallback
+  const userData = user || {
     name: "Admin User",
     email: "admin@partededuro.com",
-    avatar: "/avatars/admin.jpg",
+    image: "/avatars/admin.jpg",
   };
 
   return (
@@ -122,7 +131,13 @@ export function AppSidebar({ ...props }: React.ComponentProps<typeof Sidebar>) {
         <NavMain items={adminNav} />
       </SidebarContent>
       <SidebarFooter>
-        <NavUser user={userData} />
+        <NavUser
+          user={{
+            name: userData.name,
+            email: userData.email,
+            avatar: userData.image || "/avatars/default.jpg",
+          }}
+        />
       </SidebarFooter>
       <SidebarRail />
     </Sidebar>

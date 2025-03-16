@@ -15,14 +15,19 @@ export default async function AdminLayout({
   children: React.ReactNode;
 }) {
   const session = await auth();
-
   if (!session?.user.isAdmin) {
     redirect("/");
   }
 
   return (
     <SidebarProvider>
-      <AppSidebar />
+      <AppSidebar
+        user={{
+          name: session.user.name ?? "Admin User",
+          email: session.user.email ?? "admin@example.com",
+          image: session.user.image ?? undefined,
+        }}
+      />
       <SidebarInset>
         <header className="flex h-16 shrink-0 items-center gap-2 transition-[width,height] ease-linear group-has-[[data-collapsible=icon]]/sidebar-wrapper:h-12">
           <div className="flex items-center gap-2 px-4">
