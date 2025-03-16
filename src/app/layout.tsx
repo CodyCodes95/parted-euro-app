@@ -8,6 +8,9 @@ import FacebookPixel from "./_components/fb-pixel";
 import { NuqsAdapter } from "nuqs/adapters/next";
 import { Toaster } from "~/components/ui/sonner";
 import { ThemeProvider } from "~/components/theme-provider";
+import { NextSSRPlugin } from "@uploadthing/react/next-ssr-plugin";
+import { extractRouterConfig } from "uploadthing/server";
+import { uploadRouter } from "~/server/uploadthing";
 
 export const metadata: Metadata = {
   title: "Parted Euro",
@@ -32,6 +35,7 @@ export default function RootLayout({
           disableTransitionOnChange
         >
           <TRPCReactProvider>
+            <NextSSRPlugin routerConfig={extractRouterConfig(uploadRouter)} />
             <NuqsAdapter>{children}</NuqsAdapter>
           </TRPCReactProvider>
           <Toaster />
