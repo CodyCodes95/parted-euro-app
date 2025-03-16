@@ -1,5 +1,6 @@
 "use client";
 
+import * as React from "react";
 import { usePathname } from "next/navigation";
 import Link from "next/link";
 import {
@@ -45,24 +46,20 @@ export function AdminBreadcrumb() {
         {segments.slice(1).map((segment, index) => {
           const segmentPath = `/admin/${segments.slice(1, index + 2).join("/")}`;
 
-          // If this is the last segment, render as a page (current)
-          if (index === segments.length - 2) {
-            return (
-              <BreadcrumbItem key={segment}>
-                <BreadcrumbSeparator />
-                <BreadcrumbPage>{formatSegment(segment)}</BreadcrumbPage>
-              </BreadcrumbItem>
-            );
-          }
-
-          // Otherwise, render as a link
           return (
-            <BreadcrumbItem key={segment}>
+            <React.Fragment key={segment}>
               <BreadcrumbSeparator />
-              <BreadcrumbLink asChild>
-                <Link href={segmentPath}>{formatSegment(segment)}</Link>
-              </BreadcrumbLink>
-            </BreadcrumbItem>
+              <BreadcrumbItem>
+                {/* If this is the last segment, render as a page (current) */}
+                {index === segments.length - 2 ? (
+                  <BreadcrumbPage>{formatSegment(segment)}</BreadcrumbPage>
+                ) : (
+                  <BreadcrumbLink asChild>
+                    <Link href={segmentPath}>{formatSegment(segment)}</Link>
+                  </BreadcrumbLink>
+                )}
+              </BreadcrumbItem>
+            </React.Fragment>
           );
         })}
       </BreadcrumbList>
