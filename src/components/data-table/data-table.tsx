@@ -73,7 +73,7 @@ export function DataTable<TData, TValue>({
 
   return (
     <div className="space-y-4">
-      {searchKey && (
+      {(filterableColumns.length > 0 || onAddClick) && (
         <DataTableToolbar
           table={table}
           searchKey={searchKey}

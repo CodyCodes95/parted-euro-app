@@ -16,7 +16,7 @@ import {
 
 interface DataTableToolbarProps<TData> {
   table: Table<TData>;
-  searchKey: string;
+  searchKey?: string;
   filterableColumns?: {
     id: string;
     title: string;
@@ -36,14 +36,18 @@ export function DataTableToolbar<TData>({
   return (
     <div className="flex flex-wrap items-center justify-between gap-4">
       <div className="flex flex-1 items-center space-x-2">
-        <Input
-          placeholder="Search..."
-          value={(table.getColumn(searchKey)?.getFilterValue() as string) ?? ""}
-          onChange={(event) =>
-            table.getColumn(searchKey)?.setFilterValue(event.target.value)
-          }
-          className="h-9 w-full md:w-[250px]"
-        />
+        {searchKey && (
+          <Input
+            placeholder="Search..."
+            value={
+              (table.getColumn(searchKey)?.getFilterValue() as string) ?? ""
+            }
+            onChange={(event) =>
+              table.getColumn(searchKey)?.setFilterValue(event.target.value)
+            }
+            className="h-9 w-full md:w-[250px]"
+          />
+        )}
         {filterableColumns.length > 0 &&
           filterableColumns.map(
             (column) =>

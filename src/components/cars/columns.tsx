@@ -46,14 +46,6 @@ export function getCarColumns({
       header: "Model",
     },
     {
-      accessorKey: "body",
-      header: "Body",
-      cell: ({ row }) => {
-        const body = row.original.body;
-        return <div>{body || "-"}</div>;
-      },
-    },
-    {
       id: "actions",
       cell: ({ row }) => {
         const car = row.original;

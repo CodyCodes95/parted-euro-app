@@ -171,19 +171,6 @@ export function CarForm({
                 </FormItem>
               )}
             />
-            <FormField
-              control={form.control}
-              name="body"
-              render={({ field }) => (
-                <FormItem>
-                  <FormLabel>Body</FormLabel>
-                  <FormControl>
-                    <Input placeholder="Sedan" {...field} />
-                  </FormControl>
-                  <FormMessage />
-                </FormItem>
-              )}
-            />
             <div className="flex justify-end space-x-2">
               <Button
                 variant="outline"
