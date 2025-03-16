@@ -50,8 +50,6 @@ export default function CarsAdminPage() {
     },
     {
       placeholderData: keepPreviousData,
-      // Add refetchOnWindowFocus: false to prevent unwanted refetches
-      refetchOnWindowFocus: false,
     },
   );
 
