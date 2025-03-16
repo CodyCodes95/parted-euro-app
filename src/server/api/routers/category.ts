@@ -26,11 +26,28 @@ export const categoryRouter = createTRPCRouter({
     .query(async ({ ctx, input }) => {
       const { limit, cursor, search, sortBy, sortOrder, parentId } = input;
 
+      // Build the orderBy object based on sortBy
+      let orderByConfig: any = { name: "asc" }; // Default sorting
+
+      if (sortBy) {
+        if (sortBy === "parentName") {
+          // Handle sorting by parent name
+          orderByConfig = {
+            parent: {
+              name: sortOrder ?? "asc",
+            },
+          };
+        } else {
+          // Handle normal field sorting
+          orderByConfig = { [sortBy]: sortOrder ?? "asc" };
+        }
+      }
+
       // Create the base query
       const query = {
         take: limit + 1,
         ...(cursor ? { cursor: { id: cursor } } : {}),
-        orderBy: sortBy ? { [sortBy]: sortOrder ?? "asc" } : { name: "asc" },
+        orderBy: orderByConfig,
         where: {
           ...(search
             ? {
@@ -61,7 +78,7 @@ export const categoryRouter = createTRPCRouter({
       // Map the results to include the parent name
       const mappedCategories = categories.map((category) => ({
         ...category,
-        parentName: category.parent?.name,
+        parentName: category.parent?.name || null,
       }));
 
       return {
