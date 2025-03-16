@@ -6,6 +6,7 @@ import { type Metadata } from "next";
 import { TRPCReactProvider } from "~/trpc/react";
 import FacebookPixel from "./_components/fb-pixel";
 import { NuqsAdapter } from "nuqs/adapters/next";
+import { Toaster } from "~/components/ui/sonner";
 
 export const metadata: Metadata = {
   title: "Parted Euro",
@@ -22,6 +23,7 @@ export default function RootLayout({
         <TRPCReactProvider>
           <NuqsAdapter>{children}</NuqsAdapter>
         </TRPCReactProvider>
+        <Toaster />
         <FacebookPixel />
       </body>
     </html>
