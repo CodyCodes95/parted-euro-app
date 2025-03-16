@@ -3,6 +3,7 @@ import { type DefaultSession, type NextAuthConfig } from "next-auth";
 import GoogleProvider from "next-auth/providers/google";
 
 import { db } from "~/server/db";
+import { api } from "~/trpc/server";
 
 /**
  * Module augmentation for `next-auth` types. Allows us to add custom properties to the `session`
@@ -57,5 +58,14 @@ export const authConfig = {
         isAdmin: session.user.isAdmin,
       },
     }),
+    signIn: async ({ user }) => {
+      const admins = await api.user.getAll({ isAdmin: true });
+
+      if (admins.items.some((admin) => admin.email === user.email)) {
+        return true;
+      }
+
+      return false;
+    },
   },
 } satisfies NextAuthConfig;

@@ -8,9 +8,6 @@ export default function ImagesSettingsPage() {
       <div className="flex items-center justify-between">
         <h1 className="text-3xl font-bold">Image Settings</h1>
       </div>
-      <p className="mt-2 text-muted-foreground">
-        Manage all the images used throughout your website.
-      </p>
 
       <Separator className="my-6" />
 

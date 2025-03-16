@@ -12,11 +12,12 @@ export const userRouter = createTRPCRouter({
         cursor: z.string().optional(),
         search: z.string().optional(),
         sortBy: z.string().optional(),
+        isAdmin: z.boolean().optional(),
         sortOrder: z.enum(["asc", "desc"]).optional(),
       }),
     )
     .query(async ({ ctx, input }) => {
-      const { limit, cursor, search, sortBy, sortOrder } = input;
+      const { limit, cursor, search, sortBy, sortOrder, isAdmin } = input;
 
       // Create the base query
       const query = {
@@ -24,6 +25,7 @@ export const userRouter = createTRPCRouter({
         ...(cursor ? { cursor: { id: cursor } } : {}),
         orderBy: sortBy ? { [sortBy]: sortOrder ?? "asc" } : { email: "asc" },
         where: {
+          isAdmin: isAdmin ?? undefined,
           ...(search
             ? {
                 OR: [
