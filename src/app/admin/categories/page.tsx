@@ -3,12 +3,9 @@
 import { useState } from "react";
 import { api } from "~/trpc/react";
 import { DataTable } from "~/components/data-table/data-table";
-import {
-  getCategoryColumns,
-  type Category,
-} from "~/components/categories/columns";
-import { CategoryForm } from "~/components/categories/category-form";
-import { DeleteCategoryDialog } from "~/components/categories/delete-category-dialog";
+import { getCategoryColumns, type Category } from "./_components/columns";
+import { CategoryForm } from "./_components/category-form";
+import { DeleteCategoryDialog } from "./_components/delete-category-dialog";
 import { keepPreviousData } from "@tanstack/react-query";
 import { Input } from "~/components/ui/input";
 import {
@@ -41,7 +38,6 @@ export default function CategoriesAdminPage() {
           sortOrder: sorting[0]?.desc ? ("desc" as const) : ("asc" as const),
         }
       : null;
-
 
   const { data: parentOptions = [] } = api.category.getAllParents.useQuery();
 

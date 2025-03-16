@@ -13,7 +13,7 @@ import {
   AlertDialogTitle,
 } from "~/components/ui/alert-dialog";
 import { toast } from "sonner";
-import { Car } from "./columns";
+import { type Car } from "./columns";
 
 interface DeleteCarDialogProps {
   open: boolean;

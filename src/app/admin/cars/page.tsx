@@ -3,9 +3,9 @@
 import { useState } from "react";
 import { api } from "~/trpc/react";
 import { DataTable } from "~/components/data-table/data-table";
-import { getCarColumns, type Car } from "~/components/cars/columns";
-import { CarForm } from "~/components/cars/car-form";
-import { DeleteCarDialog } from "~/components/cars/delete-car-dialog";
+import { getCarColumns, type Car } from "./_components/columns";
+import { CarForm } from "./_components/car-form";
+import { DeleteCarDialog } from "./_components/delete-car-dialog";
 import { keepPreviousData } from "@tanstack/react-query";
 import { Input } from "~/components/ui/input";
 import {
