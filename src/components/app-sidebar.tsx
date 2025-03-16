@@ -13,6 +13,7 @@ import {
   FolderTree,
   Users,
   Settings2,
+  CarFrontIcon,
 } from "lucide-react";
 import { usePathname } from "next/navigation";
 
@@ -25,6 +26,7 @@ import {
   SidebarHeader,
   SidebarRail,
 } from "~/components/ui/sidebar";
+import Link from "next/link";
 
 export function AppSidebar({
   user,
@@ -67,7 +69,7 @@ export function AppSidebar({
     {
       title: "Donors",
       url: "/admin/donors",
-      icon: UserPlus,
+      icon: CarFrontIcon,
       isActive: pathname.startsWith("/admin/donors"),
     },
     {
@@ -131,7 +133,7 @@ export function AppSidebar({
   ];
 
   // Default user data as fallback
-  const userData = user || {
+  const userData = user ?? {
     name: "Admin User",
     email: "admin@partededuro.com",
     image: "/avatars/admin.jpg",
@@ -142,7 +144,9 @@ export function AppSidebar({
       <SidebarHeader>
         <div className="flex items-center gap-2">
           <div className="flex aspect-square size-8 items-center justify-center rounded-lg bg-sidebar-primary text-sidebar-primary-foreground">
-            <img src="/stripes.png" alt="Logo" />
+            <Link href="/">
+              <img src="/stripes.png" alt="Logo" />
+            </Link>
           </div>
           <span className="truncate text-left text-sm font-semibold leading-tight">
             Parted Euro Admin
@@ -157,7 +161,7 @@ export function AppSidebar({
           user={{
             name: userData.name,
             email: userData.email,
-            avatar: userData.image || "/avatars/default.jpg",
+            avatar: userData.image ?? "/avatars/default.jpg",
           }}
         />
       </SidebarFooter>
