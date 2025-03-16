@@ -21,6 +21,7 @@ alwaysApply: false
 
     ### Optimization and Best Practices
     - Minimize the use of `'use client'`, `useEffect`, and `setState`; favor React Server Components (RSC) and Next.js SSR features.
+    - Prioritise using trpc over server actions
     - Implement dynamic imports for code splitting and optimization.
     - Use responsive design with a mobile-first approach.
     - Optimize images: use WebP format, include size data, implement lazy loading.
