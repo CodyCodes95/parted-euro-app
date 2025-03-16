@@ -58,14 +58,14 @@ export const authConfig = {
         isAdmin: session.user.isAdmin,
       },
     }),
-    signIn: async ({ user }) => {
-      const admins = await api.user.getAll({ isAdmin: true });
+    // signIn: async ({ user }) => {
+    //   const admins = await api.user.getAll({ isAdmin: true });
 
-      if (admins.items.some((admin) => admin.email === user.email)) {
-        return true;
-      }
+    //   if (admins.items.some((admin) => admin.email === user.email)) {
+    //     return true;
+    //   }
 
-      return false;
-    },
+    //   return false;
+    // },
   },
 } satisfies NextAuthConfig;
