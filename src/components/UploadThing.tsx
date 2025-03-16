@@ -23,9 +23,8 @@ export function HomepageImageUploader() {
   return (
     <UploadButton
       endpoint="homepageImage"
-      onClientUploadComplete={(res) => {
+      onClientUploadComplete={() => {
         toast.success("Images uploaded successfully!");
-        // Refresh the page to show the new images
         router.refresh();
       }}
       onUploadError={onUploadError}
@@ -44,9 +43,8 @@ export function HomepageImageUploadZone({ className }: { className?: string }) {
   return (
     <UploadDropzone
       endpoint="homepageImage"
-      onClientUploadComplete={(res) => {
+      onClientUploadComplete={() => {
         toast.success("Images uploaded successfully!");
-        // Refresh the page to show the new images
         router.refresh();
       }}
       onUploadError={onUploadError}

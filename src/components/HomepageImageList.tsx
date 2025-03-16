@@ -4,13 +4,10 @@ import { useState } from "react";
 import Image from "next/image";
 import { Button } from "~/components/ui/button";
 import { Card } from "~/components/ui/card";
-import {
-  deleteHomepageImage,
-  reorderHomepageImages,
-} from "~/app/actions/homepage-images";
 import { Loader2, GripVertical, Trash2 } from "lucide-react";
 import { toast } from "sonner";
 import type { HomepageImage } from "@prisma/client";
+import { api } from "~/trpc/react";
 import {
   DndContext,
   closestCenter,
@@ -18,7 +15,7 @@ import {
   PointerSensor,
   useSensor,
   useSensors,
-  DragEndEvent,
+  type DragEndEvent,
 } from "@dnd-kit/core";
 import {
   arrayMove,
@@ -61,12 +58,7 @@ function SortableImageItem({
       </div>
 
       <div className="relative h-16 w-24 overflow-hidden rounded-md">
-        <Image
-          src={image.url}
-          alt="Homepage image"
-          fill
-          className="object-cover"
-        />
+        <img src={image.url} alt="Homepage image" className="object-cover" />
       </div>
 
       <div className="flex-1">
@@ -93,9 +85,33 @@ function SortableImageItem({
 }
 
 export function HomepageImageList({ images }: { images: HomepageImage[] }) {
-  const [isReordering, setIsReordering] = useState(false);
   const [isDeleting, setIsDeleting] = useState<string | null>(null);
   const [items, setItems] = useState(images);
+
+  const utils = api.useUtils();
+  const deleteMutation = api.homepageImage.delete.useMutation({
+    onSuccess: () => {
+      void utils.homepageImage.getAll.invalidate();
+      toast.success("Image deleted successfully");
+    },
+    onError: (error) => {
+      toast.error(error.message || "Failed to delete image");
+    },
+    onSettled: () => {
+      setIsDeleting(null);
+    },
+  });
+
+  const reorderMutation = api.homepageImage.reorder.useMutation({
+    onSuccess: () => {
+      void utils.homepageImage.getAll.invalidate();
+      toast.success("Images reordered successfully");
+    },
+    onError: (error) => {
+      toast.error(error.message || "Failed to reorder images");
+      setItems(images); // Revert to original order on error
+    },
+  });
 
   const sensors = useSensors(
     useSensor(PointerSensor),
@@ -119,29 +135,16 @@ export function HomepageImageList({ images }: { images: HomepageImage[] }) {
     const reorderedItems = arrayMove(items, oldIndex, newIndex);
     setItems(reorderedItems);
 
-    try {
-      setIsReordering(true);
-      await reorderHomepageImages(reorderedItems.map((item) => item.id));
-      toast.success("Images reordered successfully");
-    } catch (error) {
-      toast.error("Failed to reorder images");
-      setItems(images); // Revert to original order on error
-    } finally {
-      setIsReordering(false);
-    }
+    // Call API to update order
+    reorderMutation.mutate({
+      orderedIds: reorderedItems.map((item) => item.id),
+    });
   };
 
   const handleDelete = async (id: string) => {
-    try {
-      setIsDeleting(id);
-      await deleteHomepageImage(id);
-      setItems(items.filter((item) => item.id !== id));
-      toast.success("Image deleted successfully");
-    } catch (error) {
-      toast.error("Failed to delete image");
-    } finally {
-      setIsDeleting(null);
-    }
+    setIsDeleting(id);
+    setItems(items.filter((item) => item.id !== id));
+    deleteMutation.mutate({ id });
   };
 
   if (items.length === 0) {
@@ -156,7 +159,7 @@ export function HomepageImageList({ images }: { images: HomepageImage[] }) {
 
   return (
     <div className="relative">
-      {isReordering && (
+      {reorderMutation.isPending && (
         <div className="absolute inset-0 z-10 flex items-center justify-center rounded-lg bg-background/80">
           <Loader2 className="h-8 w-8 animate-spin text-primary" />
           <span className="ml-2 text-lg font-medium">Updating order...</span>

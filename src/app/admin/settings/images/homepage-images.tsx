@@ -3,10 +3,14 @@
 import { Suspense } from "react";
 import { HomepageImageList } from "~/components/HomepageImageList";
 import { HomepageImageUploadZone } from "~/components/UploadThing";
-import { getHomepageImages } from "~/app/actions/homepage-images";
+import { api } from "~/trpc/react";
 
-export async function HomepageImageManager() {
-  const images = await getHomepageImages();
+export function HomepageImageManager() {
+  const { data: images, isLoading } = api.homepageImage.getAll.useQuery();
+
+  if (isLoading) {
+    return <div className="h-48 animate-pulse rounded-md bg-muted" />;
+  }
 
   return (
     <div className="space-y-6">
@@ -28,13 +32,7 @@ export async function HomepageImageManager() {
           the order displayed on the homepage.
         </p>
         <div className="mt-4">
-          <Suspense
-            fallback={
-              <div className="h-48 animate-pulse rounded-md bg-muted" />
-            }
-          >
-            <HomepageImageList images={images} />
-          </Suspense>
+          {images && <HomepageImageList images={images} />}
         </div>
       </div>
     </div>

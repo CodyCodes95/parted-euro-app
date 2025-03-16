@@ -1,11 +1,10 @@
-import { Suspense } from "react";
 import { Separator } from "~/components/ui/separator";
 import { HomepageImageManager } from "./homepage-images";
 import { Card } from "~/components/ui/card";
 
 export default function ImagesSettingsPage() {
   return (
-    <div className="container py-6">
+    <div className="container p-6">
       <div className="flex items-center justify-between">
         <h1 className="text-3xl font-bold">Image Settings</h1>
       </div>
@@ -24,13 +23,7 @@ export default function ImagesSettingsPage() {
           </p>
 
           <Card className="mt-4 p-6">
-            <Suspense
-              fallback={
-                <div className="h-64 w-full animate-pulse rounded-md bg-muted" />
-              }
-            >
-              <HomepageImageManager />
-            </Suspense>
+            <HomepageImageManager />
           </Card>
         </div>
       </div>

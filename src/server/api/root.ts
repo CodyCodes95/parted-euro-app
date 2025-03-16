@@ -3,6 +3,7 @@ import { postRouter } from "~/server/api/routers/post";
 import { categoryRouter } from "~/server/api/routers/category";
 import { userRouter } from "~/server/api/routers/user";
 import { locationRouter } from "~/server/api/routers/location";
+import { homepageImageRouter } from "~/server/api/routers/homepage-images";
 import { createCallerFactory, createTRPCRouter } from "~/server/api/trpc";
 
 /**
@@ -16,6 +17,7 @@ export const appRouter = createTRPCRouter({
   category: categoryRouter,
   user: userRouter,
   location: locationRouter,
+  homepageImage: homepageImageRouter,
 });
 
 // export type definition of API
