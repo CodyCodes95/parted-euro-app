@@ -54,7 +54,7 @@ export function NavMain({
                     "data-[active=true]:bg-gray-300/70 dark:data-[active=true]:bg-gray-700/80",
                   )}
                 >
-                  <Link href={item.url}>
+                  <Link prefetch={true} href={item.url}>
                     {item.icon && <item.icon />}
                     <span>{item.title}</span>
                   </Link>
