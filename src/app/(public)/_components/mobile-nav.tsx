@@ -175,7 +175,6 @@ export function MobileNav() {
         )}
       >
         <div className="flex h-full flex-col">
-
           <nav className="mt-8 flex-1">
             <ul className="space-y-3">
               {navLinks.map((link, index) => (

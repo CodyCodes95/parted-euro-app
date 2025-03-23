@@ -58,10 +58,6 @@ export function CartDrawer() {
               <ShoppingBag className="h-5 w-5" />
               Your Cart {itemCount > 0 && `(${itemCount})`}
             </DrawerTitle>
-            <DrawerClose className="rounded-full p-1.5 text-muted-foreground hover:bg-accent hover:text-accent-foreground">
-              <X className="h-4 w-4" />
-              <span className="sr-only">Close</span>
-            </DrawerClose>
           </div>
           <DrawerDescription>
             {cart.length === 0
