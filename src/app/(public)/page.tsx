@@ -1,23 +1,28 @@
+import { HomepageCarousel } from "~/app/(public)/_components/homepage-carousel";
+import { Button } from "~/components/ui/button";
 import Link from "next/link";
-import { auth } from "~/server/auth";
-import { HydrateClient } from "~/trpc/server";
-
+import { api } from "~/trpc/server";
 export default async function Home() {
-  const session = await auth();
-
-  // if (session?.user) {
+  const homepageImages = await api.homepageImage.getPublic();
   //   void api.post.getLatest.prefetch();
-  // }
 
   return (
-    // <HydrateClient>
-    <main className="flex min-h-screen flex-col items-center justify-center bg-gradient-to-b from-[#2e026d] to-[#15162c] text-white">
-      <div className="container flex flex-col items-center justify-center gap-12 px-4 py-16">
-        <h1 className="text-5xl font-extrabold tracking-tight sm:text-[5rem]">
-          Home
-        </h1>
+    <div className="flex min-h-[90vh] flex-col bg-white">
+      <div className="flex h-full w-full items-center justify-center">
+        <HomepageCarousel images={homepageImages} />
       </div>
-    </main>
-    // </HydrateClient>
+      <div className="absolute left-1/2 top-1/2 -translate-x-1/2 -translate-y-1/2 transform">
+        <div className="flex flex-col items-center justify-center">
+          <h1 className="mb-6 text-center text-4xl font-bold md:text-5xl lg:text-6xl">
+            Your BMW Spare Parts Specialists
+          </h1>
+          <Link href="/listings">
+            <Button className="bg-white text-black hover:bg-gray-200">
+              Shop Now
+            </Button>
+          </Link>
+        </div>
+      </div>
+    </div>
   );
 }

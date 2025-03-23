@@ -1,9 +1,14 @@
 import { z } from "zod";
 
-import { createTRPCRouter, protectedProcedure } from "~/server/api/trpc";
+import {
+  adminProcedure,
+  createTRPCRouter,
+  protectedProcedure,
+  publicProcedure,
+} from "~/server/api/trpc";
 
 export const homepageImageRouter = createTRPCRouter({
-  getAll: protectedProcedure.query(async ({ ctx }) => {
+  getAll: adminProcedure.query(async ({ ctx }) => {
     return ctx.db.homepageImage.findMany({
       orderBy: {
         order: "asc",
@@ -11,7 +16,20 @@ export const homepageImageRouter = createTRPCRouter({
     });
   }),
 
-  delete: protectedProcedure
+  getPublic: publicProcedure.query(async ({ ctx }) => {
+    return ctx.db.homepageImage.findMany({
+      orderBy: {
+        order: "asc",
+      },
+      select: {
+        id: true,
+        url: true,
+        order: true,
+      },
+    });
+  }),
+
+  delete: adminProcedure
     .input(z.object({ id: z.string() }))
     .mutation(async ({ ctx, input }) => {
       // Check if user is admin
@@ -26,7 +44,7 @@ export const homepageImageRouter = createTRPCRouter({
       return { success: true };
     }),
 
-  reorder: protectedProcedure
+  reorder: adminProcedure
     .input(z.object({ orderedIds: z.array(z.string()) }))
     .mutation(async ({ ctx, input }) => {
       // Check if user is admin
