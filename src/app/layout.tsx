@@ -11,6 +11,7 @@ import { ThemeProvider } from "~/components/theme-provider";
 import { NextSSRPlugin } from "@uploadthing/react/next-ssr-plugin";
 import { extractRouterConfig } from "uploadthing/server";
 import { uploadRouter } from "~/server/uploadthing";
+import { CartStoreInitializer } from "~/components/cart-provider";
 
 export const metadata: Metadata = {
   title: "Parted Euro",
@@ -30,7 +31,9 @@ export default function RootLayout({
       <body>
         <TRPCReactProvider>
           <NextSSRPlugin routerConfig={extractRouterConfig(uploadRouter)} />
-          <NuqsAdapter>{children}</NuqsAdapter>
+          <CartStoreInitializer>
+            <NuqsAdapter>{children}</NuqsAdapter>
+          </CartStoreInitializer>
         </TRPCReactProvider>
         <Toaster />
         <FacebookPixel />

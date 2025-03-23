@@ -10,8 +10,18 @@ import {
   CarFront,
   Shield,
   PhoneCall,
+  ShoppingBag,
+  Search,
 } from "lucide-react";
 import { cn } from "~/lib/utils";
+import { useCartStore } from "~/stores/useCartStore";
+import {
+  Dialog,
+  DialogContent,
+  DialogHeader,
+  DialogTitle,
+} from "~/components/ui/dialog";
+import { Input } from "~/components/ui/input";
 
 const navLinks = [
   { href: "/browse", label: "Browse Store", icon: Home },
@@ -23,6 +33,10 @@ const navLinks = [
 export function MobileNav() {
   const [isOpen, setIsOpen] = useState(false);
   const [activeIndex, setActiveIndex] = useState(-1);
+  const [searchOpen, setSearchOpen] = useState(false);
+  const { toggleCart, cart } = useCartStore();
+
+  const itemCount = cart.reduce((count, item) => count + item.quantity, 0);
 
   const toggleMenu = () => {
     setIsOpen(!isOpen);
@@ -43,7 +57,31 @@ export function MobileNav() {
   }, [isOpen]);
 
   return (
-    <div className="md:hidden">
+    <div className="flex items-center space-x-1.5 md:hidden">
+      {/* Search Button */}
+      <button
+        onClick={() => setSearchOpen(true)}
+        aria-label="Search"
+        className="relative flex h-10 w-10 items-center justify-center rounded-full bg-primary/10 p-2 text-primary transition-all duration-300 hover:bg-primary/20"
+      >
+        <Search className="h-5 w-5" />
+      </button>
+
+      {/* Cart Button */}
+      <button
+        onClick={toggleCart}
+        aria-label="Shopping cart"
+        className="relative flex h-10 w-10 items-center justify-center rounded-full bg-primary/10 p-2 text-primary transition-all duration-300 hover:bg-primary/20"
+      >
+        <ShoppingBag className="h-5 w-5" />
+        {itemCount > 0 && (
+          <span className="absolute -right-1 -top-1 flex h-5 w-5 items-center justify-center rounded-full bg-primary text-xs font-medium text-primary-foreground">
+            {itemCount}
+          </span>
+        )}
+      </button>
+
+      {/* Menu Button */}
       <button
         onClick={toggleMenu}
         aria-label={isOpen ? "Close menu" : "Open menu"}
@@ -70,6 +108,57 @@ export function MobileNav() {
         />
       </button>
 
+      {/* Search Dialog */}
+      <Dialog open={searchOpen} onOpenChange={setSearchOpen}>
+        <DialogContent className="sm:max-w-md">
+          <DialogHeader>
+            <DialogTitle>Search</DialogTitle>
+          </DialogHeader>
+          <div className="flex items-center space-x-2">
+            <div className="grid flex-1 gap-2">
+              <Input
+                type="search"
+                placeholder="Search for parts..."
+                className="h-10"
+                autoFocus
+              />
+            </div>
+            <button
+              type="submit"
+              className="inline-flex h-10 items-center justify-center rounded-md bg-primary px-4 py-2 text-sm font-medium text-primary-foreground shadow transition-colors hover:bg-primary/90 focus-visible:outline-none focus-visible:ring-1 focus-visible:ring-ring"
+            >
+              Search
+            </button>
+          </div>
+          <div className="mt-4">
+            <h3 className="text-sm font-medium">Popular searches</h3>
+            <div className="mt-2 flex flex-wrap gap-2">
+              <Link
+                href="/search?q=bmw+e36"
+                className="rounded-full bg-secondary px-3 py-1 text-xs"
+                onClick={() => setSearchOpen(false)}
+              >
+                BMW E36
+              </Link>
+              <Link
+                href="/search?q=headlights"
+                className="rounded-full bg-secondary px-3 py-1 text-xs"
+                onClick={() => setSearchOpen(false)}
+              >
+                Headlights
+              </Link>
+              <Link
+                href="/search?q=engine+parts"
+                className="rounded-full bg-secondary px-3 py-1 text-xs"
+                onClick={() => setSearchOpen(false)}
+              >
+                Engine parts
+              </Link>
+            </div>
+          </div>
+        </DialogContent>
+      </Dialog>
+
       <div
         className={cn(
           "fixed inset-0 z-40 bg-background/80 backdrop-blur-sm transition-all duration-300",
@@ -86,7 +175,7 @@ export function MobileNav() {
         )}
       >
         <div className="flex h-full flex-col">
-          <div className="flex items-center justify-between">
+          {/* <div className="flex items-center justify-between">
             <p className="text-lg font-semibold text-foreground">Menu</p>
             <button
               onClick={toggleMenu}
@@ -95,7 +184,7 @@ export function MobileNav() {
               <X className="h-5 w-5" />
               <span className="sr-only">Close menu</span>
             </button>
-          </div>
+          </div> */}
 
           <nav className="mt-8 flex-1">
             <ul className="space-y-3">
