@@ -1,18 +1,15 @@
-"use client";
-import { SearchIcon, ShoppingCartIcon, UserIcon } from "lucide-react";
+import { SearchIcon, UserIcon } from "lucide-react";
 import Image from "next/image";
 import Link from "next/link";
-import React from "react";
+import React, { Suspense } from "react";
 import { MobileNav } from "./mobile-nav";
 import { buttonVariants } from "~/components/ui/button";
 import { cn } from "~/lib/utils";
 import { CartDrawer } from "~/components/cart-drawer";
-import { useCartStore } from "~/stores/useCartStore";
+import CartButton from "./cart-button";
+import AdminMenu from "./admin-menu";
 
 const Nav = () => {
-  const { toggleCart, cart } = useCartStore();
-  const itemCount = cart.reduce((count, item) => count + item.quantity, 0);
-
   return (
     <header className="sticky top-0 z-50 bg-background py-4 shadow-sm">
       <div className="container mx-auto flex items-center justify-between px-4">
@@ -76,25 +73,10 @@ const Nav = () => {
           >
             <SearchIcon className="h-5 w-5" />
           </button>
-          <button
-            onClick={toggleCart}
-            aria-label="Shopping Cart"
-            className="relative hidden text-muted-foreground transition-colors hover:text-primary md:flex"
-          >
-            <ShoppingCartIcon className="h-5 w-5" />
-            {itemCount > 0 && (
-              <span className="absolute -right-1.5 -top-1.5 flex h-4 w-4 items-center justify-center rounded-full bg-primary text-xs font-medium text-primary-foreground">
-                {itemCount}
-              </span>
-            )}
-          </button>
-          <Link
-            href="/account"
-            aria-label="User Account"
-            className="hidden text-muted-foreground transition-colors hover:text-primary md:flex"
-          >
-            <UserIcon className="h-5 w-5" />
-          </Link>
+          <CartButton />
+          <Suspense fallback={null}>
+            <AdminMenu />
+          </Suspense>
           <MobileNav />
         </div>
       </div>
