@@ -175,16 +175,6 @@ export function MobileNav() {
         )}
       >
         <div className="flex h-full flex-col">
-          {/* <div className="flex items-center justify-between">
-            <p className="text-lg font-semibold text-foreground">Menu</p>
-            <button
-              onClick={toggleMenu}
-              className="rounded-full p-1 text-muted-foreground transition-colors hover:bg-accent hover:text-accent-foreground"
-            >
-              <X className="h-5 w-5" />
-              <span className="sr-only">Close menu</span>
-            </button>
-          </div> */}
 
           <nav className="mt-8 flex-1">
             <ul className="space-y-3">

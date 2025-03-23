@@ -19,11 +19,13 @@ import { Button } from "~/components/ui/button";
 import { Separator } from "~/components/ui/separator";
 import Link from "next/link";
 import { ScrollArea } from "~/components/ui/scroll-area";
+import { useIsMobile } from "~/hooks/use-mobile";
 
 export function CartDrawer() {
   const { cart, isOpen, closeCart, removeItem, updateQuantity, clearCart } =
     useCartStore();
   const [isMounted, setIsMounted] = useState(false);
+  const isMobile = useIsMobile();
 
   // Prevent hydration errors
   useEffect(() => {
@@ -42,8 +44,14 @@ export function CartDrawer() {
   if (!isMounted) return null;
 
   return (
-    <Drawer open={isOpen} onOpenChange={closeCart}>
-      <DrawerContent className="max-h-[85vh]">
+    <Drawer
+      open={isOpen}
+      onOpenChange={closeCart}
+      direction={isMobile ? "bottom" : "right"}
+    >
+      <DrawerContent
+        className={isMobile ? "max-h-[85vh]" : "ml-auto h-full max-w-[400px]"}
+      >
         <DrawerHeader className="px-4 sm:px-6">
           <div className="flex items-center justify-between">
             <DrawerTitle className="flex items-center gap-2 text-xl font-semibold">
