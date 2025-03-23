@@ -28,19 +28,12 @@ export default function RootLayout({
       suppressHydrationWarning
     >
       <body>
-        <ThemeProvider
-          attribute="class"
-          defaultTheme="system"
-          enableSystem
-          disableTransitionOnChange
-        >
-          <TRPCReactProvider>
-            <NextSSRPlugin routerConfig={extractRouterConfig(uploadRouter)} />
-            <NuqsAdapter>{children}</NuqsAdapter>
-          </TRPCReactProvider>
-          <Toaster />
-          <FacebookPixel />
-        </ThemeProvider>
+        <TRPCReactProvider>
+          <NextSSRPlugin routerConfig={extractRouterConfig(uploadRouter)} />
+          <NuqsAdapter>{children}</NuqsAdapter>
+        </TRPCReactProvider>
+        <Toaster />
+        <FacebookPixel />
       </body>
     </html>
   );

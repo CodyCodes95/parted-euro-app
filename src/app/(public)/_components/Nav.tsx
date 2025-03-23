@@ -3,10 +3,12 @@ import Image from "next/image";
 import Link from "next/link";
 import React from "react";
 import { MobileNav } from "./mobile-nav";
+import { buttonVariants } from "~/components/ui/button";
+import { cn } from "~/lib/utils";
 
 const Nav = () => {
   return (
-    <header className="sticky top-0 z-50 bg-white py-4 shadow-sm">
+    <header className="sticky top-0 z-50 bg-background py-4 shadow-sm">
       <div className="container mx-auto flex items-center justify-between px-4">
         {/* Logo */}
         <Link href="/" className="flex items-center">
@@ -24,25 +26,37 @@ const Nav = () => {
         <nav className="hidden space-x-8 md:flex">
           <Link
             href="/browse"
-            className="rounded-md px-3 py-2 text-sm font-medium text-gray-700 transition-all hover:bg-blue-600 hover:text-white"
+            className={cn(
+              buttonVariants({ variant: "ghost", size: "sm" }),
+              "text-foreground hover:bg-primary hover:text-primary-foreground",
+            )}
           >
             Browse Store
           </Link>
           <Link
             href="/wrecking"
-            className="rounded-md px-3 py-2 text-sm font-medium text-gray-700 transition-all hover:bg-blue-600 hover:text-white"
+            className={cn(
+              buttonVariants({ variant: "ghost", size: "sm" }),
+              "text-foreground hover:bg-primary hover:text-primary-foreground",
+            )}
           >
             Cars Wrecking Now
           </Link>
           <Link
             href="/warranty"
-            className="rounded-md px-3 py-2 text-sm font-medium text-gray-700 transition-all hover:bg-blue-600 hover:text-white"
+            className={cn(
+              buttonVariants({ variant: "ghost", size: "sm" }),
+              "text-foreground hover:bg-primary hover:text-primary-foreground",
+            )}
           >
             Warranty & Return Policy
           </Link>
           <Link
             href="/contact"
-            className="rounded-md px-3 py-2 text-sm font-medium text-gray-700 transition-all hover:bg-blue-600 hover:text-white"
+            className={cn(
+              buttonVariants({ variant: "ghost", size: "sm" }),
+              "text-foreground hover:bg-primary hover:text-primary-foreground",
+            )}
           >
             Contact
           </Link>
@@ -52,21 +66,21 @@ const Nav = () => {
         <div className="flex items-center space-x-4">
           <button
             aria-label="Search"
-            className="text-gray-700 hover:text-blue-600"
+            className="text-muted-foreground hover:text-primary"
           >
             <SearchIcon className="h-5 w-5" />
           </button>
           <Link
             href="/cart"
             aria-label="Shopping Cart"
-            className="text-gray-700 hover:text-blue-600"
+            className="text-muted-foreground hover:text-primary"
           >
             <ShoppingCartIcon className="h-5 w-5" />
           </Link>
           <Link
             href="/account"
             aria-label="User Account"
-            className="text-gray-700 hover:text-blue-600"
+            className="text-muted-foreground hover:text-primary"
           >
             <UserIcon className="h-5 w-5" />
           </Link>
