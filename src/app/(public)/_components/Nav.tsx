@@ -46,7 +46,7 @@ const Nav = () => {
             Cars Wrecking Now
           </Link>
           <Link
-            href="/warranty"
+            href="/returns-refunds"
             className={cn(
               buttonVariants({ variant: "ghost", size: "sm" }),
               "text-foreground hover:bg-primary hover:text-primary-foreground",
