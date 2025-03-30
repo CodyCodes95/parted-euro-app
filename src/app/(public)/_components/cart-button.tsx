@@ -12,6 +12,7 @@ const CartButton = () => {
       variant="ghost"
       size="icon"
       onClick={toggleCart}
+      className="relative"
       aria-label="Shopping Cart"
     >
       <ShoppingCartIcon className="h-5 w-5" />

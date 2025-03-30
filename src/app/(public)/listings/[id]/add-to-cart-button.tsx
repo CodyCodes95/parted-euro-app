@@ -1,0 +1,133 @@
+"use client";
+
+import { useState } from "react";
+import { Button } from "~/components/ui/button";
+import { useCartStore, type CartItem } from "~/stores/useCartStore";
+import { ShoppingCart, Plus, Minus, Check } from "lucide-react";
+import { toast } from "sonner";
+
+type ListingType = {
+  id: string;
+  title: string;
+  price: number | null;
+  images: { url: string }[];
+  parts: {
+    quantity: number;
+    donor: {
+      vin: string;
+    };
+    partDetails: {
+      length: number | null;
+      width: number | null;
+      height: number | null;
+      weight: number | null;
+    };
+  }[];
+};
+
+interface AddToCartButtonProps {
+  listing: ListingType;
+  inStock: boolean;
+}
+
+export function AddToCartButton({ listing, inStock }: AddToCartButtonProps) {
+  const [quantity, setQuantity] = useState(1);
+  const [isAdded, setIsAdded] = useState(false);
+  const { addItem } = useCartStore();
+
+  const maxQuantity = listing.parts[0]?.quantity ?? 0;
+
+  const handleAddToCart = () => {
+    if (!inStock) return;
+
+    const cartItem: CartItem = {
+      listingId: listing.id,
+      listingTitle: listing.title,
+      listingPrice: listing.price ?? 0,
+      listingImage: listing.images[0]?.url,
+      quantity,
+      length: listing.parts[0]?.partDetails?.length ?? 0,
+      width: listing.parts[0]?.partDetails?.width ?? 0,
+      height: listing.parts[0]?.partDetails?.height ?? 0,
+      weight: listing.parts[0]?.partDetails?.weight ?? 0,
+      itemVin: listing.parts[0]?.donor?.vin ?? "",
+    };
+
+    addItem(cartItem);
+    setIsAdded(true);
+    toast.success(`${listing.title} added to cart`);
+
+    // Reset the added state after a short delay
+    setTimeout(() => {
+      setIsAdded(false);
+    }, 2000);
+  };
+
+  const incrementQuantity = () => {
+    if (quantity < maxQuantity) {
+      setQuantity(quantity + 1);
+    }
+  };
+
+  const decrementQuantity = () => {
+    if (quantity > 1) {
+      setQuantity(quantity - 1);
+    }
+  };
+
+  return (
+    <div className="space-y-4">
+      {inStock ? (
+        <>
+          <div className="flex items-center gap-2">
+            <div className="flex items-center rounded-md border">
+              <button
+                onClick={decrementQuantity}
+                disabled={quantity <= 1}
+                className="flex h-10 w-10 items-center justify-center rounded-l-md border-r text-sm disabled:opacity-50"
+                aria-label="Decrease quantity"
+              >
+                <Minus className="h-4 w-4" />
+              </button>
+              <span className="flex h-10 w-12 items-center justify-center px-2 text-center text-sm">
+                {quantity}
+              </span>
+              <button
+                onClick={incrementQuantity}
+                disabled={quantity >= maxQuantity}
+                className="flex h-10 w-10 items-center justify-center rounded-r-md border-l text-sm disabled:opacity-50"
+                aria-label="Increase quantity"
+              >
+                <Plus className="h-4 w-4" />
+              </button>
+            </div>
+            <p className="text-sm text-muted-foreground">
+              {maxQuantity} available
+            </p>
+          </div>
+
+          <Button
+            onClick={handleAddToCart}
+            className="w-full"
+            size="lg"
+            disabled={isAdded}
+          >
+            {isAdded ? (
+              <>
+                <Check className="mr-2 h-4 w-4" /> Added to Cart
+              </>
+            ) : (
+              <>
+                <ShoppingCart className="mr-2 h-4 w-4" /> Add to Cart
+              </>
+            )}
+          </Button>
+        </>
+      ) : (
+        <Button disabled size="lg" className="w-full">
+          Out of Stock
+        </Button>
+      )}
+    </div>
+  );
+}
