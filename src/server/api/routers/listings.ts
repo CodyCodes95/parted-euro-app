@@ -93,6 +93,60 @@ export const listingsRouter = createTRPCRouter({
       });
       return listing;
     }),
+  getRelatedListings: publicProcedure
+    .input(
+      z.object({
+        generation: z.string(),
+        model: z.string(),
+        id: z.string(),
+      }),
+    )
+    .query(async ({ ctx, input }) => {
+      const listings = await ctx.db.listing.findMany({
+        take: 4,
+        include: {
+          images: {
+            orderBy: {
+              order: "asc",
+            },
+          },
+        },
+        where: {
+          id: {
+            not: input.id,
+          },
+          active: true,
+          parts: {
+            some: {
+              partDetails: {
+                cars: {
+                  some: {
+                    generation: input.generation,
+                    model: input.model,
+                  },
+                },
+              },
+            },
+          },
+        },
+      });
+      if (listings.length) return listings;
+      // just get 4 random listings
+
+      const randomListings = await ctx.db.listing.findMany({
+        take: 4,
+        include: {
+          images: true,
+        },
+        where: {
+          id: {
+            not: input.id,
+          },
+          active: true,
+        },
+      });
+      return randomListings;
+    }),
   searchListings: publicProcedure
     .input(
       z.object({

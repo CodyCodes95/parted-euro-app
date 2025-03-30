@@ -14,6 +14,7 @@ import { Separator } from "~/components/ui/separator";
 import { Badge } from "~/components/ui/badge";
 import { AddToCart } from "./add-to-cart";
 import { InteractiveCompatibleCars } from "./interactive-compatible-cars";
+import { RelatedListings } from "./related-listings";
 
 type Props = {
   params: { id: string };
@@ -63,6 +64,16 @@ export default async function ListingPage({ params }: Props) {
   const uniqueCompatibleCars = compatibleCars.filter(
     (car, index, self) => index === self.findIndex((c) => c.id === car.id),
   );
+
+  // Get first car's generation and model for related listings
+  const firstCar = uniqueCompatibleCars[0];
+
+  // Fetch related listings based on first car's generation and model
+  const relatedListings = await api.listings.getRelatedListings({
+    id,
+    generation: firstCar?.generation ?? "",
+    model: firstCar?.model ?? "",
+  });
 
   return (
     <div className="container mx-auto px-4 py-8 md:py-12">
@@ -205,6 +216,12 @@ export default async function ListingPage({ params }: Props) {
       )}
 
       <Separator className="my-8" />
+
+      {relatedListings.length > 0 && (
+        <div className="mt-8">
+          <RelatedListings listings={relatedListings} />
+        </div>
+      )}
     </div>
   );
 }
