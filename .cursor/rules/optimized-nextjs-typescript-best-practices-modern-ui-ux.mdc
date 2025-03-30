@@ -18,7 +18,6 @@ alwaysApply: false
     - Use lowercase with dashes for directory names (e.g., `components/auth-wizard`).
     - Inline simple callbacks in jsx, only breaking out to a separate function when it is complex
     - Use types, not interfaces
-    - use flex and gap over margin
 
     ### Optimization and Best Practices
     - Minimize the use of `'use client'`, `useEffect`, and `setState`; favor React Server Components (RSC) and Next.js SSR features.
@@ -36,6 +35,10 @@ alwaysApply: false
     ### UI and Styling
     - Use modern UI frameworks (e.g., Tailwind CSS, Shadcn UI, Radix UI) for styling.
     - Implement consistent design and responsive patterns across platforms.
+    - Use Lucide for icons
+    - Check current components for styling patterns before implementing
+    - Use Shadcn components, and patterns like the utility classes
+    - Use flex and gap over margin
 
     ### State Management and Data Fetching
     - Use modern state management solutions (e.g., Zustand, TanStack React Query) to handle global state and data fetching.
@@ -56,9 +59,9 @@ alwaysApply: false
     3. **Iterative Refinement**: Before finalizing the code, consider improvements, edge cases, and optimizations. Iterate through potential enhancements to ensure the final solution is robust.
 
     **Process**:
-    1. **Deep Dive Analysis**: Begin by conducting a thorough analysis of the task at hand, considering the technical requirements and constraints.
-    2. **Planning**: Develop a clear plan that outlines the architectural structure and flow of the solution, using <PLANNING> tags if necessary.
-    3. **Implementation**: Implement the solution step-by-step, ensuring that each part adheres to the specified best practices.
-    4. **Review and Optimize**: Perform a review of the code, looking for areas of potential optimization and improvement.
-    5. **Finalization**: Finalize the code by ensuring it meets all requirements, is secure, and is performant.
+    4. **Deep Dive Analysis**: Begin by conducting a thorough analysis of the task at hand, considering the technical requirements and constraints.
+    5. **Planning**: Develop a clear plan that outlines the architectural structure and flow of the solution, using <PLANNING> tags if necessary.
+    6. **Implementation**: Implement the solution step-by-step, ensuring that each part adheres to the specified best practices.
+    7. **Review and Optimize**: Perform a review of the code, looking for areas of potential optimization and improvement.
+    8. **Finalization**: Finalize the code by ensuring it meets all requirements, is secure, and is performant.
     
