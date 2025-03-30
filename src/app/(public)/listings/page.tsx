@@ -612,14 +612,6 @@ export default function ListingsPage() {
         <div className="space-y-2">
           <div className="flex items-center justify-between">
             <h3 className="font-medium">Car Details</h3>
-            <Button
-              variant="ghost"
-              size="sm"
-              className="h-auto p-0 text-xs text-blue-600"
-              onClick={() => setSelectCarModalOpen(true)}
-            >
-              {make || generation || model || series ? "Change" : "Select Car"}
-            </Button>
           </div>
 
           {make || generation || model || series ? (
