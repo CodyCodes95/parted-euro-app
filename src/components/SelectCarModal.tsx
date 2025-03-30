@@ -1,4 +1,4 @@
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import { api } from "~/trpc/react";
 import { Button } from "~/components/ui/button";
 import { Check, ChevronRight, Loader2 } from "lucide-react";
@@ -34,6 +34,17 @@ export function SelectCarModal({
   const [selectedSeries, setSelectedSeries] = useState<string>("");
   const [selectedGeneration, setSelectedGeneration] = useState<string>("");
   const [selectedModel, setSelectedModel] = useState<string>("");
+
+  // Reset selections and step when modal opens
+  useEffect(() => {
+    if (open) {
+      setStep(0);
+      setSelectedMake("");
+      setSelectedSeries("");
+      setSelectedGeneration("");
+      setSelectedModel("");
+    }
+  }, [open]);
 
   // Fetch data for each step
   const { data: makesData, isLoading: isLoadingMakes } =
@@ -299,7 +310,7 @@ export function SelectCarModal({
 
   return (
     <Dialog open={open} onOpenChange={handleOpenChange}>
-      <DialogContent className="sm:max-w-md md:max-w-lg">
+      <DialogContent className="max-h-[90vh] overflow-y-auto sm:max-w-md md:max-w-lg">
         {renderStepContent()}
       </DialogContent>
     </Dialog>
