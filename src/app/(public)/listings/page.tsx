@@ -1,9 +1,42 @@
 "use client";
 
+import { useState, useEffect } from "react";
 import { api } from "~/trpc/react";
 import { parseAsInteger, useQueryState } from "nuqs";
 import { useDebounce } from "use-debounce";
+import { ChevronDown, Search, Filter, X, ArrowUpDown } from "lucide-react";
+
+// UI Components
+import { Button } from "~/components/ui/button";
+import { Input } from "~/components/ui/input";
+import { Card, CardContent } from "~/components/ui/card";
+import { Badge } from "~/components/ui/badge";
+import {
+  Select,
+  SelectContent,
+  SelectItem,
+  SelectTrigger,
+  SelectValue,
+} from "~/components/ui/select";
+import {
+  Sheet,
+  SheetContent,
+  SheetHeader,
+  SheetTitle,
+  SheetTrigger,
+} from "~/components/ui/sheet";
+import {
+  Pagination,
+  PaginationContent,
+  PaginationEllipsis,
+  PaginationItem,
+  PaginationLink,
+  PaginationNext,
+  PaginationPrevious,
+} from "~/components/ui/pagination";
+
 export default function ListingsPage() {
+  // URL State Management
   const [page, setPage] = useQueryState("page", parseAsInteger.withDefault(1));
   const [sortBy, setSortBy] = useQueryState("sortBy", {
     defaultValue: "updatedAt",
@@ -30,12 +63,20 @@ export default function ListingsPage() {
     defaultValue: "",
   });
 
+  // Local state
+  const [sidebarOpen, setSidebarOpen] = useState(false);
+  const [selectedCategoryId, setSelectedCategoryId] = useState<string | null>(
+    null,
+  );
+
+  // Debounce search to reduce API calls
   const [debouncedSearch] = useDebounce(search, 500);
 
+  // API calls
   const listings = api.listings.searchListings.useQuery({
-    page,
+    page: page - 1, // Convert to 0-indexed for the backend
     sortBy,
-    sortOrder,
+    sortOrder: sortOrder as "asc" | "desc",
     search: debouncedSearch,
     category,
     subcat,
@@ -43,5 +84,495 @@ export default function ListingsPage() {
     model,
     series,
   });
-  return <div>Listings</div>;
+
+  const parentCategories = api.category.getParentCategories.useQuery();
+  const subcategories = api.category.getSubCategories.useQuery(
+    { parentId: selectedCategoryId ?? "" },
+    { enabled: !!selectedCategoryId },
+  );
+
+  // Update selectedCategoryId when category changes
+  useEffect(() => {
+    if (category && parentCategories.data) {
+      const found = parentCategories.data.find((c) => c.name === category);
+      if (found) {
+        setSelectedCategoryId(found.id);
+      }
+    }
+  }, [category, parentCategories.data]);
+
+  // Handle filter changes
+  const handleCategoryChange = (categoryName: string) => {
+    if (categoryName === category) return;
+    void setCategory(categoryName);
+    void setSubcat("");
+    void setPage(1);
+  };
+
+  const handleSubcategoryChange = (subcategoryName: string) => {
+    void setSubcat(subcategoryName);
+    void setPage(1);
+  };
+
+  const handleSortChange = (value: string) => {
+    const [newSortBy, newSortOrder] = value.split("-");
+    void setSortBy(newSortBy);
+    void setSortOrder(newSortOrder as "asc" | "desc");
+    void setPage(1);
+  };
+
+  const clearFilters = () => {
+    void setCategory("");
+    void setSubcat("");
+    void setGeneration("");
+    void setModel("");
+    void setSeries("");
+    void setPage(1);
+  };
+
+  const hasActiveFilters = !!(
+    category ||
+    subcat ||
+    generation ||
+    model ||
+    series
+  );
+
+  // Generate pagination
+  const renderPagination = () => {
+    if (!listings.data) return null;
+
+    const { totalPages } = listings.data;
+    if (totalPages <= 1) return null;
+
+    // Create an array of page numbers to show
+    let pages: (number | "ellipsis")[] = [];
+
+    if (totalPages <= 7) {
+      // Show all pages if there are 7 or fewer
+      pages = Array.from({ length: totalPages }, (_, i) => i + 1);
+    } else {
+      // Always include first and last page
+      pages = [1];
+
+      // Add ellipsis or pages around the current page
+      if (page <= 3) {
+        pages.push(2, 3, 4, "ellipsis");
+      } else if (page >= totalPages - 2) {
+        pages.push("ellipsis", totalPages - 3, totalPages - 2, totalPages - 1);
+      } else {
+        pages.push("ellipsis", page - 1, page, page + 1, "ellipsis");
+      }
+
+      pages.push(totalPages);
+    }
+
+    return (
+      <Pagination className="my-6">
+        <PaginationContent>
+          <PaginationItem>
+            <PaginationPrevious
+              onClick={() => void setPage(Math.max(1, page - 1))}
+              aria-disabled={page === 1}
+              className={page === 1 ? "pointer-events-none opacity-50" : ""}
+            />
+          </PaginationItem>
+
+          {pages.map((pageNum, i) =>
+            pageNum === "ellipsis" ? (
+              <PaginationItem key={`ellipsis-${i}`}>
+                <PaginationEllipsis />
+              </PaginationItem>
+            ) : (
+              <PaginationItem key={pageNum}>
+                <PaginationLink
+                  isActive={page === pageNum}
+                  onClick={() => void setPage(pageNum)}
+                >
+                  {pageNum}
+                </PaginationLink>
+              </PaginationItem>
+            ),
+          )}
+
+          <PaginationItem>
+            <PaginationNext
+              onClick={() => void setPage(Math.min(totalPages, page + 1))}
+              aria-disabled={page === totalPages}
+              className={
+                page === totalPages ? "pointer-events-none opacity-50" : ""
+              }
+            />
+          </PaginationItem>
+        </PaginationContent>
+      </Pagination>
+    );
+  };
+
+  return (
+    <main className="container mx-auto px-4 py-6 md:px-6 lg:px-8">
+      <div className="mb-6 flex flex-col md:flex-row md:items-center md:justify-between">
+        <h1 className="mb-4 text-3xl font-bold md:mb-0">Listings</h1>
+
+        <div className="flex w-full flex-col space-y-2 sm:flex-row sm:space-x-2 sm:space-y-0 md:w-auto">
+          {/* Search Input */}
+          <div className="relative w-full md:max-w-[300px]">
+            <Search className="absolute left-3 top-1/2 h-4 w-4 -translate-y-1/2 transform text-muted-foreground" />
+            <Input
+              value={search}
+              onChange={(e) => setSearch(e.target.value)}
+              placeholder="Search listings..."
+              className="pl-10"
+            />
+            {search && (
+              <Button
+                variant="ghost"
+                size="icon"
+                className="absolute right-1 top-1/2 h-7 w-7 -translate-y-1/2 transform"
+                onClick={() => setSearch("")}
+              >
+                <X className="h-4 w-4" />
+              </Button>
+            )}
+          </div>
+
+          {/* Sort Dropdown */}
+          <Select
+            value={`${sortBy}-${sortOrder}`}
+            onValueChange={handleSortChange}
+          >
+            <SelectTrigger className="w-full sm:w-[180px]">
+              <div className="flex items-center">
+                <ArrowUpDown className="mr-2 h-4 w-4" />
+                <span>Sort By</span>
+              </div>
+            </SelectTrigger>
+            <SelectContent>
+              <SelectItem value="updatedAt-desc">Newest First</SelectItem>
+              <SelectItem value="updatedAt-asc">Oldest First</SelectItem>
+              <SelectItem value="price-asc">Price: Low to High</SelectItem>
+              <SelectItem value="price-desc">Price: High to Low</SelectItem>
+              <SelectItem value="title-asc">Title: A-Z</SelectItem>
+              <SelectItem value="title-desc">Title: Z-A</SelectItem>
+            </SelectContent>
+          </Select>
+
+          {/* Mobile Filter Button */}
+          <Sheet open={sidebarOpen} onOpenChange={setSidebarOpen}>
+            <SheetTrigger asChild>
+              <Button variant="outline" className="w-full sm:w-auto md:hidden">
+                <Filter className="mr-2 h-4 w-4" />
+                Filters
+                {hasActiveFilters && (
+                  <Badge
+                    variant="secondary"
+                    className="ml-2 h-5 w-5 rounded-full p-0 text-center"
+                  >
+                    {
+                      [category, subcat, generation, model, series].filter(
+                        Boolean,
+                      ).length
+                    }
+                  </Badge>
+                )}
+              </Button>
+            </SheetTrigger>
+
+            <SheetContent
+              side="left"
+              className="w-[300px] sm:w-[350px] md:max-w-sm"
+            >
+              <SheetHeader>
+                <SheetTitle>Filters</SheetTitle>
+              </SheetHeader>
+              <div className="mt-4 flex flex-col space-y-4">
+                {renderFilterContent()}
+              </div>
+            </SheetContent>
+          </Sheet>
+        </div>
+      </div>
+
+      {/* Desktop Layout */}
+      <div className="flex flex-col space-y-6 lg:flex-row lg:space-x-6 lg:space-y-0">
+        {/* Sidebar (desktop only) */}
+        <div className="hidden w-full md:block md:w-[250px] lg:w-[280px]">
+          <div className="sticky top-6 rounded-lg border bg-card text-card-foreground shadow-sm">
+            <div className="p-4">
+              <div className="mb-4 flex items-center justify-between">
+                <h2 className="font-semibold">Filters</h2>
+                {hasActiveFilters && (
+                  <Button
+                    variant="ghost"
+                    size="sm"
+                    onClick={clearFilters}
+                    className="h-auto p-0 text-xs text-muted-foreground"
+                  >
+                    Clear all
+                  </Button>
+                )}
+              </div>
+              {renderFilterContent()}
+            </div>
+          </div>
+        </div>
+
+        {/* Listings Grid */}
+        <div className="flex-1">
+          {/* Active Filters (Mobile) */}
+          {hasActiveFilters && (
+            <div className="mb-4 flex flex-wrap gap-2 md:hidden">
+              {category && (
+                <Badge variant="secondary" className="flex items-center gap-1">
+                  {category}
+                  <Button
+                    variant="ghost"
+                    size="icon"
+                    onClick={() => void setCategory("")}
+                    className="h-4 w-4 p-0"
+                  >
+                    <X className="h-3 w-3" />
+                  </Button>
+                </Badge>
+              )}
+              {subcat && (
+                <Badge variant="secondary" className="flex items-center gap-1">
+                  {subcat}
+                  <Button
+                    variant="ghost"
+                    size="icon"
+                    onClick={() => void setSubcat("")}
+                    className="h-4 w-4 p-0"
+                  >
+                    <X className="h-3 w-3" />
+                  </Button>
+                </Badge>
+              )}
+              {(generation || model || series) && (
+                <Badge variant="secondary" className="flex items-center gap-1">
+                  Car Filters
+                  <Button
+                    variant="ghost"
+                    size="icon"
+                    onClick={() => {
+                      void setGeneration("");
+                      void setModel("");
+                      void setSeries("");
+                    }}
+                    className="h-4 w-4 p-0"
+                  >
+                    <X className="h-3 w-3" />
+                  </Button>
+                </Badge>
+              )}
+              <Button
+                variant="ghost"
+                size="sm"
+                onClick={clearFilters}
+                className="h-auto text-xs text-muted-foreground"
+              >
+                Clear all
+              </Button>
+            </div>
+          )}
+
+          {/* Results Stats */}
+          {listings.data && (
+            <p className="mb-4 text-sm text-muted-foreground">
+              Showing {listings.data.listings.length} of {listings.data.count}{" "}
+              results
+            </p>
+          )}
+
+          {/* Loading State */}
+          {listings.isLoading && (
+            <div className="grid grid-cols-1 gap-4 sm:grid-cols-2 lg:grid-cols-3">
+              {Array.from({ length: 6 }).map((_, i) => (
+                <Card key={i} className="animate-pulse">
+                  <div className="h-40 bg-muted"></div>
+                  <CardContent className="p-4">
+                    <div className="mb-2 h-4 w-2/3 bg-muted"></div>
+                    <div className="mb-4 h-4 w-1/2 bg-muted"></div>
+                    <div className="h-6 w-1/3 bg-muted"></div>
+                  </CardContent>
+                </Card>
+              ))}
+            </div>
+          )}
+
+          {/* Error State */}
+          {listings.isError && (
+            <div className="my-10 text-center">
+              <p className="text-lg font-medium text-destructive">
+                Failed to load listings
+              </p>
+              <p className="text-muted-foreground">Please try again later</p>
+            </div>
+          )}
+
+          {/* No Results */}
+          {listings.data?.listings.length === 0 && (
+            <div className="my-10 text-center">
+              <p className="text-lg font-medium">No listings found</p>
+              <p className="text-muted-foreground">
+                Try adjusting your filters or search term
+              </p>
+              {hasActiveFilters && (
+                <Button
+                  variant="outline"
+                  className="mt-4"
+                  onClick={clearFilters}
+                >
+                  Clear all filters
+                </Button>
+              )}
+            </div>
+          )}
+
+          {/* Listings Grid */}
+          {listings.data && listings.data.listings.length > 0 && (
+            <div className="grid grid-cols-1 gap-4 sm:grid-cols-2 lg:grid-cols-3">
+              {listings.data.listings.map((listing) => (
+                <Card
+                  key={listing.id}
+                  className="overflow-hidden transition-shadow hover:shadow-md"
+                >
+                  <div className="relative h-[200px] w-full bg-muted">
+                    {listing.images?.[0] ? (
+                      <img
+                        src={listing.images[0].url}
+                        alt={listing.title}
+                        className="h-full w-full object-cover"
+                      />
+                    ) : (
+                      <div className="flex h-full w-full items-center justify-center bg-muted">
+                        <span className="text-muted-foreground">No image</span>
+                      </div>
+                    )}
+                  </div>
+                  <CardContent className="p-4">
+                    <h3 className="mb-2 line-clamp-1 text-lg font-medium">
+                      {listing.title}
+                    </h3>
+                    <p className="mb-2 line-clamp-2 text-sm text-muted-foreground">
+                      {listing.description || "No description available"}
+                    </p>
+                    <div className="flex items-center justify-between">
+                      <p className="text-lg font-bold">
+                        ${listing.price.toFixed(2)}
+                      </p>
+                      <Button variant="outline" size="sm">
+                        View
+                      </Button>
+                    </div>
+                  </CardContent>
+                </Card>
+              ))}
+            </div>
+          )}
+
+          {/* Pagination */}
+          {renderPagination()}
+        </div>
+      </div>
+    </main>
+  );
+
+  // Helper function to render filter content (used in both mobile and desktop)
+  function renderFilterContent() {
+    return (
+      <>
+        {/* Category Filter */}
+        <div className="space-y-2">
+          <h3 className="font-medium">Category</h3>
+          <div className="space-y-1">
+            {parentCategories.isLoading && (
+              <p className="text-sm text-muted-foreground">Loading...</p>
+            )}
+            {parentCategories.data?.map((cat) => (
+              <div key={cat.id} className="flex items-center">
+                <Button
+                  variant={category === cat.name ? "default" : "ghost"}
+                  size="sm"
+                  className="w-full justify-start text-left"
+                  onClick={() => handleCategoryChange(cat.name)}
+                >
+                  {cat.name}
+                </Button>
+              </div>
+            ))}
+          </div>
+        </div>
+
+        {/* Subcategory Filter - Only show if a category is selected */}
+        {selectedCategoryId && (
+          <div className="space-y-2">
+            <h3 className="font-medium">Subcategory</h3>
+            <div className="space-y-1">
+              {subcategories.isLoading && (
+                <p className="text-sm text-muted-foreground">Loading...</p>
+              )}
+              {subcategories.data?.map((subcategory) => (
+                <div key={subcategory.id} className="flex items-center">
+                  <Button
+                    variant={subcategory.name === subcat ? "default" : "ghost"}
+                    size="sm"
+                    className="w-full justify-start text-left"
+                    onClick={() => handleSubcategoryChange(subcategory.name)}
+                  >
+                    {subcategory.name}
+                  </Button>
+                </div>
+              ))}
+              {subcategories.data?.length === 0 && (
+                <p className="text-sm text-muted-foreground">
+                  No subcategories available
+                </p>
+              )}
+            </div>
+          </div>
+        )}
+
+        {/* Additional Car Filters (simplified for this example) */}
+        <div className="space-y-2">
+          <h3 className="font-medium">Car Details</h3>
+
+          <div className="space-y-2">
+            <label className="text-sm">Generation</label>
+            <Input
+              placeholder="E.g. E36, E46, F30"
+              value={generation || ""}
+              onChange={(e) => void setGeneration(e.target.value)}
+            />
+          </div>
+
+          <div className="space-y-2">
+            <label className="text-sm">Model</label>
+            <Input
+              placeholder="E.g. 3-Series, 5-Series"
+              value={model || ""}
+              onChange={(e) => void setModel(e.target.value)}
+            />
+          </div>
+
+          <div className="space-y-2">
+            <label className="text-sm">Series</label>
+            <Input
+              placeholder="E.g. 325i, 330i, M3"
+              value={series || ""}
+              onChange={(e) => void setSeries(e.target.value)}
+            />
+          </div>
+        </div>
+
+        {/* Apply Filters Button (Mobile only) */}
+        <Button
+          className="mt-2 w-full md:hidden"
+          onClick={() => setSidebarOpen(false)}
+        >
+          Apply Filters
+        </Button>
+      </>
+    );
+  }
 }
