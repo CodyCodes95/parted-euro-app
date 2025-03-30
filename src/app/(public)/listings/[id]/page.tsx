@@ -50,7 +50,7 @@ export default async function ListingPage({ params }: Props) {
     notFound();
   }
 
-  const { title, description, price, condition, images, parts } = listing;
+  const { title, description, price, images, parts } = listing;
   const firstPart = parts?.[0];
   const quantity = firstPart?.quantity ?? 0;
   const inStock = quantity > 0;
@@ -127,20 +127,26 @@ export default async function ListingPage({ params }: Props) {
 
           <div className="mt-6">
             {/* Client-side Add to Cart component */}
-            <AddToCart
-              listingId={id}
-              listingTitle={title ?? ""}
-              listingPrice={price ?? 0}
-              listingImage={images?.[0]?.url}
-              quantity={quantity}
-              dimensions={{
-                length: firstPart?.partDetails?.length ?? null,
-                width: firstPart?.partDetails?.width ?? null,
-                height: firstPart?.partDetails?.height ?? null,
-                weight: firstPart?.partDetails?.weight ?? null,
-              }}
-              vin={firstPart?.donor?.vin}
-            />
+            {inStock ? (
+              <AddToCart
+                listingId={id}
+                listingTitle={title ?? ""}
+                listingPrice={price ?? 0}
+                listingImage={images?.[0]?.url}
+                quantity={quantity}
+                dimensions={{
+                  length: firstPart?.partDetails?.length ?? null,
+                  width: firstPart?.partDetails?.width ?? null,
+                  height: firstPart?.partDetails?.height ?? null,
+                  weight: firstPart?.partDetails?.weight ?? null,
+                }}
+                vin={firstPart?.donor?.vin}
+              />
+            ) : (
+              <div className="rounded-md bg-red-100 px-6 py-4 text-center text-red-700">
+                This item is currently out of stock.
+              </div>
+            )}
           </div>
         </div>
       </div>
