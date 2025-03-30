@@ -13,7 +13,6 @@ import {
 import { Separator } from "~/components/ui/separator";
 import { Badge } from "~/components/ui/badge";
 import { AddToCart } from "./add-to-cart";
-import { CompatibleCars } from "./compatible-cars";
 
 type Props = {
   params: { id: string };
@@ -55,7 +54,6 @@ export default async function ListingPage({ params }: Props) {
   const quantity = firstPart?.quantity ?? 0;
   const inStock = quantity > 0;
 
-  // This will be used client-side
   return (
     <div className="container mx-auto px-4 py-8 md:py-12">
       <div className="grid gap-8 md:grid-cols-2">
@@ -119,82 +117,6 @@ export default async function ListingPage({ params }: Props) {
             <p>{description}</p>
           </div>
 
-          {/* {firstPart?.donor && (
-            <div className="mt-6 rounded-lg bg-muted p-4">
-              <h3 className="font-semibold">Donor Vehicle Information</h3>
-              <div className="mt-2 grid grid-cols-2 gap-2 text-sm">
-                <div>
-                  <span className="text-muted-foreground">VIN:</span>{" "}
-                  {firstPart.donor.vin}
-                </div>
-                <div>
-                  <span className="text-muted-foreground">Year:</span>{" "}
-                  {firstPart.donor.year}
-                </div>
-                <div>
-                  <span className="text-muted-foreground">Car:</span>{" "}
-                  {firstPart.donor.car.make}
-                </div>
-                <div>
-                  <span className="text-muted-foreground">Mileage:</span>{" "}
-                  {firstPart.donor.mileage} km
-                </div>
-              </div>
-            </div>
-          )} */}
-
-          {/* {firstPart?.partDetails && (
-            <div className="mt-4 rounded-lg bg-muted p-4">
-              <h3 className="font-semibold">Part Details</h3>
-              <div className="mt-2 grid grid-cols-2 gap-2 text-sm">
-                {firstPart.partDetails.name && (
-                  <div>
-                    <span className="text-muted-foreground">Name:</span>{" "}
-                    {firstPart.partDetails.name}
-                  </div>
-                )}
-                {firstPart.partDetails.partNo && (
-                  <div>
-                    <span className="text-muted-foreground">Part No:</span>{" "}
-                    {firstPart.partDetails.partNo}
-                  </div>
-                )}
-                {firstPart.partDetails.alternatePartNumbers && (
-                  <div className="col-span-2">
-                    <span className="text-muted-foreground">
-                      Alternate Part Numbers:
-                    </span>{" "}
-                    {firstPart.partDetails.alternatePartNumbers}
-                  </div>
-                )}
-                <div className="col-span-2 mt-2">
-                  <span className="text-muted-foreground">Dimensions:</span>
-                  {firstPart.partDetails.length && (
-                    <span> L: {firstPart.partDetails.length}mm</span>
-                  )}
-                  {firstPart.partDetails.width && (
-                    <span> W: {firstPart.partDetails.width}mm</span>
-                  )}
-                  {firstPart.partDetails.height && (
-                    <span> H: {firstPart.partDetails.height}mm</span>
-                  )}
-                  {firstPart.partDetails.weight && (
-                    <span> Weight: {firstPart.partDetails.weight}kg</span>
-                  )}
-                </div>
-                {firstPart.partDetails.cars &&
-                  firstPart.partDetails.cars.length > 0 && (
-                    <div className="col-span-2 mt-2">
-                      <span className="text-muted-foreground">
-                        Compatible with:
-                      </span>
-                      <CompatibleCars cars={firstPart.partDetails.cars} />
-                    </div>
-                  )}
-              </div>
-            </div>
-          )} */}
-
           <div className="mt-6">
             {/* Client-side Add to Cart component */}
             <AddToCart
@@ -214,6 +136,54 @@ export default async function ListingPage({ params }: Props) {
           </div>
         </div>
       </div>
+      <Separator className="my-8" />
+      {parts && parts.length > 0 && (
+        <div className="mt-6">
+          <h3 className="mb-2 text-lg font-semibold">Parts included</h3>
+          <div className="overflow-x-auto rounded-md border">
+            <table className="min-w-full divide-y divide-border">
+              <thead className="bg-muted">
+                <tr>
+                  <th
+                    scope="col"
+                    className="px-4 py-3 text-left text-xs font-medium uppercase tracking-wider text-muted-foreground"
+                  >
+                    Name
+                  </th>
+                  <th
+                    scope="col"
+                    className="px-4 py-3 text-left text-xs font-medium uppercase tracking-wider text-muted-foreground"
+                  >
+                    Part No
+                  </th>
+                  <th
+                    scope="col"
+                    className="px-4 py-3 text-left text-xs font-medium uppercase tracking-wider text-muted-foreground"
+                  >
+                    Alternate Part Numbers
+                  </th>
+                </tr>
+              </thead>
+              <tbody className="divide-y divide-border bg-background">
+                {parts.map((part, index) => (
+                  <tr key={index} className="hover:bg-muted/50">
+                    <td className="whitespace-nowrap px-4 py-3 text-sm">
+                      {part.partDetails?.name ?? "—"}
+                    </td>
+                    <td className="whitespace-nowrap px-4 py-3 text-sm">
+                      {part.partDetails?.partNo ?? "—"}
+                    </td>
+                    <td className="px-4 py-3 text-sm">
+                      {part.partDetails?.alternatePartNumbers ?? "—"}
+                    </td>
+                  </tr>
+                ))}
+              </tbody>
+            </table>
+          </div>
+        </div>
+      )}
+      <Separator className="my-8" />
     </div>
   );
 }
