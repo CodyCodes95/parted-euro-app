@@ -65,8 +65,7 @@ const Nav = () => {
           </Link>
         </nav>
 
-        {/* Icons and Mobile Menu */}
-        <div className="flex items-center gap-2">
+        <div className="hidden items-center gap-2 md:flex">
           <Button variant="ghost" size="icon">
             <SearchIcon className="h-5 w-5" />
           </Button>
@@ -74,8 +73,8 @@ const Nav = () => {
           <Suspense fallback={null}>
             <AdminMenu />
           </Suspense>
-          <MobileNav />
         </div>
+        <MobileNav />
       </div>
 
       {/* Cart Drawer */}

@@ -17,6 +17,7 @@ export const listingsRouter = createTRPCRouter({
         generation: z.string().optional(),
         model: z.string().optional(),
         series: z.string().optional(),
+        make: z.string().optional(),
         search: z.string().optional(),
         category: z.string().optional(),
         subcat: z.string().optional(),
@@ -67,6 +68,7 @@ export const listingsRouter = createTRPCRouter({
         !input.generation &&
         !input.model &&
         !input.series &&
+        !input.make &&
         !input.category
       ) {
         const queryWhere = {
@@ -117,6 +119,7 @@ export const listingsRouter = createTRPCRouter({
                     },
                     cars: {
                       some: {
+                        make: input.make,
                         generation: {
                           contains: input.generation ?? "",
                         },

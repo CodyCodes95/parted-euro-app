@@ -4,7 +4,7 @@ import { useState, useEffect } from "react";
 import { api } from "~/trpc/react";
 import { parseAsInteger, useQueryState } from "nuqs";
 import { useDebounce } from "use-debounce";
-import { ChevronDown, Search, Filter, X, ArrowUpDown } from "lucide-react";
+import { ChevronDown, Search, Filter, X, ArrowUpDown, Car } from "lucide-react";
 
 // UI Components
 import { Button } from "~/components/ui/button";
@@ -34,6 +34,7 @@ import {
   PaginationNext,
   PaginationPrevious,
 } from "~/components/ui/pagination";
+import { SelectCarModal } from "~/components/SelectCarModal";
 
 export default function ListingsPage() {
   // URL State Management
@@ -62,12 +63,16 @@ export default function ListingsPage() {
   const [series, setSeries] = useQueryState("series", {
     defaultValue: "",
   });
+  const [make, setMake] = useQueryState("make", {
+    defaultValue: "",
+  });
 
   // Local state
   const [sidebarOpen, setSidebarOpen] = useState(false);
   const [selectedCategoryId, setSelectedCategoryId] = useState<string | null>(
     null,
   );
+  const [selectCarModalOpen, setSelectCarModalOpen] = useState(false);
 
   // Debounce search to reduce API calls
   const [debouncedSearch] = useDebounce(search, 500);
@@ -83,6 +88,7 @@ export default function ListingsPage() {
     generation,
     model,
     series,
+    make,
   });
 
   const parentCategories = api.category.getParentCategories.useQuery();
@@ -132,6 +138,7 @@ export default function ListingsPage() {
     void setGeneration("");
     void setModel("");
     void setSeries("");
+    void setMake("");
     void setPage(1);
   };
 
@@ -140,8 +147,24 @@ export default function ListingsPage() {
     subcat ||
     generation ||
     model ||
-    series
+    series ||
+    make
   );
+
+  // Handle car selection from modal
+  const handleCarSelected = (carData: {
+    make: string;
+    series?: string;
+    generation?: string;
+    model?: string;
+  }) => {
+    // Only set URL parameters for values that are provided
+    void setMake(carData.make);
+    void setGeneration(carData.generation ?? "");
+    void setModel(carData.model ?? "");
+    void setSeries(carData.series ?? "");
+    void setPage(1);
+  };
 
   // Generate pagination
   const renderPagination = () => {
@@ -220,6 +243,16 @@ export default function ListingsPage() {
         <h1 className="mb-4 text-3xl font-bold md:mb-0">Listings</h1>
 
         <div className="flex w-full flex-col space-y-2 sm:flex-row sm:space-x-2 sm:space-y-0 md:w-auto">
+          {/* Select Car Button */}
+          <Button
+            variant="default"
+            className="flex items-center gap-2 whitespace-nowrap"
+            onClick={() => setSelectCarModalOpen(true)}
+          >
+            <Car className="h-4 w-4" />
+            <span>Select Car</span>
+          </Button>
+
           {/* Search Input */}
           <div className="relative w-full md:max-w-[300px]">
             <Search className="absolute left-3 top-1/2 h-4 w-4 -translate-y-1/2 transform text-muted-foreground" />
@@ -274,9 +307,14 @@ export default function ListingsPage() {
                     className="ml-2 h-5 w-5 rounded-full p-0 text-center"
                   >
                     {
-                      [category, subcat, generation, model, series].filter(
-                        Boolean,
-                      ).length
+                      [
+                        category,
+                        subcat,
+                        generation,
+                        model,
+                        series,
+                        make,
+                      ].filter(Boolean).length
                     }
                   </Badge>
                 )}
@@ -291,12 +329,31 @@ export default function ListingsPage() {
                 <SheetTitle>Filters</SheetTitle>
               </SheetHeader>
               <div className="mt-4 flex flex-col space-y-4">
+                {/* Mobile Select Car Button */}
+                <Button
+                  variant="default"
+                  className="flex items-center gap-2"
+                  onClick={() => {
+                    setSelectCarModalOpen(true);
+                    setSidebarOpen(false);
+                  }}
+                >
+                  <Car className="h-4 w-4" />
+                  <span>Select Car</span>
+                </Button>
                 {renderFilterContent()}
               </div>
             </SheetContent>
           </Sheet>
         </div>
       </div>
+
+      {/* Select Car Modal */}
+      <SelectCarModal
+        open={selectCarModalOpen}
+        onOpenChange={setSelectCarModalOpen}
+        onCarSelected={handleCarSelected}
+      />
 
       {/* Desktop Layout */}
       <div className="flex flex-col space-y-6 lg:flex-row lg:space-x-6 lg:space-y-0">
@@ -353,13 +410,17 @@ export default function ListingsPage() {
                   </Button>
                 </Badge>
               )}
-              {(generation || model || series) && (
+              {(make || generation || model || series) && (
                 <Badge variant="secondary" className="flex items-center gap-1">
-                  Car Filters
+                  <Car className="mr-1 h-3 w-3" />
+                  {[make, series, generation, model]
+                    .filter(Boolean)
+                    .join(" - ")}
                   <Button
                     variant="ghost"
                     size="icon"
                     onClick={() => {
+                      void setMake("");
                       void setGeneration("");
                       void setModel("");
                       void setSeries("");
@@ -547,36 +608,80 @@ export default function ListingsPage() {
           </div>
         </div>
 
-        {/* Additional Car Filters (simplified for this example) */}
+        {/* Car Details */}
         <div className="space-y-2">
-          <h3 className="font-medium">Car Details</h3>
-
-          <div className="space-y-2">
-            <label className="text-sm">Generation</label>
-            <Input
-              placeholder="E.g. E36, E46, F30"
-              value={generation || ""}
-              onChange={(e) => void setGeneration(e.target.value)}
-            />
+          <div className="flex items-center justify-between">
+            <h3 className="font-medium">Car Details</h3>
+            <Button
+              variant="ghost"
+              size="sm"
+              className="h-auto p-0 text-xs text-blue-600"
+              onClick={() => setSelectCarModalOpen(true)}
+            >
+              {make || generation || model || series ? "Change" : "Select Car"}
+            </Button>
           </div>
 
-          <div className="space-y-2">
-            <label className="text-sm">Model</label>
-            <Input
-              placeholder="E.g. 3-Series, 5-Series"
-              value={model || ""}
-              onChange={(e) => void setModel(e.target.value)}
-            />
-          </div>
+          {make || generation || model || series ? (
+            <div className="rounded-md border p-3">
+              {make && (
+                <div className="flex items-center justify-between">
+                  <span className="text-sm text-muted-foreground">Make:</span>
+                  <span className="text-sm font-medium">{make}</span>
+                </div>
+              )}
+              {series && (
+                <div className="flex items-center justify-between">
+                  <span className="text-sm text-muted-foreground">Series:</span>
+                  <span className="text-sm font-medium">{series}</span>
+                </div>
+              )}
+              {generation && (
+                <div className="flex items-center justify-between">
+                  <span className="text-sm text-muted-foreground">
+                    Generation:
+                  </span>
+                  <span className="text-sm font-medium">{generation}</span>
+                </div>
+              )}
+              {model && (
+                <div className="flex items-center justify-between">
+                  <span className="text-sm text-muted-foreground">Model:</span>
+                  <span className="text-sm font-medium">{model}</span>
+                </div>
+              )}
 
-          <div className="space-y-2">
-            <label className="text-sm">Series</label>
-            <Input
-              placeholder="E.g. 325i, 330i, M3"
-              value={series || ""}
-              onChange={(e) => void setSeries(e.target.value)}
-            />
-          </div>
+              <Button
+                variant="ghost"
+                size="sm"
+                className="mt-2 w-full text-destructive"
+                onClick={() => {
+                  void setMake("");
+                  void setGeneration("");
+                  void setModel("");
+                  void setSeries("");
+                }}
+              >
+                <X className="mr-1 h-3 w-3" />
+                Clear Car Selection
+              </Button>
+            </div>
+          ) : (
+            <div className="flex flex-col items-center justify-center rounded-md border border-dashed p-6">
+              <Car className="mb-2 h-6 w-6 text-muted-foreground" />
+              <p className="text-center text-sm text-muted-foreground">
+                No car selected
+              </p>
+              <Button
+                variant="outline"
+                size="sm"
+                className="mt-2"
+                onClick={() => setSelectCarModalOpen(true)}
+              >
+                Select Car
+              </Button>
+            </div>
+          )}
         </div>
 
         {/* Apply Filters Button (Mobile only) */}
