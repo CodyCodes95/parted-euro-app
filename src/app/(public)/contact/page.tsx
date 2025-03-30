@@ -35,9 +35,14 @@ export default function Contact() {
                 <MapPin className="h-6 w-6 text-primary" />
                 <div>
                   <p className="font-medium text-foreground">Our Location</p>
-                  <p className="text-muted-foreground">
+                  <a
+                    href="https://maps.google.com/?q=Unit+2/26+Rushdale+Street,+Knoxfield,+Victoria+Australia"
+                    target="_blank"
+                    rel="noopener noreferrer"
+                    className="text-primary hover:underline"
+                  >
                     Unit 2/26 Rushdale Street, Knoxfield, Victoria Australia
-                  </p>
+                  </a>
                 </div>
               </div>
 
@@ -45,7 +50,10 @@ export default function Contact() {
                 <Phone className="h-6 w-6 text-primary" />
                 <div>
                   <p className="font-medium text-foreground">Phone</p>
-                  <a className="text-muted-foreground" href="tel:+61431133764">
+                  <a
+                    className="text-primary hover:underline"
+                    href="tel:+61431133764"
+                  >
                     0431 133 764
                   </a>
                 </div>
@@ -56,7 +64,7 @@ export default function Contact() {
                 <div>
                   <p className="font-medium text-foreground">Email</p>
                   <a
-                    className="text-muted-foreground"
+                    className="text-primary hover:underline"
                     href="mailto:contact@partedeuro.com.au"
                   >
                     contact@partedeuro.com.au

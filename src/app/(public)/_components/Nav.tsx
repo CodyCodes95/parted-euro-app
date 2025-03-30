@@ -28,7 +28,7 @@ const Nav = () => {
         {/* Desktop Navigation Links */}
         <nav className="hidden space-x-8 md:flex">
           <Link
-            href="/browse"
+            href="/listings"
             className={cn(
               buttonVariants({ variant: "ghost", size: "sm" }),
               "text-foreground hover:bg-primary hover:text-primary-foreground",
