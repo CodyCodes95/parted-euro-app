@@ -3,7 +3,7 @@ import Image from "next/image";
 import Link from "next/link";
 import React, { Suspense } from "react";
 import { MobileNav } from "./mobile-nav";
-import { buttonVariants } from "~/components/ui/button";
+import { Button, buttonVariants } from "~/components/ui/button";
 import { cn } from "~/lib/utils";
 import { CartDrawer } from "~/components/cart-drawer";
 import CartButton from "./cart-button";
@@ -66,13 +66,10 @@ const Nav = () => {
         </nav>
 
         {/* Icons and Mobile Menu */}
-        <div className="flex items-center space-x-4">
-          <button
-            aria-label="Search"
-            className="hidden text-muted-foreground transition-colors hover:text-primary md:flex"
-          >
+        <div className="flex items-center gap-2">
+          <Button variant="ghost" size="icon">
             <SearchIcon className="h-5 w-5" />
-          </button>
+          </Button>
           <CartButton />
           <Suspense fallback={null}>
             <AdminMenu />

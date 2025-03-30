@@ -142,16 +142,16 @@ export function AppSidebar({
   return (
     <Sidebar collapsible="icon" {...props}>
       <SidebarHeader>
-        <div className="flex items-center gap-2">
-          <div className="flex aspect-square size-8 items-center justify-center rounded-lg bg-sidebar-primary text-sidebar-primary-foreground">
-            <Link href="/">
+        <Link href="/">
+          <div className="flex items-center gap-2">
+            <div className="flex aspect-square size-8 items-center justify-center rounded-lg bg-sidebar-primary text-sidebar-primary-foreground">
               <img src="/stripes.png" alt="Logo" />
-            </Link>
+            </div>
+            <span className="truncate text-left text-sm font-semibold leading-tight">
+              Parted Euro Admin
+            </span>
           </div>
-          <span className="truncate text-left text-sm font-semibold leading-tight">
-            Parted Euro Admin
-          </span>
-        </div>
+        </Link>
       </SidebarHeader>
       <SidebarContent>
         <NavMain items={adminNav} />
