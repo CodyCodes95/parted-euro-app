@@ -1,9 +1,17 @@
 "use client";
 
 import { useState, useMemo } from "react";
-import { type Car } from "~/app/(public)/listings/[id]/compatible-cars";
 import { cn } from "~/lib/utils";
 import { Badge } from "~/components/ui/badge";
+
+// Define Car type directly in this file
+type Car = {
+  id: string;
+  generation: string;
+  series: string;
+  model: string;
+  body: string | null;
+};
 
 interface InteractiveCompatibleCarsProps {
   cars: Car[];
@@ -30,30 +38,40 @@ export function InteractiveCompatibleCars({
       }
     > = {};
 
+    // If no cars, return empty object
+    if (!cars || cars.length === 0) {
+      return grouped;
+    }
+
     cars.forEach((car) => {
-      if (!grouped[car.series]) {
-        grouped[car.series] = {
-          series: car.series,
+      const series = car.series || "Unknown";
+      const generation = car.generation || "Unknown";
+      const model = car.model || "Unknown";
+      const body = car.body;
+
+      if (!grouped[series]) {
+        grouped[series] = {
+          series,
           generations: {},
         };
       }
 
-      if (!grouped[car.series].generations[car.generation]) {
-        grouped[car.series].generations[car.generation] = {
-          generation: car.generation,
+      if (!grouped[series].generations[generation]) {
+        grouped[series].generations[generation] = {
+          generation,
           models: [],
         };
       }
 
       // Check if model already exists to avoid duplicates
-      const existingModelIndex = grouped[car.series].generations[
-        car.generation
-      ].models.findIndex((m) => m.model === car.model && m.body === car.body);
+      const existingModelIndex = grouped[series].generations[
+        generation
+      ].models.findIndex((m) => m.model === model && m.body === body);
 
       if (existingModelIndex === -1) {
-        grouped[car.series].generations[car.generation].models.push({
-          model: car.model,
-          body: car.body,
+        grouped[series].generations[generation].models.push({
+          model,
+          body,
         });
       }
     });
@@ -61,22 +79,27 @@ export function InteractiveCompatibleCars({
     return grouped;
   }, [cars]);
 
+  // Return early if no cars
+  if (!cars || cars.length === 0) {
+    return null;
+  }
+
   // Set initial active series if not yet set
   if (
     activeSeries === null &&
     Object.keys(carsBySeriesAndGeneration).length > 0
   ) {
-    setActiveSeries(Object.keys(carsBySeriesAndGeneration)[0]);
+    const firstSeries = Object.keys(carsBySeriesAndGeneration)[0];
+    if (firstSeries) {
+      setActiveSeries(firstSeries);
+    }
   }
 
   const seriesList = Object.keys(carsBySeriesAndGeneration).sort();
-  const activeSeriesData = activeSeries
-    ? carsBySeriesAndGeneration[activeSeries]
-    : null;
-
-  if (!cars || cars.length === 0) {
-    return null;
-  }
+  const activeSeriesData =
+    activeSeries && carsBySeriesAndGeneration[activeSeries]
+      ? carsBySeriesAndGeneration[activeSeries]
+      : null;
 
   return (
     <div className="space-y-3">
@@ -106,12 +129,6 @@ export function InteractiveCompatibleCars({
         <div className="flex-1 p-3">
           {activeSeriesData ? (
             <div className="space-y-2">
-              <div className="mb-3">
-                <Badge variant="outline" className="text-xs">
-                  {Object.keys(activeSeriesData.generations).length}{" "}
-                  generation(s)
-                </Badge>
-              </div>
               <div className="overflow-hidden rounded-md border">
                 <table className="w-full">
                   <thead className="bg-muted/50">

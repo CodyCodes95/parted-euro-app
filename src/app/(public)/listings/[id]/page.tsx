@@ -103,9 +103,7 @@ export default async function ListingPage({ params }: Props) {
           <h1 className="text-2xl font-bold sm:text-3xl">{title}</h1>
 
           <div className="mt-2 flex items-center gap-2">
-            <Badge variant="outline" className="text-sm">
-              {condition}
-            </Badge>
+            {" "}
             {inStock ? (
               <Badge variant="outline" className="bg-green-50 text-green-700">
                 In Stock ({quantity})
