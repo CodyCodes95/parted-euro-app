@@ -13,6 +13,7 @@ import {
 import { Separator } from "~/components/ui/separator";
 import { Badge } from "~/components/ui/badge";
 import { AddToCart } from "./add-to-cart";
+import { InteractiveCompatibleCars } from "./interactive-compatible-cars";
 
 type Props = {
   params: { id: string };
@@ -53,6 +54,15 @@ export default async function ListingPage({ params }: Props) {
   const firstPart = parts?.[0];
   const quantity = firstPart?.quantity ?? 0;
   const inStock = quantity > 0;
+
+  // Extract all compatible cars from the parts
+  const compatibleCars =
+    parts?.flatMap((part) => part.partDetails?.cars || []) || [];
+
+  // Deduplicate cars by id
+  const uniqueCompatibleCars = compatibleCars.filter(
+    (car, index, self) => index === self.findIndex((c) => c.id === car.id),
+  );
 
   return (
     <div className="container mx-auto px-4 py-8 md:py-12">
@@ -183,6 +193,13 @@ export default async function ListingPage({ params }: Props) {
           </div>
         </div>
       )}
+
+      {uniqueCompatibleCars.length > 0 && (
+        <div className="mt-8">
+          <InteractiveCompatibleCars cars={uniqueCompatibleCars} />
+        </div>
+      )}
+
       <Separator className="my-8" />
     </div>
   );
