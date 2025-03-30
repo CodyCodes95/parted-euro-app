@@ -10,7 +10,7 @@ const prepareSearchTerms = (search: string | undefined): string[] => {
     .filter((term) => term.length > 0);
 };
 
-export const homepageImageRouter = createTRPCRouter({
+export const listingsRouter = createTRPCRouter({
   searchListings: publicProcedure
     .input(
       z.object({
