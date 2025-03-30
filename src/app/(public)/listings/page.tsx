@@ -101,6 +101,11 @@ export default function ListingsPage() {
     }
   }, [category, parentCategories.data]);
 
+  // Scroll to top on pagination change
+  useEffect(() => {
+    window.scrollTo({ top: 0, behavior: "smooth" });
+  }, [page]);
+
   // Handle filter changes
   const handleCategoryChange = (categoryName: string) => {
     if (categoryName === category) return;
@@ -116,7 +121,7 @@ export default function ListingsPage() {
 
   const handleSortChange = (value: string) => {
     const [newSortBy, newSortOrder] = value.split("-");
-    void setSortBy(newSortBy);
+    void setSortBy(newSortBy!);
     void setSortOrder(newSortOrder as "asc" | "desc");
     void setPage(1);
   };
@@ -435,14 +440,17 @@ export default function ListingsPage() {
               {listings.data.listings.map((listing) => (
                 <Card
                   key={listing.id}
-                  className="overflow-hidden transition-shadow hover:shadow-md"
+                  className="group cursor-pointer overflow-hidden transition-all duration-200 hover:scale-[1.02] hover:shadow-md"
+                  onClick={() =>
+                    (window.location.href = `/listings/${listing.id}`)
+                  }
                 >
                   <div className="relative h-[200px] w-full bg-muted">
                     {listing.images?.[0] ? (
                       <img
                         src={listing.images[0].url}
                         alt={listing.title}
-                        className="h-full w-full object-cover"
+                        className="h-full w-full object-cover transition-transform duration-300 group-hover:scale-105"
                       />
                     ) : (
                       <div className="flex h-full w-full items-center justify-center bg-muted">
@@ -461,7 +469,11 @@ export default function ListingsPage() {
                       <p className="text-lg font-bold">
                         ${listing.price.toFixed(2)}
                       </p>
-                      <Button variant="outline" size="sm">
+                      <Button
+                        variant="outline"
+                        size="sm"
+                        className="relative z-10"
+                      >
                         View
                       </Button>
                     </div>
@@ -482,15 +494,15 @@ export default function ListingsPage() {
   function renderFilterContent() {
     return (
       <>
-        {/* Category Filter */}
+        {/* Category Filter with nested subcategories */}
         <div className="space-y-2">
-          <h3 className="font-medium">Category</h3>
+          <h3 className="font-medium">Categories</h3>
           <div className="space-y-1">
             {parentCategories.isLoading && (
               <p className="text-sm text-muted-foreground">Loading...</p>
             )}
             {parentCategories.data?.map((cat) => (
-              <div key={cat.id} className="flex items-center">
+              <div key={cat.id} className="flex flex-col">
                 <Button
                   variant={category === cat.name ? "default" : "ghost"}
                   size="sm"
@@ -499,39 +511,41 @@ export default function ListingsPage() {
                 >
                   {cat.name}
                 </Button>
+
+                {/* Show subcategories indented under selected parent */}
+                {category === cat.name && selectedCategoryId && (
+                  <div className="ml-4 mt-1 space-y-1">
+                    {subcategories.isLoading && (
+                      <p className="text-xs text-muted-foreground">
+                        Loading...
+                      </p>
+                    )}
+                    {subcategories.data?.map((subcategory) => (
+                      <Button
+                        key={subcategory.id}
+                        variant={
+                          subcategory.name === subcat ? "default" : "ghost"
+                        }
+                        size="sm"
+                        className="w-full justify-start text-left text-sm"
+                        onClick={() =>
+                          handleSubcategoryChange(subcategory.name)
+                        }
+                      >
+                        {subcategory.name}
+                      </Button>
+                    ))}
+                    {subcategories.data?.length === 0 && (
+                      <p className="text-xs text-muted-foreground">
+                        No subcategories available
+                      </p>
+                    )}
+                  </div>
+                )}
               </div>
             ))}
           </div>
         </div>
-
-        {/* Subcategory Filter - Only show if a category is selected */}
-        {selectedCategoryId && (
-          <div className="space-y-2">
-            <h3 className="font-medium">Subcategory</h3>
-            <div className="space-y-1">
-              {subcategories.isLoading && (
-                <p className="text-sm text-muted-foreground">Loading...</p>
-              )}
-              {subcategories.data?.map((subcategory) => (
-                <div key={subcategory.id} className="flex items-center">
-                  <Button
-                    variant={subcategory.name === subcat ? "default" : "ghost"}
-                    size="sm"
-                    className="w-full justify-start text-left"
-                    onClick={() => handleSubcategoryChange(subcategory.name)}
-                  >
-                    {subcategory.name}
-                  </Button>
-                </div>
-              ))}
-              {subcategories.data?.length === 0 && (
-                <p className="text-sm text-muted-foreground">
-                  No subcategories available
-                </p>
-              )}
-            </div>
-          </div>
-        )}
 
         {/* Additional Car Filters (simplified for this example) */}
         <div className="space-y-2">
