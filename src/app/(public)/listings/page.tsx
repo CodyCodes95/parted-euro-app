@@ -2,7 +2,7 @@
 
 import { api } from "~/trpc/react";
 import { parseAsInteger, useQueryState } from "nuqs";
-
+import { useDebounce } from "use-debounce";
 export default function ListingsPage() {
   const [page, setPage] = useQueryState("page", parseAsInteger.withDefault(1));
   const [sortBy, setSortBy] = useQueryState("sortBy", {
@@ -29,11 +29,14 @@ export default function ListingsPage() {
   const [series, setSeries] = useQueryState("series", {
     defaultValue: "",
   });
+
+  const [debouncedSearch] = useDebounce(search, 500);
+
   const listings = api.listings.searchListings.useQuery({
     page,
     sortBy,
     sortOrder,
-    search,
+    search: debouncedSearch,
     category,
     subcat,
     generation,

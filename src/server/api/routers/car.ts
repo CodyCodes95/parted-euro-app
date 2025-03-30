@@ -1,6 +1,6 @@
 import { z } from "zod";
 import { type Prisma } from "@prisma/client";
-import { adminProcedure, createTRPCRouter } from "../trpc";
+import { adminProcedure, createTRPCRouter, publicProcedure } from "../trpc";
 
 // Define car input validation schema
 const carSchema = z.object({
@@ -13,6 +13,105 @@ const carSchema = z.object({
 });
 
 export const carRouter = createTRPCRouter({
+  // car selection search page
+  getAllMakes: publicProcedure.query(async ({ ctx }) => {
+    const cars = await ctx.db.car.findMany({
+      select: {
+        make: true,
+      },
+    });
+    const makes = [...new Set(cars.map((car) => car.make))].sort();
+    return makes;
+  }),
+  getMatchingSeries: publicProcedure
+    .input(
+      z.object({
+        make: z.string().default("BMW"),
+      }),
+    )
+    .query(async ({ ctx, input }) => {
+      const cars = await ctx.db.car.findMany({
+        where: {
+          make: input.make,
+          NOT: {
+            series: "PE000",
+          },
+          AND: {
+            NOT: {
+              series: "SS000",
+            },
+          },
+        },
+        select: {
+          series: true,
+        },
+      });
+      const series = cars.map((car) => car.series).sort();
+      const uniqueSeries = [...new Set(series)].sort().map((series) => {
+        return {
+          label: series,
+          value: series,
+        };
+      });
+      return {
+        series: uniqueSeries,
+      };
+    }),
+  getMatchingGenerations: publicProcedure
+    .input(
+      z.object({
+        series: z.string().min(2),
+        make: z.string().default("BMW"),
+      }),
+    )
+    .query(async ({ ctx, input }) => {
+      const cars = await ctx.db.car.findMany({
+        where: {
+          series: input.series,
+          make: input.make,
+        },
+      });
+      const generations = cars.map((car) => car.generation).sort();
+      const uniqueGenerations = [...new Set(generations)]
+        .sort()
+        .map((generation) => {
+          return {
+            label: generation,
+            value: generation,
+          };
+        });
+      return {
+        generations: uniqueGenerations,
+      };
+    }),
+  getMatchingModels: publicProcedure
+    .input(
+      z.object({
+        series: z.string().min(2),
+        generation: z.string().min(2),
+        make: z.string().default("BMW"),
+      }),
+    )
+    .query(async ({ ctx, input }) => {
+      const cars = await ctx.db.car.findMany({
+        where: {
+          series: input.series,
+          generation: input.generation,
+          make: input.make,
+        },
+      });
+      const models = cars.map((car) => car.model).sort();
+      const uniqueModels = [...new Set(models)].sort().map((model) => {
+        return {
+          label: model,
+          value: model,
+        };
+      });
+      return {
+        models: uniqueModels,
+      };
+    }),
+
   // Get all cars
   getAll: adminProcedure
     .input(

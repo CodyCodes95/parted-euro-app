@@ -1,6 +1,6 @@
 import { z } from "zod";
-import { type Prisma } from "@prisma/client";
-import { adminProcedure, createTRPCRouter } from "../trpc";
+import { PrismaClient, type Prisma } from "@prisma/client";
+import { adminProcedure, createTRPCRouter, publicProcedure } from "../trpc";
 import { TRPCError } from "@trpc/server";
 
 // Define category input validation schema
@@ -11,6 +11,20 @@ const categorySchema = z.object({
 });
 
 export const categoryRouter = createTRPCRouter({
+  getParentCategories: publicProcedure.query(async ({ ctx }) => {
+    return ctx.db.partTypes.findMany({
+      where: {
+        parentId: null,
+      },
+    });
+  }),
+  getSubCategories: publicProcedure
+    .input(z.object({ parentId: z.string() }))
+    .query(async ({ ctx, input }) => {
+      return ctx.db.partTypes.findMany({
+        where: { parentId: input.parentId },
+      });
+    }),
   // Get all categories
   getAll: adminProcedure
     .input(
@@ -27,7 +41,7 @@ export const categoryRouter = createTRPCRouter({
       const { limit, cursor, search, sortBy, sortOrder, parentId } = input;
 
       // Build the orderBy object based on sortBy
-      let orderByConfig: any = { name: "asc" }; // Default sorting
+      let orderByConfig: Prisma.PartTypesOrderByWithRelationInput = { name: "asc" }; // Default sorting
 
       if (sortBy) {
         if (sortBy === "parentName") {
@@ -206,7 +220,7 @@ export const categoryRouter = createTRPCRouter({
 
 // Helper function to check for circular references
 async function checkCircularReference(
-  db: any,
+  db: PrismaClient,
   categoryId: string,
   newParentId: string,
 ): Promise<boolean> {
