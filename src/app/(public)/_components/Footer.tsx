@@ -46,10 +46,10 @@ const Footer = () => {
       </div>
       <div className="flex justify-between gap-4">
         <Link target="_blank" href="https://www.facebook.com/partedeuro">
-          <FaFacebookSquare className="h-8 w-8 text-foreground transition-colors duration-300 ease-in-out hover:text-primary" />
+          <FaFacebookSquare className="h-8 w-8 text-foreground transition-colors duration-300 ease-in-out hover:fill-[#3b5998]" />
         </Link>
         <Link target="_blank" href="https://www.instagram.com/partedeuro/">
-          <FiInstagram className="h-8 w-8 text-foreground transition-colors duration-300 ease-in-out hover:text-primary" />
+          <FiInstagram className="h-8 w-8 text-foreground transition-colors duration-300 ease-in-out hover:text-[#d62976]" />
         </Link>
       </div>
     </footer>
