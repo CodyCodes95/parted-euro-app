@@ -11,6 +11,88 @@ const prepareSearchTerms = (search: string | undefined): string[] => {
 };
 
 export const listingsRouter = createTRPCRouter({
+  getListingMetadata: publicProcedure
+    .input(
+      z.object({
+        id: z.string(),
+      }),
+    )
+    .query(async ({ ctx, input }) => {
+      const listing = await ctx.db.listing.findUnique({
+        where: {
+          id: input.id,
+        },
+        select: {
+          title: true,
+          description: true,
+          images: {
+            orderBy: {
+              order: "asc",
+            },
+          },
+        },
+      });
+      return listing;
+    }),
+  getListing: publicProcedure
+    .input(
+      z.object({
+        id: z.string(),
+      }),
+    )
+    .query(async ({ ctx, input }) => {
+      const listing = await ctx.db.listing.findUnique({
+        where: {
+          id: input.id,
+        },
+        select: {
+          id: true,
+          title: true,
+          description: true,
+          condition: true,
+          price: true,
+          images: {
+            orderBy: {
+              order: "asc",
+            },
+          },
+          parts: {
+            select: {
+              donor: {
+                select: {
+                  vin: true,
+                  year: true,
+                  car: true,
+                  mileage: true,
+                },
+              },
+              partDetails: {
+                select: {
+                  length: true,
+                  name: true,
+                  width: true,
+                  height: true,
+                  weight: true,
+                  partNo: true,
+                  alternatePartNumbers: true,
+                  cars: {
+                    select: {
+                      id: true,
+                      generation: true,
+                      series: true,
+                      model: true,
+                      body: true,
+                    },
+                  },
+                },
+              },
+              quantity: true,
+            },
+          },
+        },
+      });
+      return listing;
+    }),
   searchListings: publicProcedure
     .input(
       z.object({
