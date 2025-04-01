@@ -1,5 +1,5 @@
 import { z } from "zod";
-import { PrismaClient, type Prisma } from "@prisma/client";
+import { type PrismaClient, type Prisma } from "@prisma/client";
 import { adminProcedure, createTRPCRouter, publicProcedure } from "../trpc";
 import { TRPCError } from "@trpc/server";
 
@@ -41,7 +41,9 @@ export const categoryRouter = createTRPCRouter({
       const { limit, cursor, search, sortBy, sortOrder, parentId } = input;
 
       // Build the orderBy object based on sortBy
-      let orderByConfig: Prisma.PartTypesOrderByWithRelationInput = { name: "asc" }; // Default sorting
+      let orderByConfig: Prisma.PartTypesOrderByWithRelationInput = {
+        name: "asc",
+      }; // Default sorting
 
       if (sortBy) {
         if (sortBy === "parentName") {

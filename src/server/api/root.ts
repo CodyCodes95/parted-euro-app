@@ -7,6 +7,7 @@ import { partRouter } from "~/server/api/routers/part";
 import { donorRouter } from "~/server/api/routers/donor";
 import { createCallerFactory, createTRPCRouter } from "~/server/api/trpc";
 import { listingsRouter } from "~/server/api/routers/listings";
+import { checkoutRouter } from "./routers/checkout";
 /**
  * This is the primary router for your server.
  *
@@ -21,6 +22,7 @@ export const appRouter = createTRPCRouter({
   part: partRouter,
   donor: donorRouter,
   listings: listingsRouter,
+  checkout: checkoutRouter,
 });
 
 // export type definition of API
