@@ -1,24 +1,17 @@
 import { create } from "zustand";
 import { persist } from "zustand/middleware";
 
+// Define the simplified CartItem type
 export type CartItem = {
   listingId: string;
-  listingTitle: string;
-  listingPrice: number;
-  listingImage: string | undefined;
   quantity: number;
-  length: number;
-  width: number;
-  height: number;
-  weight: number;
-  itemVin: string;
 };
 
 interface CartState {
   cart: CartItem[];
   isOpen: boolean;
 
-  // Actions
+  // Actions - Note: addItem now takes the simplified item or its components
   addItem: (item: CartItem) => void;
   removeItem: (listingId: string) => void;
   updateQuantity: (listingId: string, quantity: number) => void;
@@ -54,8 +47,13 @@ export const useCartStore = create<CartState>()(
             };
           }
 
-          // Add new item
-          return { cart: [...state.cart, item] };
+          // Add new item (only listingId and quantity)
+          return {
+            cart: [
+              ...state.cart,
+              { listingId: item.listingId, quantity: item.quantity },
+            ],
+          };
         }),
 
       removeItem: (listingId) =>
@@ -63,18 +61,19 @@ export const useCartStore = create<CartState>()(
           cart: state.cart.filter((item) => item.listingId !== listingId),
         })),
 
+      // Update quantity logic remains similar, ensures quantity >= 1
       updateQuantity: (listingId, quantity) =>
         set((state) => ({
           cart: state.cart.map((item) =>
             item.listingId === listingId
-              ? { ...item, quantity: Math.max(1, quantity) }
+              ? { ...item, quantity: Math.max(1, quantity) } // Ensure quantity is at least 1
               : item,
           ),
         })),
 
       clearCart: () => set({ cart: [] }),
 
-      // UI actions
+      // UI actions remain the same
       openCart: () => set({ isOpen: true }),
       closeCart: () => set({ isOpen: false }),
       toggleCart: () => set((state) => ({ isOpen: !state.isOpen })),

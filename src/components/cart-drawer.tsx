@@ -1,11 +1,12 @@
 "use client";
 
 import Image from "next/image";
-import { useEffect, useState } from "react";
+import { useEffect, useState, useMemo } from "react";
 import { X, ShoppingBag, Trash2, Plus, Minus } from "lucide-react";
 import { formatCurrency } from "~/lib/utils";
+import { api } from "~/trpc/react";
 
-import { useCartStore, type CartItem } from "~/stores/useCartStore";
+import { useCartStore } from "~/stores/useCartStore";
 import {
   Drawer,
   DrawerClose,
@@ -20,6 +21,16 @@ import { Separator } from "~/components/ui/separator";
 import Link from "next/link";
 import { ScrollArea } from "~/components/ui/scroll-area";
 import { useIsMobile } from "~/hooks/use-mobile";
+import { Skeleton } from "~/components/ui/skeleton";
+
+// Define a type for the combined cart item data
+type PopulatedCartItem = {
+  listingId: string;
+  quantity: number;
+  title?: string;
+  price?: number | null;
+  imageUrl?: string | null;
+};
 
 export function CartDrawer() {
   const { cart, isOpen, closeCart, removeItem, updateQuantity, clearCart } =
@@ -27,16 +38,57 @@ export function CartDrawer() {
   const [isMounted, setIsMounted] = useState(false);
   const isMobile = useIsMobile();
 
+  // Extract listing IDs from the cart
+  const listingIds = useMemo(() => cart.map((item) => item.listingId), [cart]);
+
+  // Fetch listing details using the new tRPC query
+  const { data: listingsData, isLoading } =
+    api.listings.getListingsByIds.useQuery(
+      {
+        ids: listingIds,
+      },
+      {
+        enabled: isMounted && listingIds.length > 0, // Only run query when mounted and cart has items
+        staleTime: 5 * 60 * 1000, // Cache for 5 minutes
+      },
+    );
+
   // Prevent hydration errors
   useEffect(() => {
     setIsMounted(true);
   }, []);
 
-  // Calculate totals
-  const subtotal = cart.reduce(
-    (total, item) => total + item.listingPrice * item.quantity,
-    0,
-  );
+  // Combine cart quantities with fetched listing data
+  const populatedCart = useMemo((): PopulatedCartItem[] => {
+    if (!listingsData) {
+      // While loading or if data is unavailable, return cart items with only ID and quantity
+      return cart.map((item) => ({ ...item }));
+    }
+
+    const listingsMap = new Map(
+      listingsData.map((listing) => [
+        listing.id,
+        {
+          title: listing.title,
+          price: listing.price,
+          imageUrl: listing.images?.[0]?.url,
+        },
+      ]),
+    );
+
+    return cart.map((item) => ({
+      ...item,
+      ...(listingsMap.get(item.listingId) || {}),
+    }));
+  }, [cart, listingsData]);
+
+  // Calculate totals using populated cart data
+  const subtotal = useMemo(() => {
+    return populatedCart.reduce(
+      (total, item) => total + (item.price ?? 0) * item.quantity,
+      0,
+    );
+  }, [populatedCart]);
 
   const itemCount = cart.reduce((count, item) => count + item.quantity, 0);
 
@@ -58,6 +110,9 @@ export function CartDrawer() {
               <ShoppingBag className="h-5 w-5" />
               Your Cart {itemCount > 0 && `(${itemCount})`}
             </DrawerTitle>
+            <DrawerClose className="rounded-full p-1 text-muted-foreground hover:bg-secondary">
+              <X className="h-5 w-5" />
+            </DrawerClose>
           </div>
           <DrawerDescription>
             {cart.length === 0
@@ -70,16 +125,22 @@ export function CartDrawer() {
           <>
             <ScrollArea className="px-4 sm:px-6">
               <div className="space-y-4 py-2">
-                {cart.map((item) => (
-                  <CartItem
-                    key={item.listingId}
-                    item={item}
-                    onRemove={() => removeItem(item.listingId)}
-                    onUpdateQuantity={(quantity) =>
-                      updateQuantity(item.listingId, quantity)
-                    }
-                  />
-                ))}
+                {isLoading && populatedCart.length > 0
+                  ? // Show skeletons while loading data for existing cart items
+                    populatedCart.map((item) => (
+                      <CartItemSkeleton key={item.listingId} />
+                    ))
+                  : // Show populated items once data is loaded
+                    populatedCart.map((item) => (
+                      <CartItemDisplay
+                        key={item.listingId}
+                        item={item}
+                        onRemove={() => removeItem(item.listingId)}
+                        onUpdateQuantity={(quantity) =>
+                          updateQuantity(item.listingId, quantity)
+                        }
+                      />
+                    ))}
               </div>
             </ScrollArea>
 
@@ -88,25 +149,41 @@ export function CartDrawer() {
                 <div className="space-y-2">
                   <div className="flex items-center justify-between">
                     <span className="text-muted-foreground">Subtotal</span>
-                    <span className="font-medium">
-                      {formatCurrency(subtotal)}
-                    </span>
+                    {isLoading ? (
+                      <Skeleton className="h-5 w-20" />
+                    ) : (
+                      <span className="font-medium">
+                        {formatCurrency(subtotal)}
+                      </span>
+                    )}
                   </div>
                   <Separator />
                   <div className="flex items-center justify-between font-medium">
                     <span>Total</span>
-                    <span>{formatCurrency(subtotal)}</span>
+                    {isLoading ? (
+                      <Skeleton className="h-5 w-20" />
+                    ) : (
+                      <span>{formatCurrency(subtotal)}</span>
+                    )}
                   </div>
                 </div>
 
                 <div className="flex flex-col gap-3">
-                  <Link href="/checkout" className="w-full" onClick={closeCart}>
-                    <Button className="w-full">Proceed to Checkout</Button>
+                  <Link
+                    href="/checkout"
+                    className="w-full"
+                    onClick={closeCart}
+                    aria-disabled={isLoading}
+                  >
+                    <Button className="w-full" disabled={isLoading}>
+                      {isLoading ? "Loading..." : "Proceed to Checkout"}
+                    </Button>
                   </Link>
                   <Button
                     variant="outline"
                     className="w-full"
                     onClick={clearCart}
+                    disabled={isLoading}
                   >
                     Clear Cart
                   </Button>
@@ -133,13 +210,13 @@ export function CartDrawer() {
   );
 }
 
-// Helper component to render a cart item
-function CartItem({
+// Updated Helper component to render a cart item using PopulatedCartItem
+function CartItemDisplay({
   item,
   onRemove,
   onUpdateQuantity,
 }: {
-  item: CartItem;
+  item: PopulatedCartItem;
   onRemove: () => void;
   onUpdateQuantity: (quantity: number) => void;
 }) {
@@ -147,10 +224,10 @@ function CartItem({
     <div className="flex items-start gap-4 rounded-lg border p-3">
       {/* Product image */}
       <div className="relative h-16 w-16 shrink-0 overflow-hidden rounded-md">
-        {item.listingImage ? (
+        {item.imageUrl ? (
           <Image
-            src={item.listingImage}
-            alt={item.listingTitle}
+            src={item.imageUrl}
+            alt={item.title ?? "Listing image"}
             fill
             className="object-cover"
           />
@@ -165,9 +242,9 @@ function CartItem({
       <div className="flex flex-1 flex-col">
         <div className="flex items-start justify-between">
           <div>
-            <h4 className="font-medium">{item.listingTitle}</h4>
+            <h4 className="font-medium">{item.title ?? "Loading..."}</h4>
             <p className="mt-1 text-sm text-muted-foreground">
-              {formatCurrency(item.listingPrice)}
+              {item.price != null ? formatCurrency(item.price) : "-"}
             </p>
           </div>
           <button
@@ -202,8 +279,27 @@ function CartItem({
             </button>
           </div>
           <p className="ml-auto text-sm font-medium">
-            {formatCurrency(item.listingPrice * item.quantity)}
+            {item.price != null
+              ? formatCurrency(item.price * item.quantity)
+              : "-"}
           </p>
+        </div>
+      </div>
+    </div>
+  );
+}
+
+// Skeleton component for loading state
+function CartItemSkeleton() {
+  return (
+    <div className="flex items-start gap-4 rounded-lg border p-3">
+      <Skeleton className="h-16 w-16 shrink-0 rounded-md" />
+      <div className="flex flex-1 flex-col space-y-2">
+        <Skeleton className="h-5 w-3/4" />
+        <Skeleton className="h-4 w-1/4" />
+        <div className="mt-2 flex items-center justify-between">
+          <Skeleton className="h-8 w-20" />
+          <Skeleton className="h-5 w-16" />
         </div>
       </div>
     </div>

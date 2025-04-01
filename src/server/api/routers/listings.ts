@@ -147,6 +147,41 @@ export const listingsRouter = createTRPCRouter({
       });
       return randomListings;
     }),
+  getListingsByIds: publicProcedure
+    .input(
+      z.object({
+        ids: z.array(z.string()),
+      }),
+    )
+    .query(async ({ ctx, input }) => {
+      if (input.ids.length === 0) {
+        return []; // Return empty array if no IDs are provided
+      }
+
+      const listings = await ctx.db.listing.findMany({
+        where: {
+          id: {
+            in: input.ids,
+          },
+        },
+        select: {
+          id: true,
+          title: true,
+          price: true,
+          images: {
+            orderBy: {
+              order: "asc",
+            },
+            take: 1, // Only take the first image
+            select: {
+              url: true,
+            },
+          },
+          // Potentially add stock/quantity check here later if needed
+        },
+      });
+      return listings;
+    }),
   searchListings: publicProcedure
     .input(
       z.object({
