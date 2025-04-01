@@ -1,12 +1,12 @@
 "use client";
 
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import { z } from "zod";
 import { useForm } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
 import { Minus, Plus, Trash2 } from "lucide-react";
 import Image from "next/image";
-import { useMemo, useEffect } from "react";
+import { useMemo } from "react";
 import { api } from "~/trpc/react";
 import { useCartStore } from "~/stores/useCartStore";
 import { formatCurrency } from "~/lib/utils";
@@ -33,36 +33,49 @@ import {
 import { Separator } from "~/components/ui/separator";
 import { Skeleton } from "~/components/ui/skeleton";
 import { ScrollArea } from "~/components/ui/scroll-area";
-
-// Country codes for the form
-const COUNTRY_CODES = [
-  { code: "US", name: "United States" },
-  { code: "CA", name: "Canada" },
-  { code: "GB", name: "United Kingdom" },
-  { code: "DE", name: "Germany" },
-  { code: "FR", name: "France" },
-  { code: "JP", name: "Japan" },
-  { code: "AU", name: "Australia" },
-  // Add more countries as needed
-];
+import { useGoogleMapsApi } from "./_components/useGoogleMapsScript";
+import {
+  type CheckoutAddress,
+  AddressAutoComplete,
+} from "./_components/AddressAutocomplete";
 
 // Define the form schema using zod
-const checkoutFormSchema = z.object({
-  name: z.string().min(1, "Name is required"),
-  email: z
-    .string()
-    .min(1, "Email is required")
-    .email("Invalid email address")
-    .transform((val) => val.trim()),
-  shipToCountryCode: z.string().min(1, "Country is required"),
-  isB2B: z.boolean().default(false),
-  acceptTerms: z
-    .boolean()
-    .default(false)
-    .refine((val) => val === true, {
-      message: "You must accept the terms and conditions",
+const checkoutFormSchema = z
+  .object({
+    name: z.string().min(1, "Name is required"),
+    email: z
+      .string()
+      .min(1, "Email is required")
+      .email("Invalid email address")
+      .transform((val) => val.trim()),
+    shipToCountryCode: z.string().min(1, "Country is required"),
+    address: z.object({
+      formattedAddress: z.string(),
+      city: z.string(),
+      region: z.string(),
+      postalCode: z.string(),
     }),
-});
+    isB2B: z.boolean().default(false),
+    acceptTerms: z
+      .boolean()
+      .default(false)
+      .refine((val) => val === true, {
+        message: "You must accept the terms and conditions",
+      }),
+  })
+  .refine(
+    (data) => {
+      // If shipping to AU, address is required
+      if (data.shipToCountryCode === "AU") {
+        return !!data.address.formattedAddress;
+      }
+      return true;
+    },
+    {
+      message: "Address is required for Australian deliveries",
+      path: ["address.formattedAddress"],
+    },
+  );
 
 type CheckoutFormValues = z.infer<typeof checkoutFormSchema>;
 
@@ -76,13 +89,23 @@ type PopulatedCartItem = {
 };
 
 export default function Checkout() {
-  const [isMounted, setIsMounted] = useState(false);
+  const [address, setAddress] = useState<CheckoutAddress>(
+    localStorage.getItem("checkout-address")
+      ? (JSON.parse(
+          localStorage.getItem("checkout-address")!,
+        ) as CheckoutAddress)
+      : {
+          formattedAddress: "",
+          city: "",
+          region: "",
+          postalCode: "",
+        },
+  );
+
+  const { isLoaded } = useGoogleMapsApi();
   const { cart, removeItem, updateQuantity } = useCartStore();
 
-  // Prevent hydration errors by only rendering on client
-  useEffect(() => {
-    setIsMounted(true);
-  }, []);
+  const shippingCountries = api.checkout.getShippingCountries.useQuery();
 
   // Extract listing IDs from the cart
   const listingIds = useMemo(() => cart.map((item) => item.listingId), [cart]);
@@ -94,7 +117,7 @@ export default function Checkout() {
         ids: listingIds,
       },
       {
-        enabled: isMounted && listingIds.length > 0,
+        enabled: isLoaded && listingIds.length > 0,
         staleTime: 5 * 60 * 1000, // Cache for 5 minutes
       },
     );
@@ -136,14 +159,76 @@ export default function Checkout() {
     defaultValues: {
       name: "",
       email: "",
-      shipToCountryCode: "",
+      shipToCountryCode: "AU",
+      address: {
+        formattedAddress: "",
+        city: "",
+        region: "",
+        postalCode: "",
+      },
       isB2B: false,
       acceptTerms: false,
     },
   });
 
+  // Update address validation when country changes
+  useEffect(() => {
+    const subscription = form.watch((value, { name }) => {
+      if (name === "shipToCountryCode") {
+        if (value.shipToCountryCode !== "AU") {
+          // Reset address validation errors if country is not Australia
+          form.clearErrors("address");
+
+          // If changing from AU to another country, clear the address
+          if (form.getValues("address.formattedAddress")) {
+            const emptyAddress = {
+              formattedAddress: "",
+              city: "",
+              region: "",
+              postalCode: "",
+            };
+            setAddress(emptyAddress);
+            form.setValue("address", emptyAddress);
+          }
+        }
+      }
+    });
+    return () => subscription.unsubscribe();
+  }, [form]);
+
+  // Save address to localStorage when it changes
+  useEffect(() => {
+    if (address.formattedAddress) {
+      localStorage.setItem("checkout-address", JSON.stringify(address));
+      form.setValue("address", address);
+    }
+  }, [address, form]);
+
+  // Set initial address from localStorage if available
+  useEffect(() => {
+    const savedAddress = localStorage.getItem("checkout-address");
+    if (savedAddress) {
+      try {
+        const parsedAddress = JSON.parse(savedAddress) as CheckoutAddress;
+        setAddress(parsedAddress);
+        form.setValue("address", parsedAddress);
+      } catch (error) {
+        console.error("Failed to parse saved address:", error);
+      }
+    }
+  }, []);
+
   // Form submission handler
   function onSubmit(data: CheckoutFormValues) {
+    // Check if shipping to Australia but no address
+    if (data.shipToCountryCode === "AU" && !data.address.formattedAddress) {
+      form.setError("address.formattedAddress", {
+        type: "manual",
+        message: "Address is required for Australian deliveries",
+      });
+      return;
+    }
+
     // Process checkout
     console.log("Form submitted:", data);
     // TODO: Call checkout API endpoint
@@ -153,7 +238,7 @@ export default function Checkout() {
     );
   }
 
-  if (!isMounted) {
+  if (!isLoaded) {
     return null; // Prevent hydration errors
   }
 
@@ -278,7 +363,8 @@ export default function Checkout() {
                           </SelectTrigger>
                         </FormControl>
                         <SelectContent>
-                          {COUNTRY_CODES.map((country) => (
+                          <SelectItem value="AU">AUSTRALIA</SelectItem>
+                          {shippingCountries.data?.map((country) => (
                             <SelectItem key={country.code} value={country.code}>
                               {country.name}
                             </SelectItem>
@@ -289,6 +375,29 @@ export default function Checkout() {
                     </FormItem>
                   )}
                 />
+
+                {form.watch("shipToCountryCode") === "AU" && (
+                  <FormField
+                    control={form.control}
+                    name="address"
+                    render={() => (
+                      <FormItem>
+                        <FormLabel>Address</FormLabel>
+                        <FormControl>
+                          <AddressAutoComplete
+                            address={address}
+                            setAddress={setAddress}
+                            placeholder="Enter your Australian address"
+                          />
+                        </FormControl>
+                        <FormDescription>
+                          Start typing your suburb or postcode
+                        </FormDescription>
+                        <FormMessage />
+                      </FormItem>
+                    )}
+                  />
+                )}
 
                 <FormField
                   control={form.control}
@@ -302,9 +411,9 @@ export default function Checkout() {
                         />
                       </FormControl>
                       <div className="space-y-1 leading-none">
-                        <FormLabel>Business Purchase</FormLabel>
+                        <FormLabel>B2B Delivery</FormLabel>
                         <FormDescription>
-                          Check this if {"you're"} purchasing for a business
+                          This is a business address.
                         </FormDescription>
                       </div>
                     </FormItem>
