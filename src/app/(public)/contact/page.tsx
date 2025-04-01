@@ -3,6 +3,13 @@
 import { useState } from "react";
 import { MapPin, Phone, Mail } from "lucide-react";
 import { Separator } from "~/components/ui/separator";
+import {
+  Card,
+  CardHeader,
+  CardTitle,
+  CardDescription,
+  CardContent,
+} from "~/components/ui/card";
 
 export default function Contact() {
   return (
@@ -12,64 +19,59 @@ export default function Contact() {
           <h1 className="text-4xl font-bold tracking-tight text-foreground sm:text-5xl">
             Contact Us
           </h1>
-          <p className="mt-4 text-lg text-muted-foreground">
+          {/* <p className="mt-4 text-lg text-muted-foreground">
             We&apos;re here to help with any questions about our parts or
             services
-          </p>
+          </p> */}
         </div>
 
-        <div className="mt-12 rounded-lg bg-card p-8">
-          <div className="space-y-8">
-            <div>
-              <h2 className="text-2xl font-semibold text-foreground">
-                Get in Touch
-              </h2>
-              <p className="mt-4 text-muted-foreground">
-                Have questions about our parts or services? We&apos;re here to
-                help!
-              </p>
+        <Card className="mt-12">
+          <CardHeader>
+            <CardTitle>Get in Touch</CardTitle>
+            {/* <CardDescription>
+              Have questions about our parts or services? We&apos;re here to
+              help!
+            </CardDescription> */}
+          </CardHeader>
+          <CardContent className="space-y-6">
+            <div className="flex items-center gap-4">
+              <MapPin className="h-6 w-6 text-primary" />
+              <div>
+                <p className="font-medium text-foreground">Our Location</p>
+                <a
+                  href="https://maps.google.com/?q=Unit+2/26+Rushdale+Street,+Knoxfield,+Victoria+Australia"
+                  target="_blank"
+                  rel="noopener noreferrer"
+                  className="text-primary hover:underline"
+                >
+                  Unit 2/26 Rushdale Street, Knoxfield, Victoria Australia
+                </a>
+              </div>
             </div>
 
-            <div className="space-y-6">
-              <div className="flex items-center gap-4">
-                <MapPin className="h-6 w-6 text-primary" />
-                <div>
-                  <p className="font-medium text-foreground">Our Location</p>
-                  <a
-                    href="https://maps.google.com/?q=Unit+2/26+Rushdale+Street,+Knoxfield,+Victoria+Australia"
-                    target="_blank"
-                    rel="noopener noreferrer"
-                    className="text-primary hover:underline"
-                  >
-                    Unit 2/26 Rushdale Street, Knoxfield, Victoria Australia
-                  </a>
-                </div>
+            <div className="flex items-center gap-4">
+              <Phone className="h-6 w-6 text-primary" />
+              <div>
+                <p className="font-medium text-foreground">Phone</p>
+                <a
+                  className="text-primary hover:underline"
+                  href="tel:+61431133764"
+                >
+                  0431 133 764
+                </a>
               </div>
+            </div>
 
-              <div className="flex items-center gap-4">
-                <Phone className="h-6 w-6 text-primary" />
-                <div>
-                  <p className="font-medium text-foreground">Phone</p>
-                  <a
-                    className="text-primary hover:underline"
-                    href="tel:+61431133764"
-                  >
-                    0431 133 764
-                  </a>
-                </div>
-              </div>
-
-              <div className="flex items-center gap-4">
-                <Mail className="h-6 w-6 text-primary" />
-                <div>
-                  <p className="font-medium text-foreground">Email</p>
-                  <a
-                    className="text-primary hover:underline"
-                    href="mailto:contact@partedeuro.com.au"
-                  >
-                    contact@partedeuro.com.au
-                  </a>
-                </div>
+            <div className="flex items-center gap-4">
+              <Mail className="h-6 w-6 text-primary" />
+              <div>
+                <p className="font-medium text-foreground">Email</p>
+                <a
+                  className="text-primary hover:underline"
+                  href="mailto:contact@partedeuro.com.au"
+                >
+                  contact@partedeuro.com.au
+                </a>
               </div>
             </div>
 
@@ -84,8 +86,8 @@ export default function Contact() {
                 <p>Monday to Friday</p>
               </div>
             </div>
-          </div>
-        </div>
+          </CardContent>
+        </Card>
       </div>
     </div>
   );
