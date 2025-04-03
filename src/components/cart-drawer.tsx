@@ -78,7 +78,7 @@ export function CartDrawer() {
 
     return cart.map((item) => ({
       ...item,
-      ...(listingsMap.get(item.listingId) || {}),
+      ...(listingsMap.get(item.listingId) ?? {}),
     }));
   }, [cart, listingsData]);
 
@@ -170,6 +170,7 @@ export function CartDrawer() {
 
                 <div className="flex flex-col gap-3">
                   <Link
+                    prefetch={true}
                     href="/checkout"
                     className="w-full"
                     onClick={closeCart}
