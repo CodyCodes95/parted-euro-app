@@ -198,10 +198,8 @@ export default function Checkout() {
 
   // Save address to localStorage when it changes
   useEffect(() => {
-    if (address.formattedAddress) {
-      localStorage.setItem("checkout-address", JSON.stringify(address));
-      form.setValue("address", address);
-    }
+    localStorage.setItem("checkout-address", JSON.stringify(address));
+    form.setValue("address", address);
   }, [address, form]);
 
   // Set initial address from localStorage if available
