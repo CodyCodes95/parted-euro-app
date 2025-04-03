@@ -8,6 +8,7 @@ import { donorRouter } from "~/server/api/routers/donor";
 import { createCallerFactory, createTRPCRouter } from "~/server/api/trpc";
 import { listingsRouter } from "~/server/api/routers/listings";
 import { checkoutRouter } from "./routers/checkout";
+import { cartRouter } from "./routers/cart";
 /**
  * This is the primary router for your server.
  *
@@ -23,6 +24,7 @@ export const appRouter = createTRPCRouter({
   donor: donorRouter,
   listings: listingsRouter,
   checkout: checkoutRouter,
+  cart: cartRouter,
 });
 
 // export type definition of API

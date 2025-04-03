@@ -42,16 +42,15 @@ export function CartDrawer() {
   const listingIds = useMemo(() => cart.map((item) => item.listingId), [cart]);
 
   // Fetch listing details using the new tRPC query
-  const { data: listingsData, isLoading } =
-    api.listings.getListingsByIds.useQuery(
-      {
-        ids: listingIds,
-      },
-      {
-        enabled: isMounted && listingIds.length > 0, // Only run query when mounted and cart has items
-        staleTime: 5 * 60 * 1000, // Cache for 5 minutes
-      },
-    );
+  const { data: listingsData, isLoading } = api.cart.getListingsByIds.useQuery(
+    {
+      ids: listingIds,
+    },
+    {
+      enabled: isMounted && listingIds.length > 0, // Only run query when mounted and cart has items
+      staleTime: 5 * 60 * 1000, // Cache for 5 minutes
+    },
+  );
 
   // Prevent hydration errors
   useEffect(() => {

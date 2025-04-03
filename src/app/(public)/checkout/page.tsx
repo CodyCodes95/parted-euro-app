@@ -38,6 +38,7 @@ import {
   type CheckoutAddress,
   AddressAutoComplete,
 } from "./_components/AddressAutocomplete";
+import { toast } from "sonner";
 
 // Define the form schema using zod
 const checkoutFormSchema = z
@@ -111,15 +112,22 @@ export default function Checkout() {
   const listingIds = useMemo(() => cart.map((item) => item.listingId), [cart]);
 
   // Fetch listing details using tRPC
-  const { data: listingsData, isLoading } =
-    api.listings.getListingsByIds.useQuery(
+  const { data: listingsData, isLoading } = api.cart.getListingsByIds.useQuery(
+    {
+      ids: listingIds,
+    },
+    {
+      enabled: !!listingIds.length,
+      staleTime: 5 * 60 * 1000, // Cache for 5 minutes
+    },
+  );
+
+  const { data: shippingData, isLoading: isShippingLoading } =
+    api.cart.getCartShippingData.useQuery(
       {
         ids: listingIds,
       },
-      {
-        enabled: isLoaded && listingIds.length > 0,
-        staleTime: 5 * 60 * 1000, // Cache for 5 minutes
-      },
+      { enabled: !!listingIds.length },
     );
 
   // Combine cart quantities with fetched listing data
@@ -171,6 +179,30 @@ export default function Checkout() {
     },
   });
 
+  const shippingServices = api.checkout.getShippingServices.useQuery(
+    {
+      destinationPostcode: address.postalCode ?? "",
+      weight: shippingData?.cartWeight ?? 0,
+      length: shippingData?.largestPart.length ?? 0,
+      width: shippingData?.largestPart.width ?? 0,
+      height: shippingData?.largestPart.height ?? 0,
+      destinationCountry: form.watch("shipToCountryCode") || "AUSTRALIA",
+      destinationCity: address.city ?? "",
+      destinationState: address.region ?? "",
+      b2b: form.watch("isB2B"),
+    },
+    {
+      enabled:
+        !!shippingData &&
+        !!cart.length &&
+        (!!address.postalCode || form.watch("shipToCountryCode") !== "AU"),
+      retry: false,
+    },
+  );
+
+  const { mutateAsync: getStripeCheckout } =
+    api.checkout.getStripeCheckout.useMutation();
+
   // Update address validation when country changes
   useEffect(() => {
     const subscription = form.watch((value, { name }) => {
@@ -217,7 +249,7 @@ export default function Checkout() {
   }, []);
 
   // Form submission handler
-  function onSubmit(data: CheckoutFormValues) {
+  async function onSubmit(data: CheckoutFormValues) {
     // Check if shipping to Australia but no address
     if (data.shipToCountryCode === "AU" && !data.address.formattedAddress) {
       form.setError("address.formattedAddress", {
@@ -227,13 +259,29 @@ export default function Checkout() {
       return;
     }
 
+    if (!shippingServices.data) {
+      toast.error("Error while fetching shipping services. Please try again.");
+      return;
+    }
+
     // Process checkout
-    console.log("Form submitted:", data);
-    // TODO: Call checkout API endpoint
-    alert(
-      "Checkout functionality would be implemented here. Form data: " +
-        JSON.stringify(data),
-    );
+
+    const { url } = await getStripeCheckout({
+      items: cart.map((item) => ({
+        itemId: item.listingId,
+        quantity: item.quantity,
+      })),
+      name: data.name,
+      email: data.email,
+      countryCode: data.shipToCountryCode,
+      shippingOptions: shippingServices.data,
+    });
+
+    if (url) {
+      window.location.href = url;
+    } else {
+      toast.error("Error while creating checkout session. Please try again.");
+    }
   }
 
   if (!isLoaded) {

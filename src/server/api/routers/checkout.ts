@@ -1,5 +1,7 @@
+import { Stripe } from "stripe";
 import { z } from "zod";
-import { adminProcedure, createTRPCRouter, publicProcedure,  } from "../trpc";
+import { adminProcedure, createTRPCRouter, publicProcedure } from "../trpc";
+import { PrismaClient } from "@prisma/client";
 // import { createStripeSession } from "@/pages/api/checkout";
 
 type ShippingCountryResponse = {
@@ -348,38 +350,254 @@ const getInterparcelShippingServices = async (input: ShippingServicesInput) => {
     .slice(0, 4) as StripeShippingOption[];
 };
 
+export type CheckoutItem = {
+  itemId: string;
+  quantity: number;
+};
+
+type StripeSessionRequest = {
+  shippingOptions: StripeShippingOption[];
+  email: string;
+  name: string;
+  items: CheckoutItem[];
+  countryCode: string;
+  adminCreated?: boolean;
+};
+
+export const createStripeSession = async (input: StripeSessionRequest) => {
+  const prisma = new PrismaClient();
+
+  const stripe = new Stripe(process.env.STRIPE_SECRET!, {
+    apiVersion: "2022-11-15",
+  });
+
+  const { items, shippingOptions, email, name, countryCode } = input;
+  try {
+    const redirectURL =
+      process.env.NODE_ENV === "development"
+        ? "http://localhost:3000"
+        : `https://partedeuro.com.au`;
+
+    // get items from query
+
+    const listingsPurchased = await prisma.listing.findMany({
+      where: {
+        id: {
+          in: items.map((item) => item.itemId),
+        },
+      },
+      select: {
+        id: true,
+        title: true,
+        price: true,
+        images: {
+          orderBy: {
+            order: "asc",
+          },
+        },
+        parts: {
+          select: {
+            donor: {
+              select: {
+                vin: true,
+              },
+            },
+            inventoryLocation: {
+              select: {
+                name: true,
+              },
+            },
+            partDetails: {
+              select: {
+                partNo: true,
+                alternatePartNumbers: true,
+                name: true,
+                weight: true,
+                length: true,
+                width: true,
+                height: true,
+              },
+            },
+          },
+        },
+      },
+    });
+
+    // create a new customer
+
+    const customer = await stripe.customers.create({
+      email,
+      name,
+    });
+
+    const stripeLineItems = listingsPurchased.map((item) => {
+      const itemProvided = items.find(
+        (itemQuery) => itemQuery.itemId === item.id,
+      );
+      return {
+        price_data: {
+          currency: "aud",
+          product_data: {
+            name: item.title,
+            images: [item.images[0]!.url],
+            metadata: {
+              VIN: item.parts[0]?.donor!.vin,
+              inventoryLocations: item.parts
+                .map((part) => part.inventoryLocation?.name)
+                .join(","),
+            },
+          },
+          unit_amount: item.price * 100,
+        },
+        quantity: itemProvided!.quantity,
+      };
+    });
+
+    const order = await prisma?.order.create({
+      data: {
+        email,
+        name,
+        status: input.adminCreated ? "Pending payment" : "PENDING",
+        subtotal: stripeLineItems.reduce(
+          (acc, cur) => acc + cur.price_data.unit_amount * cur.quantity,
+          0,
+        ),
+      },
+    });
+
+    for (const item of listingsPurchased) {
+      const itemProvided = items.find(
+        (itemQuery) => itemQuery.itemId === item.id,
+      );
+      const orderItem = await prisma?.orderItem.create({
+        data: {
+          listingId: item.id,
+          quantity: itemProvided!.quantity,
+          orderId: order?.id,
+        },
+      });
+      await prisma?.order.update({
+        where: {
+          id: order?.id,
+        },
+        data: {
+          orderItems: {
+            connect: {
+              id: orderItem?.id,
+            },
+          },
+        },
+      });
+    }
+
+    const session = await stripe.checkout.sessions.create({
+      customer: customer.id,
+      payment_method_types: ["card", "afterpay_clearpay", "link"],
+      phone_number_collection: {
+        enabled: true,
+      },
+      shipping_address_collection: {
+        allowed_countries: [
+          countryCode,
+        ] as Stripe.Checkout.SessionCreateParams.ShippingAddressCollection.AllowedCountry[],
+      },
+      shipping_options:
+        shippingOptions as Stripe.Checkout.SessionCreateParams.ShippingOption[],
+      line_items:
+        stripeLineItems as Stripe.Checkout.SessionCreateParams.LineItem[],
+      mode: "payment",
+      success_url: `${redirectURL}/orders/confirmation?orderId=${order?.id}`,
+      cancel_url: `${redirectURL}/checkout`,
+      metadata: {
+        orderId: order?.id ?? "",
+      },
+    });
+
+    return {
+      url: session.url,
+    };
+  } catch (err) {
+    if (err instanceof Error) {
+      console.log(err.message);
+      throw new Error(err.message);
+    }
+    throw new Error("Unknown error");
+  }
+};
+
 export const checkoutRouter = createTRPCRouter({
-//   getAdminCheckoutSession: adminProcedure
-//     .input(
-//       z.object({
-//         items: z.array(
-//           z.object({
-//             itemId: z.string(),
-//             quantity: z.number(),
-//             price: z.number(),
-//           }),
-//         ),
-//         name: z.string(),
-//         email: z.string(),
-//         countryCode: z.string(),
-//         shippingOptions: z.array(
-//           z.object({
-//             shipping_rate_data: z.object({
-//               type: z.string(),
-//               display_name: z.string(),
-//               fixed_amount: z.object({
-//                 amount: z.number(),
-//                 currency: z.string(),
-//               }),
-//             }),
-//           }),
-//         ),
-//       }),
-//     )
-//     .query(async ({ ctx, input }) => {
-//       const url = await createStripeSession({ ...input, adminCreated: true });
-//       return url;
-//     }),
+  getStripeCheckout: publicProcedure
+    .input(
+      z.object({
+        items: z.array(
+          z.object({
+            itemId: z.string(),
+            quantity: z.number(),
+          }),
+        ),
+        name: z.string(),
+        email: z.string(),
+        countryCode: z.string(),
+        shippingOptions: z.array(
+          z.object({
+            shipping_rate_data: z.object({
+              type: z.string(),
+              display_name: z.string(),
+              fixed_amount: z.object({
+                amount: z.number(),
+                currency: z.string(),
+              }),
+            }),
+          }),
+        ),
+      }),
+    )
+    .mutation(async ({ ctx, input }) => {
+      const { items, name, email, countryCode, shippingOptions } = input;
+
+      const session = await createStripeSession({
+        items,
+        name,
+        email,
+        countryCode,
+        shippingOptions,
+      });
+
+      return {
+        url: session.url,
+      };
+    }),
+  //   getAdminCheckoutSession: adminProcedure
+  //     .input(
+  //       z.object({
+  //         items: z.array(
+  //           z.object({
+  //             itemId: z.string(),
+  //             quantity: z.number(),
+  //             price: z.number(),
+  //           }),
+  //         ),
+  //         name: z.string(),
+  //         email: z.string(),
+  //         countryCode: z.string(),
+  //         shippingOptions: z.array(
+  //           z.object({
+  //             shipping_rate_data: z.object({
+  //               type: z.string(),
+  //               display_name: z.string(),
+  //               fixed_amount: z.object({
+  //                 amount: z.number(),
+  //                 currency: z.string(),
+  //               }),
+  //             }),
+  //           }),
+  //         ),
+  //       }),
+  //     )
+  //     .query(async ({ ctx, input }) => {
+  //       const url = await createStripeSession({ ...input, adminCreated: true });
+  //       return url;
+  //     }),
   getShippingCountries: publicProcedure.query(async () => {
     const res = await fetch(`${auspostBaseUrl}/postage/country.json`, {
       headers: {
