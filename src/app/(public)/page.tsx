@@ -16,7 +16,7 @@ export default async function Home() {
           <h1 className="mb-6 text-center text-4xl font-bold text-white md:text-5xl lg:text-6xl">
             Your BMW Spare Parts Specialists
           </h1>
-          <Link href="/listings">
+          <Link prefetch={true} href="/listings">
             <Button variant="outline">Shop Now</Button>
           </Link>
         </div>

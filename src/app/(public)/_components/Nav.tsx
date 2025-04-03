@@ -28,6 +28,7 @@ const Nav = () => {
         {/* Desktop Navigation Links */}
         <nav className="hidden space-x-8 md:flex">
           <Link
+            prefetch={true}
             href="/listings"
             className={cn(
               buttonVariants({ variant: "ghost", size: "sm" }),
