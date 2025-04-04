@@ -14,4 +14,29 @@ export const orderRouter = createTRPCRouter({
       });
       return order;
     }),
+
+  getOrderWithItems: publicProcedure
+    .input(z.string())
+    .query(async ({ ctx, input }) => {
+      const order = await ctx.db.order.findUnique({
+        where: { id: input },
+        include: {
+          orderItems: {
+            include: {
+              listing: {
+                include: {
+                  images: {
+                    orderBy: {
+                      order: "asc",
+                    },
+                    take: 1,
+                  },
+                },
+              },
+            },
+          },
+        },
+      });
+      return order;
+    }),
 });
