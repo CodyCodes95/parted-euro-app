@@ -1,5 +1,6 @@
 import { type NextRequest } from "next/server";
 import Stripe from "stripe";
+import { createInvoiceFromStripeEvent } from "~/server/xero/createInvoice";
 
 export const POST = async (req: NextRequest) => {
   const stripe = new Stripe(process.env.STRIPE_SECRET!, {
@@ -35,9 +36,16 @@ export const POST = async (req: NextRequest) => {
       // Handle the completed checkout session
       console.log(`Payment successful for session: ${session.id}`);
 
+      const lineItems = await stripe.checkout.sessions.listLineItems(
+        session.id,
+        {
+          expand: ["data.price.product"],
+        },
+      );
+
       // TODO: Fulfill the order here - update database, send confirmation emails, etc.
       // For example:
-      // await fulfillOrder(session);
+      await createInvoiceFromStripeEvent(session, lineItems.data);
 
       break;
     default:
