@@ -2,6 +2,8 @@ import { type NextRequest } from "next/server";
 import Stripe from "stripe";
 import { createInvoiceFromStripeEvent } from "~/server/xero/createInvoice";
 
+export const maxDuration = 30;
+
 export const POST = async (req: NextRequest) => {
   const stripe = new Stripe(process.env.STRIPE_SECRET!, {
     apiVersion: "2022-11-15",

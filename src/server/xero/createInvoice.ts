@@ -1,8 +1,12 @@
 import { Invoice, LineAmountTypes, Address } from "xero-node";
-import type Stripe from "stripe";
 import { sendNewOrderEmail } from "../resend/resend";
 import { initXero } from "../api/routers/xero";
 import { db } from "../db";
+import Stripe from "stripe";
+
+const stripe = new Stripe(process.env.STRIPE_SECRET!, {
+  apiVersion: "2022-11-15",
+});
 
 export type XeroItem = {
   description: string;
@@ -191,6 +195,67 @@ export const createInvoiceFromStripeEvent = async (
       shippingRateId: event.shipping_cost!.shipping_rate! as string,
     });
 
+    // update order
+    const order = await db.order.findUnique({
+      where: {
+        id: event.metadata!.orderId!,
+      },
+    });
+
+    const shippingOption = await stripe.shippingRates.retrieve(
+      order!.shippingRateId!,
+    );
+
+    await db.order.update({
+      where: {
+        id: event.metadata!.orderId!,
+      },
+      data: {
+        status: "Paid",
+        shippingMethod: shippingOption.display_name,
+      },
+    });
+
+    //   update orderitems
+
+    const orderItems = await db.orderItem.findMany({
+      where: {
+        orderId: event.metadata!.orderId!,
+      },
+      include: {
+        listing: true,
+      },
+    });
+    for (const item of orderItems) {
+      const listing = item.listing.id;
+      const listingItems = await db.listing.findUnique({
+        where: {
+          id: listing,
+        },
+        include: {
+          parts: true,
+        },
+      });
+      for (const part of listingItems!.parts) {
+        await db.listing.update({
+          where: {
+            id: listing,
+          },
+          data: {
+            parts: {
+              update: {
+                where: {
+                  id: part.id,
+                },
+                data: {
+                  quantity: part.quantity - item.quantity,
+                },
+              },
+            },
+          },
+        });
+      }
+    }
     return;
   } catch (err) {
     // write event and lineitems to db
