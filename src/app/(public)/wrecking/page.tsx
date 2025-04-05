@@ -98,13 +98,13 @@ export default function WreckingPage() {
     defaultValue: "all",
   });
   const [make, setMake] = useQueryState("make", {
-    defaultValue: "",
+    defaultValue: "BMW",
   });
   const [series, setSeries] = useQueryState("series", {
-    defaultValue: "",
+    defaultValue: "all",
   });
   const [model, setModel] = useQueryState("model", {
-    defaultValue: "",
+    defaultValue: "all",
   });
 
   // Local state
@@ -134,9 +134,9 @@ export default function WreckingPage() {
     sortOrder: (sortOrder as "asc" | "desc") || "desc",
     search: debouncedSearch,
     year: year && year !== "all" ? parseInt(year) : undefined,
-    make: make || undefined,
-    series: series || undefined,
-    model: model || undefined,
+    make: make && make !== "all" ? make : undefined,
+    series: series && series !== "all" ? series : undefined,
+    model: model && model !== "all" ? model : undefined,
   });
 
   // Scroll to top on pagination change
@@ -154,13 +154,18 @@ export default function WreckingPage() {
 
   const clearFilters = () => {
     void setYear("all");
-    void setMake("");
-    void setSeries("");
-    void setModel("");
+    void setMake("all");
+    void setSeries("all");
+    void setModel("all");
     void setPage(1);
   };
 
-  const hasActiveFilters = !!(year !== "all" || make || series || model);
+  const hasActiveFilters = !!(
+    year !== "all" ||
+    make !== "all" ||
+    series !== "all" ||
+    model !== "all"
+  );
 
   // Handle car selection from modal
   const handleCarSelected = (carData: {
@@ -170,8 +175,16 @@ export default function WreckingPage() {
   }) => {
     // Only set URL parameters for values that are provided
     void setMake(carData.make);
-    void setModel(carData.model ?? "");
-    void setSeries(carData.series ?? "");
+    void setModel(carData.model ?? "all");
+    void setSeries(carData.series ?? "all");
+    void setPage(1);
+  };
+
+  // Handle make change
+  const handleMakeChange = (value: string) => {
+    void setMake(value);
+    void setSeries("all");
+    void setModel("all");
     void setPage(1);
   };
 
@@ -458,9 +471,9 @@ export default function WreckingPage() {
                     variant="ghost"
                     size="icon"
                     onClick={() => {
-                      void setMake("");
-                      void setSeries("");
-                      void setModel("");
+                      void setMake("all");
+                      void setSeries("all");
+                      void setModel("all");
                     }}
                     className="h-4 w-4 p-0"
                   >
@@ -475,8 +488,8 @@ export default function WreckingPage() {
                     variant="ghost"
                     size="icon"
                     onClick={() => {
-                      void setSeries("");
-                      void setModel("");
+                      void setSeries("all");
+                      void setModel("all");
                     }}
                     className="h-4 w-4 p-0"
                   >
@@ -490,7 +503,7 @@ export default function WreckingPage() {
                   <Button
                     variant="ghost"
                     size="icon"
-                    onClick={() => void setModel("")}
+                    onClick={() => void setModel("all")}
                     className="h-4 w-4 p-0"
                   >
                     <X className="h-3 w-3" />
@@ -677,20 +690,12 @@ export default function WreckingPage() {
         {/* Make Filter */}
         <div className="mb-4 space-y-2">
           <h3 className="font-medium">Make</h3>
-          <Select
-            value={make}
-            onValueChange={(value) => {
-              void setMake(value);
-              void setSeries("");
-              void setModel("");
-              void setPage(1);
-            }}
-          >
+          <Select value={make} onValueChange={handleMakeChange}>
             <SelectTrigger>
               <SelectValue placeholder="Select make" />
             </SelectTrigger>
             <SelectContent>
-              <SelectItem value="">Any Make</SelectItem>
+              <SelectItem value="all">Any Make</SelectItem>
               {filterOptions.data?.makes?.map((makeOption) => (
                 <SelectItem key={makeOption} value={makeOption}>
                   {makeOption}
@@ -701,61 +706,65 @@ export default function WreckingPage() {
         </div>
 
         {/* Series Filter - only shown when make is selected */}
-        {make && !!filterOptions.data?.seriesByMake?.[make]?.length && (
-          <div className="mb-4 space-y-2">
-            <h3 className="font-medium">Series</h3>
-            <Select
-              value={series}
-              onValueChange={(value) => {
-                void setSeries(value);
-                void setModel("");
-                void setPage(1);
-              }}
-            >
-              <SelectTrigger>
-                <SelectValue placeholder="Select series" />
-              </SelectTrigger>
-              <SelectContent>
-                <SelectItem value="">Any Series</SelectItem>
-                {filterOptions.data?.seriesByMake?.[make]?.map(
-                  (seriesOption) => (
-                    <SelectItem key={seriesOption} value={seriesOption}>
-                      {seriesOption}
-                    </SelectItem>
-                  ),
-                )}
-              </SelectContent>
-            </Select>
-          </div>
-        )}
+        {make &&
+          make !== "all" &&
+          !!filterOptions.data?.seriesByMake?.[make]?.length && (
+            <div className="mb-4 space-y-2">
+              <h3 className="font-medium">Series</h3>
+              <Select
+                value={series}
+                onValueChange={(value) => {
+                  void setSeries(value);
+                  void setModel("all");
+                  void setPage(1);
+                }}
+              >
+                <SelectTrigger>
+                  <SelectValue placeholder="Select series" />
+                </SelectTrigger>
+                <SelectContent>
+                  <SelectItem value="all">Any Series</SelectItem>
+                  {filterOptions.data?.seriesByMake?.[make]?.map(
+                    (seriesOption) => (
+                      <SelectItem key={seriesOption} value={seriesOption}>
+                        {seriesOption}
+                      </SelectItem>
+                    ),
+                  )}
+                </SelectContent>
+              </Select>
+            </div>
+          )}
 
         {/* Model Filter - only shown when make is selected */}
-        {make && !!filterOptions.data?.modelsByMake?.[make]?.length && (
-          <div className="mb-4 space-y-2">
-            <h3 className="font-medium">Model</h3>
-            <Select
-              value={model}
-              onValueChange={(value) => {
-                void setModel(value);
-                void setPage(1);
-              }}
-            >
-              <SelectTrigger>
-                <SelectValue placeholder="Select model" />
-              </SelectTrigger>
-              <SelectContent>
-                <SelectItem value="">Any Model</SelectItem>
-                {filterOptions.data?.modelsByMake?.[make]?.map(
-                  (modelOption) => (
-                    <SelectItem key={modelOption} value={modelOption}>
-                      {modelOption}
-                    </SelectItem>
-                  ),
-                )}
-              </SelectContent>
-            </Select>
-          </div>
-        )}
+        {make &&
+          make !== "all" &&
+          !!filterOptions.data?.modelsByMake?.[make]?.length && (
+            <div className="mb-4 space-y-2">
+              <h3 className="font-medium">Model</h3>
+              <Select
+                value={model}
+                onValueChange={(value) => {
+                  void setModel(value);
+                  void setPage(1);
+                }}
+              >
+                <SelectTrigger>
+                  <SelectValue placeholder="Select model" />
+                </SelectTrigger>
+                <SelectContent>
+                  <SelectItem value="all">Any Model</SelectItem>
+                  {filterOptions.data?.modelsByMake?.[make]?.map(
+                    (modelOption) => (
+                      <SelectItem key={modelOption} value={modelOption}>
+                        {modelOption}
+                      </SelectItem>
+                    ),
+                  )}
+                </SelectContent>
+              </Select>
+            </div>
+          )}
       </>
     );
   }
@@ -791,20 +800,12 @@ export default function WreckingPage() {
         {/* Make Filter */}
         <div className="space-y-2">
           <h3 className="font-medium">Make</h3>
-          <Select
-            value={make}
-            onValueChange={(value) => {
-              void setMake(value);
-              void setSeries("");
-              void setModel("");
-              void setPage(1);
-            }}
-          >
+          <Select value={make} onValueChange={handleMakeChange}>
             <SelectTrigger>
               <SelectValue placeholder="Select make" />
             </SelectTrigger>
             <SelectContent>
-              <SelectItem value="">Any Make</SelectItem>
+              <SelectItem value="all">Any Make</SelectItem>
               {filterOptions.data?.makes?.map((makeOption) => (
                 <SelectItem key={makeOption} value={makeOption}>
                   {makeOption}
@@ -815,61 +816,65 @@ export default function WreckingPage() {
         </div>
 
         {/* Series Filter - only shown when make is selected */}
-        {make && !!filterOptions.data?.seriesByMake?.[make]?.length && (
-          <div className="space-y-2">
-            <h3 className="font-medium">Series</h3>
-            <Select
-              value={series}
-              onValueChange={(value) => {
-                void setSeries(value);
-                void setModel("");
-                void setPage(1);
-              }}
-            >
-              <SelectTrigger>
-                <SelectValue placeholder="Select series" />
-              </SelectTrigger>
-              <SelectContent>
-                <SelectItem value="">Any Series</SelectItem>
-                {filterOptions.data?.seriesByMake?.[make]?.map(
-                  (seriesOption) => (
-                    <SelectItem key={seriesOption} value={seriesOption}>
-                      {seriesOption}
-                    </SelectItem>
-                  ),
-                )}
-              </SelectContent>
-            </Select>
-          </div>
-        )}
+        {make &&
+          make !== "all" &&
+          !!filterOptions.data?.seriesByMake?.[make]?.length && (
+            <div className="space-y-2">
+              <h3 className="font-medium">Series</h3>
+              <Select
+                value={series}
+                onValueChange={(value) => {
+                  void setSeries(value);
+                  void setModel("all");
+                  void setPage(1);
+                }}
+              >
+                <SelectTrigger>
+                  <SelectValue placeholder="Select series" />
+                </SelectTrigger>
+                <SelectContent>
+                  <SelectItem value="all">Any Series</SelectItem>
+                  {filterOptions.data?.seriesByMake?.[make]?.map(
+                    (seriesOption) => (
+                      <SelectItem key={seriesOption} value={seriesOption}>
+                        {seriesOption}
+                      </SelectItem>
+                    ),
+                  )}
+                </SelectContent>
+              </Select>
+            </div>
+          )}
 
         {/* Model Filter - only shown when make is selected */}
-        {make && !!filterOptions.data?.modelsByMake?.[make]?.length && (
-          <div className="space-y-2">
-            <h3 className="font-medium">Model</h3>
-            <Select
-              value={model}
-              onValueChange={(value) => {
-                void setModel(value);
-                void setPage(1);
-              }}
-            >
-              <SelectTrigger>
-                <SelectValue placeholder="Select model" />
-              </SelectTrigger>
-              <SelectContent>
-                <SelectItem value="">Any Model</SelectItem>
-                {filterOptions.data?.modelsByMake?.[make]?.map(
-                  (modelOption) => (
-                    <SelectItem key={modelOption} value={modelOption}>
-                      {modelOption}
-                    </SelectItem>
-                  ),
-                )}
-              </SelectContent>
-            </Select>
-          </div>
-        )}
+        {make &&
+          make !== "all" &&
+          !!filterOptions.data?.modelsByMake?.[make]?.length && (
+            <div className="space-y-2">
+              <h3 className="font-medium">Model</h3>
+              <Select
+                value={model}
+                onValueChange={(value) => {
+                  void setModel(value);
+                  void setPage(1);
+                }}
+              >
+                <SelectTrigger>
+                  <SelectValue placeholder="Select model" />
+                </SelectTrigger>
+                <SelectContent>
+                  <SelectItem value="all">Any Model</SelectItem>
+                  {filterOptions.data?.modelsByMake?.[make]?.map(
+                    (modelOption) => (
+                      <SelectItem key={modelOption} value={modelOption}>
+                        {modelOption}
+                      </SelectItem>
+                    ),
+                  )}
+                </SelectContent>
+              </Select>
+            </div>
+          )}
 
         {/* Apply Filters Button (Mobile only) */}
         <Button className="mt-2 w-full" onClick={() => setSidebarOpen(false)}>
