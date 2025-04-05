@@ -62,6 +62,29 @@ export const donorRouter = createTRPCRouter({
       };
     }),
 
+  // Get all donors with cars for inventory form select
+  getAllDonorsWithCars: adminProcedure.query(async ({ ctx }) => {
+    const donors = await ctx.db.donor.findMany({
+      select: {
+        vin: true,
+        year: true,
+        car: {
+          select: {
+            make: true,
+            model: true,
+            series: true,
+          },
+        },
+      },
+      orderBy: { vin: "asc" },
+    });
+
+    return donors.map((donor) => ({
+      value: donor.vin,
+      label: `${donor.vin} (${donor.year} ${donor.car.make} ${donor.car.model})`,
+    }));
+  }),
+
   // Get filter options for the wrecking page
   getFilterOptions: publicProcedure.query(async ({ ctx }) => {
     // Get all donors with their car information

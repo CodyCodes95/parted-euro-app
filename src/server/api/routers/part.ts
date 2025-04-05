@@ -135,6 +135,22 @@ export const partRouter = createTRPCRouter({
     }));
   }),
 
+  // Get all part details for inventory form select
+  getAllPartDetails: adminProcedure.query(async ({ ctx }) => {
+    const partDetails = await ctx.db.partDetail.findMany({
+      select: {
+        partNo: true,
+        name: true,
+      },
+      orderBy: { name: "asc" },
+    });
+
+    return partDetails.map((part) => ({
+      value: part.partNo,
+      label: `${part.name} (${part.partNo})`,
+    }));
+  }),
+
   // Get a part by ID
   getById: adminProcedure
     .input(z.object({ partNo: z.string() }))

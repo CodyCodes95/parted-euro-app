@@ -1,8 +1,153 @@
+"use client";
+
+import { useState } from "react";
+import { api } from "~/trpc/react";
+import { DataTable } from "~/components/data-table/data-table";
+import { getInventoryColumns } from "./_components/columns";
+import { InventoryForm } from "./_components/inventory-form";
+import { DeleteInventoryDialog } from "./_components/delete-inventory-dialog";
+import { keepPreviousData } from "@tanstack/react-query";
+import { Input } from "~/components/ui/input";
+import { type SortingState } from "@tanstack/react-table";
+
+export type InventoryItem = {
+  id: string;
+  partDetailsId: string;
+  partDetails: {
+    partNo: string;
+    name: string;
+    alternatePartNumbers: string | null;
+  };
+  donorVin: string | null;
+  donor?: {
+    vin: string;
+  } | null;
+  inventoryLocationId: string | null;
+  inventoryLocation?: {
+    id: string;
+    name: string;
+  } | null;
+  variant: string | null;
+  quantity: number;
+  sold: boolean;
+  soldPrice?: number | null;
+  soldParentPrice?: number | null;
+  createdAt?: Date;
+  updatedAt?: Date;
+  listing: { id: string }[];
+};
+
 export default function InventoryAdminPage() {
+  const [isAddInventoryOpen, setIsAddInventoryOpen] = useState(false);
+  const [isEditInventoryOpen, setIsEditInventoryOpen] = useState(false);
+  const [isDeleteInventoryOpen, setIsDeleteInventoryOpen] = useState(false);
+  const [selectedInventory, setSelectedInventory] =
+    useState<InventoryItem | null>(null);
+  const [searchTerm, setSearchTerm] = useState("");
+  const [sorting, setSorting] = useState<SortingState>([]);
+
+  // Get the current sort parameters from the sorting state
+  const sortConfig =
+    sorting.length > 0
+      ? {
+          sortBy: sorting[0]?.id,
+          sortOrder: sorting[0]?.desc ? ("desc" as const) : ("asc" as const),
+        }
+      : null;
+
+  // Fetch inventory with pagination, search, and sorting
+  const inventoryQuery = api.inventory.getAll.useQuery(
+    {
+      limit: 100,
+      search: searchTerm,
+      ...(sortConfig ?? {}),
+    },
+    {
+      placeholderData: keepPreviousData,
+    },
+  );
+
+  const inventory = (inventoryQuery.data?.items ?? []) as InventoryItem[];
+  const isLoading = inventoryQuery.isLoading;
+
+  const handleAddInventory = () => {
+    setIsAddInventoryOpen(true);
+  };
+
+  const handleEditInventory = (item: InventoryItem) => {
+    setSelectedInventory(item);
+    setIsEditInventoryOpen(true);
+  };
+
+  const handleDeleteInventory = (item: InventoryItem) => {
+    setSelectedInventory(item);
+    setIsDeleteInventoryOpen(true);
+  };
+
+  const handleSearch = (term: string) => {
+    setSearchTerm(term);
+  };
+
+  const columns = getInventoryColumns({
+    onEdit: handleEditInventory,
+    onDelete: handleDeleteInventory,
+  });
+
   return (
-    <div className="container py-6">
-      <h1 className="mb-6 text-3xl font-bold">Inventory Management</h1>
-      <p className="text-muted-foreground">Manage your parts inventory here.</p>
+    <div className="container p-6">
+      <div className="mb-6 flex items-center justify-between">
+        <h1 className="text-3xl font-bold">Inventory Management</h1>
+      </div>
+
+      <div className="mb-4">
+        <Input
+          type="text"
+          placeholder="Search by part name, number, or donor VIN..."
+          className="w-full"
+          value={searchTerm}
+          onChange={(e) => handleSearch(e.target.value)}
+        />
+        <p className="mt-1 text-xs text-muted-foreground">
+          Search by VIN, part name, part number, or alternate part numbers
+        </p>
+      </div>
+
+      {isLoading && (
+        <div className="flex h-20 items-center justify-center">
+          <div className="text-sm text-muted-foreground">Loading...</div>
+        </div>
+      )}
+
+      {!isLoading && (
+        <DataTable
+          columns={columns}
+          data={inventory}
+          onAddClick={handleAddInventory}
+          sorting={sorting}
+          onSortingChange={setSorting}
+        />
+      )}
+
+      <InventoryForm
+        open={isAddInventoryOpen}
+        onOpenChange={setIsAddInventoryOpen}
+      />
+
+      {selectedInventory && (
+        <>
+          <InventoryForm
+            open={isEditInventoryOpen}
+            onOpenChange={setIsEditInventoryOpen}
+            defaultValues={selectedInventory}
+            isEditing
+          />
+          <DeleteInventoryDialog
+            open={isDeleteInventoryOpen}
+            onOpenChange={setIsDeleteInventoryOpen}
+            inventory={selectedInventory}
+          />
+        </>
+      )}
     </div>
   );
 }

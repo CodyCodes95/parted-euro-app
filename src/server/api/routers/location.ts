@@ -53,6 +53,22 @@ export const locationRouter = createTRPCRouter({
       };
     }),
 
+  // Get all locations for inventory form select
+  getAllLocations: adminProcedure.query(async ({ ctx }) => {
+    const locations = await ctx.db.inventoryLocations.findMany({
+      select: {
+        id: true,
+        name: true,
+      },
+      orderBy: { name: "asc" },
+    });
+
+    return locations.map((location) => ({
+      value: location.id,
+      label: location.name,
+    }));
+  }),
+
   // Get a location by ID
   getById: adminProcedure
     .input(z.object({ id: z.string() }))
