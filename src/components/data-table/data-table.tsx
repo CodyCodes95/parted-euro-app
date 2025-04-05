@@ -55,7 +55,7 @@ export function DataTable<TData, TValue>({
     React.useState<VisibilityState>({});
   const [rowSelection, setRowSelection] = React.useState({});
 
-  const sortingState = sorting !== undefined ? sorting : internalSorting;
+  const sortingState = sorting ?? internalSorting;
   const sortingChangeHandler = onSortingChange ?? setInternalSorting;
 
   const table = useReactTable({
