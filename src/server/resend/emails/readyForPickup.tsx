@@ -13,8 +13,7 @@ import {
   Section,
 } from "@react-email/components";
 import * as React from "react";
-import type { OrderWithItems } from "../../../utils/trpc";
-import { formatter } from "../../../utils/formatPrice";
+import { type OrderWithItems } from "~/trpc/shared";
 
 type ReadyForPickupEmailprops = {
   order: OrderWithItems;
@@ -23,6 +22,15 @@ type ReadyForPickupEmailprops = {
 const baseUrl = process.env.VERCEL_URL
   ? `https://${process.env.VERCEL_URL}`
   : "";
+
+export const formatter = new Intl.NumberFormat("en-AU", {
+  style: "currency",
+  currency: "AUD",
+  minimumFractionDigits: 2,
+});
+
+export const formatPrice = (price: number) =>
+  formatter.format(price).split("A")[1];
 
 export const ReadyForPickupEmail = ({ order }: ReadyForPickupEmailprops) => (
   <Html>
@@ -132,7 +140,7 @@ export const ReadyForPickupEmail = ({ order }: ReadyForPickupEmailprops) => (
           })}
         </Section>
         <Text style={{ ...text, margin: "0px", marginBottom: "14px" }}>
-          <Text style={{ ...span, fontWeight: "bold" }}>Total:{" "}</Text>
+          <Text style={{ ...span, fontWeight: "bold" }}>Total: </Text>
           {formatter.format((order?.subtotal ?? 0) / 100)}
         </Text>
         <Text style={{ ...text }}>

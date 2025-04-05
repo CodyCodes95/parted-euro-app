@@ -11,8 +11,7 @@ import {
   Section,
 } from "@react-email/components";
 import * as React from "react";
-import type { OrderWithItems } from "../../../utils/trpc";
-import { formatter } from "../../../utils/formatPrice";
+import { type OrderWithItems } from "~/trpc/shared";
 
 type OrderShippedEmailprops = {
   order: OrderWithItems;
@@ -21,6 +20,15 @@ type OrderShippedEmailprops = {
 const baseUrl = process.env.VERCEL_URL
   ? `https://${process.env.VERCEL_URL}`
   : "";
+
+export const formatter = new Intl.NumberFormat("en-AU", {
+  style: "currency",
+  currency: "AUD",
+  minimumFractionDigits: 2,
+});
+
+export const formatPrice = (price: number) =>
+  formatter.format(price).split("A")[1];
 
 export const OrderShippedEmail = ({ order }: OrderShippedEmailprops) => (
   <Html>
