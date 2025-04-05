@@ -32,7 +32,22 @@ export const inventoryRouter = createTRPCRouter({
       const query = {
         take: limit + 1,
         ...(cursor ? { cursor: { id: cursor } } : {}),
-        orderBy: sortBy ? { [sortBy]: sortOrder ?? "asc" } : { id: "desc" },
+        orderBy: sortBy
+          ? sortBy.startsWith("partDetails_")
+            ? {
+                partDetails: {
+                  [sortBy.replace("partDetails_", "")]: sortOrder ?? "asc",
+                },
+              }
+            : sortBy.startsWith("inventoryLocation_")
+              ? {
+                  inventoryLocation: {
+                    [sortBy.replace("inventoryLocation_", "")]:
+                      sortOrder ?? "asc",
+                  },
+                }
+              : { [sortBy]: sortOrder ?? "asc" }
+          : { id: "desc" },
         where: {
           ...(search
             ? {
