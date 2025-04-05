@@ -14,6 +14,37 @@ const inventorySchema = z.object({
 });
 
 export const inventoryRouter = createTRPCRouter({
+  // Get all inventory items for select dropdown
+  getAllForSelect: adminProcedure.query(async ({ ctx }) => {
+    const inventory = await ctx.db.part.findMany({
+      where: {
+        sold: false,
+      },
+      select: {
+        id: true,
+        partDetails: {
+          select: {
+            partNo: true,
+            name: true,
+          },
+        },
+        variant: true,
+      },
+      orderBy: {
+        partDetails: {
+          name: "asc",
+        },
+      },
+    });
+
+    return inventory.map((item) => ({
+      value: item.id,
+      label: `${item.partDetails.name} (${item.partDetails.partNo})${
+        item.variant ? ` - ${item.variant}` : ""
+      }`,
+    }));
+  }),
+
   // Get all inventory items
   getAll: adminProcedure
     .input(

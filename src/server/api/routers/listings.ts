@@ -11,6 +11,263 @@ const prepareSearchTerms = (search: string | undefined): string[] => {
 };
 
 export const listingsRouter = createTRPCRouter({
+  getAllAdmin: publicProcedure
+    .input(
+      z.object({
+        limit: z.number().default(100),
+        search: z.string().optional(),
+        sortBy: z.string().optional(),
+        sortOrder: z.enum(["asc", "desc"]).optional(),
+      }),
+    )
+    .query(async ({ ctx, input }) => {
+      const searchTerms = prepareSearchTerms(input.search);
+
+      const searchConditions = searchTerms.map((term) => ({
+        OR: [
+          { title: { contains: term, mode: "insensitive" as const } },
+          { id: { contains: term, mode: "insensitive" as const } },
+          {
+            parts: {
+              some: {
+                partDetails: {
+                  partNo: { contains: term, mode: "insensitive" as const },
+                },
+              },
+            },
+          },
+          {
+            parts: {
+              some: {
+                partDetails: {
+                  alternatePartNumbers: {
+                    contains: term,
+                    mode: "insensitive" as const,
+                  },
+                },
+              },
+            },
+          },
+        ],
+      }));
+
+      const where: Prisma.ListingWhereInput = {
+        ...(searchTerms.length > 0 ? { AND: searchConditions } : {}),
+      };
+
+      const orderBy: Record<string, "asc" | "desc"> = {};
+      if (input.sortBy) {
+        orderBy[input.sortBy] = input.sortOrder ?? "asc";
+      } else {
+        orderBy.createdAt = "desc";
+      }
+
+      const [items, count] = await Promise.all([
+        ctx.db.listing.findMany({
+          take: input.limit,
+          where,
+          orderBy,
+          include: {
+            parts: {
+              select: {
+                id: true,
+                partDetails: {
+                  select: {
+                    partNo: true,
+                    name: true,
+                  },
+                },
+              },
+            },
+            images: {
+              orderBy: {
+                order: "asc",
+              },
+              select: {
+                id: true,
+                url: true,
+                order: true,
+              },
+            },
+          },
+        }),
+        ctx.db.listing.count({ where }),
+      ]);
+
+      return {
+        items,
+        count,
+      };
+    }),
+
+  create: publicProcedure
+    .input(
+      z.object({
+        title: z.string().min(1),
+        description: z.string().min(1),
+        condition: z.string().min(1),
+        price: z.number().positive(),
+        parts: z.array(z.string()).min(1),
+        images: z
+          .array(
+            z.object({
+              id: z.string(),
+              url: z.string(),
+              order: z.number(),
+            }),
+          )
+          .optional(),
+      }),
+    )
+    .mutation(async ({ ctx, input }) => {
+      const listing = await ctx.db.listing.create({
+        data: {
+          title: input.title,
+          description: input.description,
+          condition: input.condition,
+          price: input.price,
+          active: true,
+          parts: {
+            connect: input.parts.map((partId) => ({ id: partId })),
+          },
+          images: input.images
+            ? {
+                createMany: {
+                  data: input.images.map((image) => ({
+                    url: image.url,
+                    order: image.order,
+                  })),
+                },
+              }
+            : undefined,
+        },
+      });
+
+      return listing;
+    }),
+
+  update: publicProcedure
+    .input(
+      z.object({
+        id: z.string(),
+        data: z.object({
+          title: z.string().min(1),
+          description: z.string().min(1),
+          condition: z.string().min(1),
+          price: z.number().positive(),
+          parts: z.array(z.string()).min(1),
+          images: z
+            .array(
+              z.object({
+                id: z.string(),
+                url: z.string(),
+                order: z.number(),
+              }),
+            )
+            .optional(),
+        }),
+      }),
+    )
+    .mutation(async ({ ctx, input }) => {
+      // First, fetch current parts to compare with new parts
+      const currentListing = await ctx.db.listing.findUnique({
+        where: { id: input.id },
+        include: {
+          parts: true,
+          images: true,
+        },
+      });
+
+      if (!currentListing) {
+        throw new Error("Listing not found");
+      }
+
+      // Get parts to disconnect and connect
+      const currentPartIds = currentListing.parts.map((part) => part.id);
+      const partsToDisconnect = currentPartIds.filter(
+        (id) => !input.data.parts.includes(id),
+      );
+      const partsToConnect = input.data.parts.filter(
+        (id) => !currentPartIds.includes(id),
+      );
+
+      // Update the listing with transactions to handle parts and images
+      const updatedListing = await ctx.db.$transaction(async (tx) => {
+        // Disconnect parts that are not in the new list
+        if (partsToDisconnect.length > 0) {
+          await tx.listing.update({
+            where: { id: input.id },
+            data: {
+              parts: {
+                disconnect: partsToDisconnect.map((id) => ({ id })),
+              },
+            },
+          });
+        }
+
+        // Connect new parts
+        if (partsToConnect.length > 0) {
+          await tx.listing.update({
+            where: { id: input.id },
+            data: {
+              parts: {
+                connect: partsToConnect.map((id) => ({ id })),
+              },
+            },
+          });
+        }
+
+        // Delete all current images
+        await tx.image.deleteMany({
+          where: { listingId: input.id },
+        });
+
+        // Create new images if provided
+        if (input.data.images && input.data.images.length > 0) {
+          await tx.image.createMany({
+            data: input.data.images.map((image) => ({
+              url: image.url,
+              order: image.order,
+              listingId: input.id,
+            })),
+          });
+        }
+
+        // Update the main listing data
+        return tx.listing.update({
+          where: { id: input.id },
+          data: {
+            title: input.data.title,
+            description: input.data.description,
+            condition: input.data.condition,
+            price: input.data.price,
+          },
+        });
+      });
+
+      return updatedListing;
+    }),
+
+  delete: publicProcedure
+    .input(
+      z.object({
+        id: z.string(),
+      }),
+    )
+    .mutation(async ({ ctx, input }) => {
+      // First, delete all images associated with the listing
+      await ctx.db.image.deleteMany({
+        where: { listingId: input.id },
+      });
+
+      // Then delete the listing
+      const listing = await ctx.db.listing.delete({
+        where: { id: input.id },
+      });
+
+      return listing;
+    }),
+
   getListingMetadata: publicProcedure
     .input(
       z.object({
