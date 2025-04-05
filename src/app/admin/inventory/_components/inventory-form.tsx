@@ -1,6 +1,7 @@
 "use client";
 
 import { useState, useEffect } from "react";
+import * as React from "react";
 import { useForm } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
 import { z } from "zod";
@@ -32,6 +33,10 @@ import { Button } from "~/components/ui/button";
 import { toast } from "sonner";
 import { Loader2, Plus } from "lucide-react";
 import { type InventoryItem } from "../page";
+import {
+  VirtualizedCombobox,
+  type VirtualizedOption,
+} from "~/components/ui/virtualized-combobox";
 
 interface InventoryFormProps {
   open: boolean;
@@ -161,6 +166,16 @@ export function InventoryForm({
     setIsLocationModalOpen(true);
   };
 
+  // Convert part options to the format expected by VirtualizedCombobox
+  const partOptionsFormatted = React.useMemo(
+    () =>
+      partOptions.map((part) => ({
+        value: part.value,
+        label: part.label,
+      })) as VirtualizedOption[],
+    [partOptions],
+  );
+
   return (
     <>
       <Dialog open={open} onOpenChange={onOpenChange}>
@@ -178,24 +193,18 @@ export function InventoryForm({
                 render={({ field }) => (
                   <FormItem>
                     <FormLabel>Part*</FormLabel>
-                    <Select
-                      onValueChange={field.onChange}
-                      defaultValue={field.value}
-                      disabled={isEditing}
-                    >
-                      <FormControl>
-                        <SelectTrigger>
-                          <SelectValue placeholder="Select a part" />
-                        </SelectTrigger>
-                      </FormControl>
-                      <SelectContent>
-                        {partOptions.map((part) => (
-                          <SelectItem key={part.value} value={part.value}>
-                            {part.label}
-                          </SelectItem>
-                        ))}
-                      </SelectContent>
-                    </Select>
+                    <FormControl>
+                      <VirtualizedCombobox
+                        options={partOptionsFormatted}
+                        value={field.value}
+                        onChange={field.onChange}
+                        placeholder="Select a part"
+                        searchPlaceholder="Search parts..."
+                        disabled={isEditing}
+                        height="250px"
+                        width="100%"
+                      />
+                    </FormControl>
                     <FormMessage />
                   </FormItem>
                 )}
@@ -274,6 +283,20 @@ export function InventoryForm({
 
               <FormField
                 control={form.control}
+                name="quantity"
+                render={({ field }) => (
+                  <FormItem>
+                    <FormLabel>Quantity*</FormLabel>
+                    <FormControl>
+                      <Input type="number" min={1} {...field} />
+                    </FormControl>
+                    <FormMessage />
+                  </FormItem>
+                )}
+              />
+
+              <FormField
+                control={form.control}
                 name="variant"
                 render={({ field }) => (
                   <FormItem>
@@ -284,20 +307,6 @@ export function InventoryForm({
                         {...field}
                         value={field.value ?? ""}
                       />
-                    </FormControl>
-                    <FormMessage />
-                  </FormItem>
-                )}
-              />
-
-              <FormField
-                control={form.control}
-                name="quantity"
-                render={({ field }) => (
-                  <FormItem>
-                    <FormLabel>Quantity*</FormLabel>
-                    <FormControl>
-                      <Input type="number" min={1} {...field} />
                     </FormControl>
                     <FormMessage />
                   </FormItem>

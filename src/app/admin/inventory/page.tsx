@@ -99,7 +99,7 @@ export default function InventoryAdminPage() {
     <div className="container p-6">
       <div className="mb-6 flex items-center justify-between">
         <h1 className="text-3xl font-bold">Inventory Management</h1>
-        <Button size="sm" onClick={handleAddInventory}>
+        <Button size="sm" onMouseDown={handleAddInventory}>
           <Plus className="mr-2 h-4 w-4" />
           Add Inventory
         </Button>
