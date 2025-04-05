@@ -78,9 +78,9 @@ export function getInventoryColumns({
       },
     },
     {
-      accessorKey: "location",
+      accessorKey: "inventoryLocation.name",
       header: "Location",
-      cell: ({ row }) => row.original.inventoryLocation?.name || "Not assigned",
+      cell: ({ row }) => row.original.inventoryLocation?.name ?? "Not assigned",
     },
     {
       accessorKey: "quantity",

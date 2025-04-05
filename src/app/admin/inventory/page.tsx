@@ -52,7 +52,9 @@ export default function InventoryAdminPage() {
   const sortConfig =
     sorting.length > 0
       ? {
-          sortBy: sorting[0]?.id,
+          sortBy: sorting[0]?.id.includes(".")
+            ? sorting[0]?.id.replace(".", "_")
+            : sorting[0]?.id,
           sortOrder: sorting[0]?.desc ? ("desc" as const) : ("asc" as const),
         }
       : null;
