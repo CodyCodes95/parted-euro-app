@@ -4,7 +4,15 @@ import { useState, useEffect } from "react";
 import { api } from "~/trpc/react";
 import { parseAsInteger, useQueryState } from "nuqs";
 import { useDebounce } from "use-debounce";
-import { ChevronDown, Search, Filter, X, ArrowUpDown, Car } from "lucide-react";
+import {
+  ChevronDown,
+  Search,
+  Filter,
+  X,
+  ArrowUpDown,
+  Car,
+  Loader2,
+} from "lucide-react";
 
 // UI Components
 import { Button } from "~/components/ui/button";
@@ -73,13 +81,19 @@ export default function ListingsPage() {
     null,
   );
   const [selectCarModalOpen, setSelectCarModalOpen] = useState(false);
+  const [isSearching, setIsSearching] = useState(false);
 
   // Debounce search to reduce API calls
   const [debouncedSearch] = useDebounce(search, 500);
 
+  // Set isSearching when search changes but debouncedSearch hasn't caught up
   useEffect(() => {
-    void setPage(1);
-  }, [debouncedSearch]);
+    if (search !== debouncedSearch) {
+      setIsSearching(true);
+    } else {
+      setIsSearching(false);
+    }
+  }, [search, debouncedSearch]);
 
   // API calls
   const listings = api.listings.searchListings.useQuery({
@@ -264,11 +278,12 @@ export default function ListingsPage() {
               value={search}
               onChange={(e) => {
                 void setSearch(e.target.value);
+                void setPage(1);
               }}
               placeholder="Search listings..."
               className="pl-10"
             />
-            {search && (
+            {search && !isSearching && (
               <Button
                 variant="ghost"
                 size="icon"
@@ -280,6 +295,11 @@ export default function ListingsPage() {
               >
                 <X className="h-4 w-4" />
               </Button>
+            )}
+            {isSearching && (
+              <div className="absolute right-1 top-1/2 -translate-y-1/2 transform">
+                <Loader2 className="h-4 w-4 animate-spin text-muted-foreground" />
+              </div>
             )}
           </div>
 
@@ -460,7 +480,7 @@ export default function ListingsPage() {
           )}
 
           {/* Loading State */}
-          {listings.isLoading && (
+          {(listings.isLoading || isSearching) && (
             <div className="grid grid-cols-1 gap-4 sm:grid-cols-2 lg:grid-cols-3">
               {Array.from({ length: 6 }).map((_, i) => (
                 <Card key={i} className="animate-pulse">
@@ -476,7 +496,7 @@ export default function ListingsPage() {
           )}
 
           {/* Error State */}
-          {listings.isError && (
+          {listings.isError && !isSearching && (
             <div className="my-10 text-center">
               <p className="text-lg font-medium text-destructive">
                 Failed to load listings

@@ -1,6 +1,6 @@
 import { z } from "zod";
 import { type Prisma } from "@prisma/client";
-import { adminProcedure, createTRPCRouter } from "../trpc";
+import { adminProcedure, createTRPCRouter, publicProcedure } from "../trpc";
 
 // Define donor input validation schema
 const donorSchema = z.object({
@@ -59,6 +59,182 @@ export const donorRouter = createTRPCRouter({
       return {
         items: donors,
         nextCursor,
+      };
+    }),
+
+  // Get filter options for the wrecking page
+  getFilterOptions: publicProcedure.query(async ({ ctx }) => {
+    // Get all donors with their car information
+    const donors = await ctx.db.donor.findMany({
+      where: {
+        hideFromSearch: false,
+      },
+      select: {
+        year: true,
+        car: {
+          select: {
+            make: true,
+            series: true,
+            model: true,
+          },
+        },
+      },
+    });
+
+    // Extract unique values
+    const years = [...new Set(donors.map((donor) => donor.year))].sort(
+      (a, b) => b - a,
+    );
+    const makes = [...new Set(donors.map((donor) => donor.car.make))].sort();
+
+    // Group series and models by make
+    const seriesByMake: Record<string, string[]> = {};
+    const modelsByMake: Record<string, string[]> = {};
+
+    donors.forEach((donor) => {
+      const { make, series, model } = donor.car;
+
+      if (!seriesByMake[make]) {
+        seriesByMake[make] = [];
+      }
+      if (!modelsByMake[make]) {
+        modelsByMake[make] = [];
+      }
+
+      if (series && !seriesByMake[make].includes(series)) {
+        seriesByMake[make].push(series);
+      }
+
+      if (model && !modelsByMake[make].includes(model)) {
+        modelsByMake[make].push(model);
+      }
+    });
+
+    // Sort series and models
+    Object.keys(seriesByMake).forEach((make) => {
+      seriesByMake[make].sort();
+    });
+    Object.keys(modelsByMake).forEach((make) => {
+      modelsByMake[make].sort();
+    });
+
+    return {
+      years,
+      makes,
+      seriesByMake,
+      modelsByMake,
+    };
+  }),
+
+  // Public search donors endpoint for the wrecking page
+  searchDonors: publicProcedure
+    .input(
+      z.object({
+        page: z.number(),
+        sortBy: z.string(),
+        sortOrder: z.enum(["asc", "desc"]),
+        search: z.string().optional(),
+        year: z.number().optional(),
+        make: z.string().optional(),
+        series: z.string().optional(),
+        model: z.string().optional(),
+      }),
+    )
+    .query(async ({ ctx, input }) => {
+      const pageSize = 20;
+      const orderBy: Record<string, "asc" | "desc"> = {};
+      orderBy[input.sortBy] = input.sortOrder;
+
+      // Prepare search terms for broader search
+      const searchTerms = input.search
+        ? input.search
+            .toLowerCase()
+            .split(/\s+/)
+            .filter((term) => term.length > 0)
+        : [];
+
+      // Build search conditions
+      const searchConditions =
+        searchTerms.length > 0
+          ? searchTerms.map((term) => ({
+              OR: [
+                { vin: { contains: term, mode: "insensitive" as const } },
+                {
+                  car: {
+                    make: { contains: term, mode: "insensitive" as const },
+                  },
+                },
+                {
+                  car: {
+                    model: { contains: term, mode: "insensitive" as const },
+                  },
+                },
+                {
+                  car: {
+                    series: { contains: term, mode: "insensitive" as const },
+                  },
+                },
+                {
+                  car: {
+                    generation: {
+                      contains: term,
+                      mode: "insensitive" as const,
+                    },
+                  },
+                },
+              ],
+            }))
+          : [];
+
+      // Build the base query
+      const queryWhere = {
+        hideFromSearch: false,
+        ...(input.year ? { year: input.year } : {}),
+        car: {
+          ...(input.make ? { make: input.make } : {}),
+          ...(input.series ? { series: input.series } : {}),
+          ...(input.model ? { model: input.model } : {}),
+        },
+        ...(searchTerms.length > 0 ? { AND: searchConditions } : {}),
+      } as Prisma.DonorWhereInput;
+
+      // Make parallel requests for donors and count
+      const donorsRequest = ctx.db.donor.findMany({
+        take: pageSize,
+        skip: input.page * pageSize,
+        where: queryWhere,
+        orderBy,
+        include: {
+          car: true,
+          images: {
+            orderBy: {
+              order: "asc",
+            },
+            take: 1,
+          },
+          parts: {
+            select: {
+              id: true,
+            },
+          },
+        },
+      });
+
+      const countRequest = ctx.db.donor.count({
+        where: queryWhere,
+      });
+
+      // Execute both requests in parallel
+      const [donors, count] = await Promise.all([donorsRequest, countRequest]);
+
+      const totalPages = Math.ceil(count / pageSize);
+      const hasNextPage = (input.page + 1) * pageSize < count;
+
+      return {
+        donors,
+        count,
+        hasNextPage,
+        totalPages,
       };
     }),
 
