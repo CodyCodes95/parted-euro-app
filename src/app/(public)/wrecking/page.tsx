@@ -44,7 +44,6 @@ import {
   PaginationNext,
   PaginationPrevious,
 } from "~/components/ui/pagination";
-import { SelectCarModal } from "~/components/SelectCarModal";
 
 // Type definitions
 type DonorImage = {
@@ -109,20 +108,9 @@ export default function WreckingPage() {
 
   // Local state
   const [sidebarOpen, setSidebarOpen] = useState(false);
-  const [selectCarModalOpen, setSelectCarModalOpen] = useState(false);
-  const [isSearching, setIsSearching] = useState(false);
 
   // Debounce search to reduce API calls
   const [debouncedSearch] = useDebounce(search, 500);
-
-  // Set isSearching when search changes but debouncedSearch hasn't caught up
-  useEffect(() => {
-    if (search !== debouncedSearch) {
-      setIsSearching(true);
-    } else {
-      setIsSearching(false);
-    }
-  }, [search, debouncedSearch]);
 
   // Fetch filter options
   const filterOptions = api.donor.getFilterOptions.useQuery();
@@ -166,19 +154,6 @@ export default function WreckingPage() {
     series !== "all" ||
     model !== "all"
   );
-
-  // Handle car selection from modal
-  const handleCarSelected = (carData: {
-    make: string;
-    series?: string;
-    model?: string;
-  }) => {
-    // Only set URL parameters for values that are provided
-    void setMake(carData.make);
-    void setModel(carData.model ?? "all");
-    void setSeries(carData.series ?? "all");
-    void setPage(1);
-  };
 
   // Handle make change
   const handleMakeChange = (value: string) => {
@@ -272,16 +247,6 @@ export default function WreckingPage() {
         <h1 className="mb-4 text-3xl font-bold md:mb-0">Donor Vehicles</h1>
 
         <div className="flex w-full flex-col space-y-2 sm:flex-row sm:space-x-2 sm:space-y-0 md:w-auto">
-          {/* Select Car Button */}
-          <Button
-            variant="default"
-            className="flex items-center gap-2 whitespace-nowrap"
-            onClick={() => setSelectCarModalOpen(true)}
-          >
-            <Car className="h-4 w-4" />
-            <span>Select Car</span>
-          </Button>
-
           {/* Search Input */}
           <div className="relative w-full md:max-w-[300px]">
             <Search className="absolute left-3 top-1/2 h-4 w-4 -translate-y-1/2 transform text-muted-foreground" />
@@ -291,10 +256,10 @@ export default function WreckingPage() {
                 void setSearch(e.target.value);
                 void setPage(1);
               }}
-              placeholder="Search by VIN..."
+              placeholder="Search..."
               className="pl-10"
             />
-            {search && !isSearching && (
+            {search && (
               <Button
                 variant="ghost"
                 size="icon"
@@ -306,11 +271,6 @@ export default function WreckingPage() {
               >
                 <X className="h-4 w-4" />
               </Button>
-            )}
-            {isSearching && (
-              <div className="absolute right-1 top-1/2 -translate-y-1/2 transform">
-                <Loader2 className="h-4 w-4 animate-spin text-muted-foreground" />
-              </div>
             )}
           </div>
 
@@ -367,59 +327,12 @@ export default function WreckingPage() {
                 <SheetTitle>Filters</SheetTitle>
               </SheetHeader>
               <div className="mt-4 flex flex-col space-y-4">
-                {/* Mobile Select Car Button */}
-                <Button
-                  variant="default"
-                  className="flex items-center gap-2"
-                  onClick={() => {
-                    setSelectCarModalOpen(true);
-                    setSidebarOpen(false);
-                  }}
-                >
-                  <Car className="h-4 w-4" />
-                  <span>Select Car</span>
-                </Button>
-
-                {/* Year Filter */}
-                <div className="space-y-2">
-                  <h3 className="font-medium">Year</h3>
-                  <Select
-                    value={year}
-                    onValueChange={(value) => {
-                      void setYear(value);
-                      void setPage(1);
-                    }}
-                  >
-                    <SelectTrigger>
-                      <SelectValue placeholder="Select year" />
-                    </SelectTrigger>
-                    <SelectContent>
-                      <SelectItem value="all">Any Year</SelectItem>
-                      {filterOptions.data?.years?.map((yearOption) => (
-                        <SelectItem
-                          key={yearOption}
-                          value={yearOption.toString()}
-                        >
-                          {yearOption}
-                        </SelectItem>
-                      ))}
-                    </SelectContent>
-                  </Select>
-                </div>
-
                 {renderFilterContentMobile()}
               </div>
             </SheetContent>
           </Sheet>
         </div>
       </div>
-
-      {/* Select Car Modal */}
-      <SelectCarModal
-        open={selectCarModalOpen}
-        onOpenChange={setSelectCarModalOpen}
-        onCarSelected={handleCarSelected}
-      />
 
       {/* Desktop Layout */}
       <div className="flex flex-col space-y-6 lg:flex-row lg:space-x-6 lg:space-y-0">
@@ -529,7 +442,7 @@ export default function WreckingPage() {
           )}
 
           {/* Loading State */}
-          {(donors.isLoading || isSearching || filterOptions.isLoading) && (
+          {(donors.isLoading || filterOptions.isLoading) && (
             <div className="grid grid-cols-1 gap-4 sm:grid-cols-2 lg:grid-cols-3">
               {Array.from({ length: 6 }).map((_, i) => (
                 <Card key={i} className="animate-pulse">
@@ -545,7 +458,7 @@ export default function WreckingPage() {
           )}
 
           {/* Error State */}
-          {(donors.isError || filterOptions.isError) && !isSearching && (
+          {(donors.isError || filterOptions.isError) && (
             <div className="my-10 text-center">
               <p className="text-lg font-medium text-destructive">
                 Failed to load donors
