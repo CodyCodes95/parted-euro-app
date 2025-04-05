@@ -22,6 +22,7 @@ import {
 } from "~/components/ui/dialog";
 import { Input } from "~/components/ui/input";
 import { SearchCommand } from "~/components/search";
+import { useIsMobile } from "~/hooks/use-mobile";
 
 const navLinks = [
   { href: "/browse", label: "Browse Store", icon: Home },
@@ -31,6 +32,7 @@ const navLinks = [
 ];
 
 export function MobileNav() {
+  const isMobile = useIsMobile();
   const [isOpen, setIsOpen] = useState(false);
   const [activeIndex, setActiveIndex] = useState(-1);
   const { toggleCart, cart } = useCartStore();
@@ -54,6 +56,9 @@ export function MobileNav() {
       document.body.style.overflow = "";
     };
   }, [isOpen]);
+
+  // Return null if not on mobile
+  if (!isMobile) return null;
 
   return (
     <div className="flex items-center space-x-1.5 md:hidden">

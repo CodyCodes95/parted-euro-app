@@ -77,6 +77,10 @@ export default function ListingsPage() {
   // Debounce search to reduce API calls
   const [debouncedSearch] = useDebounce(search, 500);
 
+  useEffect(() => {
+    void setPage(1);
+  }, [debouncedSearch]);
+
   // API calls
   const listings = api.listings.searchListings.useQuery({
     page: page - 1, // Convert to 0-indexed for the backend
@@ -258,7 +262,9 @@ export default function ListingsPage() {
             <Search className="absolute left-3 top-1/2 h-4 w-4 -translate-y-1/2 transform text-muted-foreground" />
             <Input
               value={search}
-              onChange={(e) => setSearch(e.target.value)}
+              onChange={(e) => {
+                void setSearch(e.target.value);
+              }}
               placeholder="Search listings..."
               className="pl-10"
             />
@@ -267,7 +273,10 @@ export default function ListingsPage() {
                 variant="ghost"
                 size="icon"
                 className="absolute right-1 top-1/2 h-7 w-7 -translate-y-1/2 transform"
-                onClick={() => setSearch("")}
+                onClick={() => {
+                  void setSearch("");
+                  void setPage(1);
+                }}
               >
                 <X className="h-4 w-4" />
               </Button>
