@@ -16,6 +16,8 @@ import {
   SelectValue,
 } from "~/components/ui/select";
 import { type SortingState } from "@tanstack/react-table";
+import { Button } from "~/components/ui/button";
+import { Plus } from "lucide-react";
 
 export default function PartsAdminPage() {
   const [isAddPartOpen, setIsAddPartOpen] = useState(false);
@@ -92,7 +94,11 @@ export default function PartsAdminPage() {
   return (
     <div className="container p-6">
       <div className="mb-6 flex items-center justify-between">
-        <h1 className="text-3xl font-bold">Parts Management</h1>
+        <h1 className="text-3xl font-bold">Part Management</h1>
+        <Button size="sm" onClick={handleAddPart}>
+          <Plus className="mr-2 h-4 w-4" />
+          Add Part
+        </Button>
       </div>
 
       <div className="mb-4">
@@ -138,7 +144,6 @@ export default function PartsAdminPage() {
         <DataTable<Part, unknown>
           columns={columns}
           data={parts}
-          onAddClick={handleAddPart}
           sorting={sorting}
           onSortingChange={setSorting}
         />

@@ -22,14 +22,12 @@ interface DataTableToolbarProps<TData> {
     title: string;
     options: { label: string; value: string }[];
   }[];
-  onAddClick?: () => void;
 }
 
 export function DataTableToolbar<TData>({
   table,
   searchKey,
   filterableColumns = [],
-  onAddClick,
 }: DataTableToolbarProps<TData>) {
   const isFiltered = table.getState().columnFilters.length > 0;
 
@@ -88,12 +86,6 @@ export function DataTableToolbar<TData>({
           </Button>
         )}
       </div>
-      {onAddClick && (
-        <Button size="sm" className="h-9" onClick={onAddClick}>
-          <Plus className="mr-2 h-4 w-4" />
-          Add Car
-        </Button>
-      )}
     </div>
   );
 }

@@ -36,7 +36,6 @@ export default function RootLayout({
           </CartStoreInitializer>
         </TRPCReactProvider>
         <Toaster />
-        <FacebookPixel />
       </body>
     </html>
   );

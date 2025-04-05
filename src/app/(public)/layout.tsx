@@ -1,3 +1,4 @@
+import FacebookPixel from "../_components/fb-pixel";
 import Footer from "./_components/Footer";
 import Nav from "./_components/Nav";
 import { ThemeProvider } from "~/components/theme-provider";
@@ -24,6 +25,7 @@ export default function PublicLayout({
 
         <Footer />
       </div>
+      {process.env.NODE_ENV === "production" && <FacebookPixel />}
     </ThemeProvider>
   );
 }

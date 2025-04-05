@@ -9,6 +9,8 @@ import { DeleteLocationDialog } from "./_components/delete-location-dialog";
 import { keepPreviousData } from "@tanstack/react-query";
 import { Input } from "~/components/ui/input";
 import { type SortingState } from "@tanstack/react-table";
+import { Button } from "~/components/ui/button";
+import { Plus } from "lucide-react";
 
 interface LocationWithTimestamps extends Location {
   createdAt: Date;
@@ -75,7 +77,11 @@ export default function LocationsAdminPage() {
   return (
     <div className="container p-6">
       <div className="mb-6 flex items-center justify-between">
-        <h1 className="text-3xl font-bold">Inventory Locations Management</h1>
+        <h1 className="text-3xl font-bold">Location Management</h1>
+        <Button size="sm" onClick={handleAddLocation}>
+          <Plus className="mr-2 h-4 w-4" />
+          Add Location
+        </Button>
       </div>
 
       <div className="mb-4">
@@ -101,7 +107,6 @@ export default function LocationsAdminPage() {
         <DataTable
           columns={columns}
           data={locations}
-          onAddClick={handleAddLocation}
           sorting={sorting}
           onSortingChange={setSorting}
         />

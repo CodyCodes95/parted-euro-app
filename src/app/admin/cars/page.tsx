@@ -16,6 +16,8 @@ import {
   SelectValue,
 } from "~/components/ui/select";
 import { type SortingState } from "@tanstack/react-table";
+import { Button } from "~/components/ui/button";
+import { Plus } from "lucide-react";
 
 export default function CarsAdminPage() {
   const [isAddCarOpen, setIsAddCarOpen] = useState(false);
@@ -86,7 +88,11 @@ export default function CarsAdminPage() {
   return (
     <div className="container p-6">
       <div className="mb-6 flex items-center justify-between">
-        <h1 className="text-3xl font-bold">Cars Management</h1>
+        <h1 className="text-3xl font-bold">Car Management</h1>
+        <Button size="sm" onClick={handleAddCar}>
+          <Plus className="mr-2 h-4 w-4" />
+          Add Car
+        </Button>
       </div>
 
       <div className="mb-4">
@@ -131,7 +137,6 @@ export default function CarsAdminPage() {
         <DataTable
           columns={columns}
           data={cars}
-          onAddClick={handleAddCar}
           sorting={sorting}
           onSortingChange={setSorting}
         />

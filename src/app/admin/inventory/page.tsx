@@ -9,6 +9,8 @@ import { DeleteInventoryDialog } from "./_components/delete-inventory-dialog";
 import { keepPreviousData } from "@tanstack/react-query";
 import { Input } from "~/components/ui/input";
 import { type SortingState } from "@tanstack/react-table";
+import { Button } from "~/components/ui/button";
+import { Plus } from "lucide-react";
 
 export type InventoryItem = {
   id: string;
@@ -97,6 +99,10 @@ export default function InventoryAdminPage() {
     <div className="container p-6">
       <div className="mb-6 flex items-center justify-between">
         <h1 className="text-3xl font-bold">Inventory Management</h1>
+        <Button size="sm" onClick={handleAddInventory}>
+          <Plus className="mr-2 h-4 w-4" />
+          Add Inventory
+        </Button>
       </div>
 
       <div className="mb-4">
@@ -122,7 +128,6 @@ export default function InventoryAdminPage() {
         <DataTable
           columns={columns}
           data={inventory}
-          onAddClick={handleAddInventory}
           sorting={sorting}
           onSortingChange={setSorting}
         />

@@ -9,6 +9,8 @@ import { DeleteDonorDialog } from "./_components/delete-donor-dialog";
 import { keepPreviousData } from "@tanstack/react-query";
 import { Input } from "~/components/ui/input";
 import { type SortingState } from "@tanstack/react-table";
+import { Button } from "~/components/ui/button";
+import { Plus } from "lucide-react";
 
 export default function DonorsAdminPage() {
   const [isAddDonorOpen, setIsAddDonorOpen] = useState(false);
@@ -69,7 +71,11 @@ export default function DonorsAdminPage() {
   return (
     <div className="container p-6">
       <div className="mb-6 flex items-center justify-between">
-        <h1 className="text-3xl font-bold">Donors Management</h1>
+        <h1 className="text-3xl font-bold">Donor Management</h1>
+        <Button size="sm" onClick={handleAddDonor}>
+          <Plus className="mr-2 h-4 w-4" />
+          Add Donor
+        </Button>
       </div>
 
       <div className="mb-4">
@@ -95,7 +101,6 @@ export default function DonorsAdminPage() {
         <DataTable<DonorWithCar, unknown>
           columns={columns}
           data={donors}
-          onAddClick={handleAddDonor}
           sorting={sorting}
           onSortingChange={setSorting}
         />

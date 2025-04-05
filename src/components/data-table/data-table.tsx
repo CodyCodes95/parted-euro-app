@@ -33,7 +33,6 @@ interface DataTableProps<TData, TValue> {
     title: string;
     options: { label: string; value: string }[];
   }[];
-  onAddClick?: () => void;
   sorting?: SortingState;
   onSortingChange?: React.Dispatch<React.SetStateAction<SortingState>>;
 }
@@ -43,7 +42,6 @@ export function DataTable<TData, TValue>({
   data,
   searchKey,
   filterableColumns = [],
-  onAddClick,
   sorting,
   onSortingChange,
 }: DataTableProps<TData, TValue>) {
@@ -81,12 +79,11 @@ export function DataTable<TData, TValue>({
 
   return (
     <div className="space-y-4">
-      {(filterableColumns.length > 0 || onAddClick) && (
+      {filterableColumns.length > 0 && (
         <DataTableToolbar
           table={table}
           searchKey={searchKey}
           filterableColumns={filterableColumns}
-          onAddClick={onAddClick}
         />
       )}
       <div className="rounded-md border">

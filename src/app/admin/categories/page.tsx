@@ -16,6 +16,8 @@ import {
   SelectValue,
 } from "~/components/ui/select";
 import { type SortingState } from "@tanstack/react-table";
+import { Button } from "~/components/ui/button";
+import { Plus } from "lucide-react";
 
 export default function CategoriesAdminPage() {
   const [isAddCategoryOpen, setIsAddCategoryOpen] = useState(false);
@@ -86,7 +88,11 @@ export default function CategoriesAdminPage() {
   return (
     <div className="container p-6">
       <div className="mb-6 flex items-center justify-between">
-        <h1 className="text-3xl font-bold">Categories Management</h1>
+        <h1 className="text-3xl font-bold">Category Management</h1>
+        <Button size="sm" onClick={handleAddCategory}>
+          <Plus className="mr-2 h-4 w-4" />
+          Add Category
+        </Button>
       </div>
 
       <div className="mb-4">
@@ -133,7 +139,6 @@ export default function CategoriesAdminPage() {
         <DataTable
           columns={columns}
           data={categories}
-          onAddClick={handleAddCategory}
           sorting={sorting}
           onSortingChange={setSorting}
         />
