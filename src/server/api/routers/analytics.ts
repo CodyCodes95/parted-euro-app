@@ -1,135 +1,82 @@
 import { z } from "zod";
 import { createTRPCRouter, publicProcedure } from "../trpc";
-import { startOfDay, endOfDay, format } from "date-fns";
+import { startOfDay, endOfDay } from "date-fns";
 
 export const analyticsRouter = createTRPCRouter({
-  // Record a page visit
-  trackPageVisit: publicProcedure
+  // Record any type of analytics event
+  trackEvent: publicProcedure
     .input(
       z.object({
-        path: z.string(),
+        eventType: z.string(),
+        path: z.string().optional(),
+        listingId: z.string().optional(),
         sessionId: z.string(),
         userId: z.string().optional(),
+        metadata: z.record(z.any()).optional(),
         ipAddress: z.string().optional(),
         userAgent: z.string().optional(),
-        referer: z.string().optional(),
       }),
     )
     .mutation(async ({ ctx, input }) => {
-      // Create page visit record
-      const pageVisit = await ctx.db.pageVisit.create({
+      const event = await ctx.db.analyticsEvent.create({
         data: {
+          eventType: input.eventType,
           path: input.path,
-          sessionId: input.sessionId,
-          userId: input.userId,
-          ipAddress: input.ipAddress,
-          userAgent: input.userAgent,
-          referer: input.referer,
-        },
-      });
-
-      // Update daily summary
-      const today = new Date();
-      const formattedDate = format(today, "yyyy-MM-dd");
-
-      // Find or create today's summary
-      await ctx.db.analyticsSummary.upsert({
-        where: {
-          date: startOfDay(today),
-        },
-        create: {
-          date: startOfDay(today),
-          pageVisitsCount: 1,
-          listingViewCount: 0,
-        },
-        update: {
-          pageVisitsCount: {
-            increment: 1,
-          },
-        },
-      });
-
-      return pageVisit;
-    }),
-
-  // Record a listing view
-  trackListingView: publicProcedure
-    .input(
-      z.object({
-        listingId: z.string(),
-        sessionId: z.string(),
-        userId: z.string().optional(),
-        ipAddress: z.string().optional(),
-        userAgent: z.string().optional(),
-      }),
-    )
-    .mutation(async ({ ctx, input }) => {
-      // Create listing view record
-      const listingView = await ctx.db.listingView.create({
-        data: {
           listingId: input.listingId,
           sessionId: input.sessionId,
           userId: input.userId,
+          metadata: input.metadata ?? {},
           ipAddress: input.ipAddress,
           userAgent: input.userAgent,
         },
       });
 
-      // Update daily summary
-      const today = new Date();
-
-      // Find or create today's summary
-      await ctx.db.analyticsSummary.upsert({
-        where: {
-          date: startOfDay(today),
-        },
-        create: {
-          date: startOfDay(today),
-          pageVisitsCount: 0,
-          listingViewCount: 1,
-        },
-        update: {
-          listingViewCount: {
-            increment: 1,
-          },
-        },
-      });
-
-      return listingView;
+      return event;
     }),
 
   // Get analytics for today
   getDailyStats: publicProcedure.query(async ({ ctx }) => {
     const today = new Date();
+    const todayStart = startOfDay(today);
+    const todayEnd = endOfDay(today);
 
-    // Get today's summary
-    const summary = await ctx.db.analyticsSummary.findUnique({
+    // Get unique visitors count (distinct sessionIds)
+    const uniqueVisitorsCount = await ctx.db.analyticsEvent.findMany({
       where: {
-        date: startOfDay(today),
+        eventType: "pageView",
+        timestamp: {
+          gte: todayStart,
+          lte: todayEnd,
+        },
+      },
+      distinct: ["sessionId"],
+      select: {
+        sessionId: true,
       },
     });
 
-    if (!summary) {
-      return {
-        pageVisitsCount: 0,
-        listingViewCount: 0,
-      };
-    }
+    // Get listing views count
+    const listingViewCount = await ctx.db.analyticsEvent.count({
+      where: {
+        eventType: "listingView",
+        timestamp: {
+          gte: todayStart,
+          lte: todayEnd,
+        },
+      },
+    });
 
-    return {
-      pageVisitsCount: summary.pageVisitsCount,
-      listingViewCount: summary.listingViewCount,
-    };
-  }),
-
-  // Get pending orders count
-  getPendingOrdersCount: publicProcedure.query(async ({ ctx }) => {
-    const count = await ctx.db.order.count({
+    // Get pending orders count
+    const pendingOrdersCount = await ctx.db.order.count({
       where: {
         status: "Paid",
       },
     });
 
-    return count;
+    return {
+      uniqueVisitorsCount: uniqueVisitorsCount.length,
+      listingViewCount,
+      pendingOrdersCount,
+    };
   }),
 });

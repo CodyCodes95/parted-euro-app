@@ -89,20 +89,19 @@ model Donor {
 }
 
 model Listing {
-    id           String        @id @default(cuid())
+    id           String      @id @default(cuid())
     title        String
-    description  String        @db.Text
+    description  String      @db.Text
     condition    String
     price        Float
     parts        Part[]
-    createdAt    DateTime      @default(now())
-    updatedAt    DateTime      @updatedAt
+    createdAt    DateTime    @default(now())
+    updatedAt    DateTime    @updatedAt
     images       Image[]
-    active       Boolean       @default(true)
-    listedOnEbay Boolean       @default(false)
+    active       Boolean     @default(true)
+    listedOnEbay Boolean     @default(false)
     ebayOfferId  String?
     OrderItem    OrderItem[]
-    ListingView  ListingView[]
 }
 
 model Part {
@@ -236,34 +235,16 @@ model HomepageImage {
     updatedAt DateTime @updatedAt
 }
 
-// Analytics models
-model PageVisit {
+// Simplified analytics model
+model AnalyticsEvent {
     id        String   @id @default(cuid())
-    path      String
-    userId    String?
+    eventType String // e.g., "pageView", "listingView", "addToCart", etc.
+    path      String? // For page views
+    listingId String? // For listing views
+    userId    String? // Authenticated user ID if available
+    sessionId String // Client-side generated session ID
+    metadata  Json? // Flexible JSON field for additional event-specific data
     timestamp DateTime @default(now())
-    sessionId String
     ipAddress String?
     userAgent String?
-    referer   String?
-}
-
-model ListingView {
-    id        String   @id @default(cuid())
-    listingId String
-    listing   Listing  @relation(fields: [listingId], references: [id], onDelete: Cascade)
-    userId    String?
-    timestamp DateTime @default(now())
-    sessionId String
-    ipAddress String?
-    userAgent String?
-}
-
-model AnalyticsSummary {
-    id               String   @id @default(cuid())
-    date             DateTime @unique
-    pageVisitsCount  Int      @default(0)
-    listingViewCount Int      @default(0)
-    createdAt        DateTime @default(now())
-    updatedAt        DateTime @updatedAt
 }

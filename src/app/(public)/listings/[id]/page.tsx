@@ -15,6 +15,7 @@ import { Badge } from "~/components/ui/badge";
 import { AddToCart } from "./add-to-cart";
 import { InteractiveCompatibleCars } from "./interactive-compatible-cars";
 import { RelatedListings } from "./related-listings";
+import { ListingAnalytics } from "./listing-analytics";
 
 type Props = {
   params: { id: string };
@@ -77,6 +78,8 @@ export default async function ListingPage({ params }: Props) {
 
   return (
     <div className="container mx-auto px-4 py-8 md:py-12">
+      <ListingAnalytics listingId={id} />
+
       <div className="grid gap-8 md:grid-cols-2">
         {/* Image carousel */}
         <div className="relative overflow-hidden rounded-lg bg-background">
