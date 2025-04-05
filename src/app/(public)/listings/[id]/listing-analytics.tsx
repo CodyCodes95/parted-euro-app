@@ -1,6 +1,6 @@
 "use client";
 
-import { useListingViewTracking } from "~/hooks/useListingViewTracking";
+import { useListingViewTracking } from "~/hooks/useAnalytics";
 
 interface ListingAnalyticsProps {
   listingId: string;

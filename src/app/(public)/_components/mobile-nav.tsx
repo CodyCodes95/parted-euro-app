@@ -3,8 +3,6 @@
 import { useState, useEffect } from "react";
 import Link from "next/link";
 import {
-  Menu,
-  X,
   ChevronRight,
   Home,
   CarFront,
@@ -14,13 +12,6 @@ import {
 } from "lucide-react";
 import { cn } from "~/lib/utils";
 import { useCartStore } from "~/stores/useCartStore";
-import {
-  Dialog,
-  DialogContent,
-  DialogHeader,
-  DialogTitle,
-} from "~/components/ui/dialog";
-import { Input } from "~/components/ui/input";
 import { SearchCommand } from "~/components/search";
 import { useIsMobile } from "~/hooks/use-mobile";
 
@@ -129,6 +120,7 @@ export function MobileNav() {
               {navLinks.map((link, index) => (
                 <li key={link.href} className="overflow-hidden">
                   <Link
+                    prefetch={true}
                     href={link.href}
                     className={cn(
                       "group flex items-center justify-between rounded-lg border border-transparent p-3 text-base font-medium transition-all duration-200",

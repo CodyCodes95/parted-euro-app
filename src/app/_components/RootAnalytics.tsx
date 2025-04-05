@@ -1,6 +1,6 @@
 "use client";
 
-import { usePageViewTracking } from "~/hooks/usePageViewTracking";
+import { usePageAnalytics } from "~/hooks/useAnalytics";
 
 /**
  * Site-wide analytics tracking component
@@ -8,7 +8,7 @@ import { usePageViewTracking } from "~/hooks/usePageViewTracking";
  */
 export function RootAnalytics() {
   // Track page views site-wide
-  usePageViewTracking();
+  usePageAnalytics();
 
   // This component doesn't render anything visible
   return null;

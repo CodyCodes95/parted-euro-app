@@ -33,7 +33,6 @@ export const usePageAnalytics = () => {
   }) => {
     // Don't track in development
     if (process.env.NODE_ENV === "development") {
-      console.log("Exiting");
       return;
     }
 

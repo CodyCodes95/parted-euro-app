@@ -18,6 +18,7 @@ export const analyticsRouter = createTRPCRouter({
       }),
     )
     .mutation(async ({ ctx, input }) => {
+      if (ctx.session?.user.isAdmin) return;
       const event = await ctx.db.analyticsEvent.create({
         data: {
           eventType: input.eventType,

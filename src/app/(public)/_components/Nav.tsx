@@ -1,6 +1,6 @@
 import { UserIcon } from "lucide-react";
 import Image from "next/image";
-import Link from "next/link";
+import { Link } from "~/components/link";
 import React, { Suspense } from "react";
 import { MobileNav } from "./mobile-nav";
 import { buttonVariants } from "~/components/ui/button";
@@ -39,6 +39,7 @@ const Nav = () => {
             Browse Store
           </Link>
           <Link
+            prefetch={true}
             href="/wrecking"
             className={cn(
               buttonVariants({ variant: "ghost", size: "sm" }),
@@ -48,6 +49,7 @@ const Nav = () => {
             Cars Wrecking Now
           </Link>
           <Link
+            prefetch={true}
             href="/returns-refunds"
             className={cn(
               buttonVariants({ variant: "ghost", size: "sm" }),
@@ -57,6 +59,7 @@ const Nav = () => {
             Warranty & Return Policy
           </Link>
           <Link
+            prefetch={true}
             href="/contact"
             className={cn(
               buttonVariants({ variant: "ghost", size: "sm" }),
