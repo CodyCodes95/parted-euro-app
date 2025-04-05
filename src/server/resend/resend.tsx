@@ -1,7 +1,7 @@
 import { Resend } from "resend";
-import type { OrderWithItems } from "../../utils/trpc";
 import NewOrderEmail from "./emails/OrderPlaced";
 import type { Order } from "@prisma/client";
+import { type OrderWithItems } from "~/trpc/shared";
 
 const baseUrl = process.env.VERCEL_URL
   ? `https://${process.env.VERCEL_URL}`
@@ -20,8 +20,9 @@ function generateOrderEmailHTML(order: OrderWithItems): string {
       (item) => `
     <tr>
       <td>
-        <img src="${item.listing.images[0]
-          ?.url}" alt="Product Image" width="60" height="60" style="vertical-align: middle; margin-right: 10px;">
+        <img src="${
+          item.listing.images[0]?.url
+        }" alt="Product Image" width="60" height="60" style="vertical-align: middle; margin-right: 10px;">
         ${item.listing.title}
       </td>
       <td>${formatCurrency(item.listing.price)}</td>
@@ -147,8 +148,9 @@ function generatePickupOrderEmailHTML(order: OrderWithItems): string {
       (item, index) => `
     <tr>
       <td>
-        <img src="${item.listing.images[0]
-          ?.url}" alt="Product Image" width="60" height="60" style="vertical-align: middle; margin-right: 10px;">
+        <img src="${
+          item.listing.images[0]?.url
+        }" alt="Product Image" width="60" height="60" style="vertical-align: middle; margin-right: 10px;">
       </td>
       <td>${item.listing.title}</td>
       <td>${formatCurrency(item.listing.price)}</td>
@@ -262,7 +264,7 @@ function generatePickupOrderEmailHTML(order: OrderWithItems): string {
   `;
 }
 
-const resend = new Resend(process.env.RESEND_API_KEY as string);
+const resend = new Resend(process.env.RESEND_API_KEY);
 
 export const sendOrderShippedEmail = async (order: OrderWithItems) => {
   if (!order?.email) return;

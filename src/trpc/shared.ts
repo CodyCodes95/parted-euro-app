@@ -3,3 +3,7 @@ import { type AppRouter } from "~/server/api/root";
 
 export type RouterInputs = inferRouterInputs<AppRouter>;
 export type RouterOutputs = inferRouterOutputs<AppRouter>;
+
+// return types from the router
+
+export type OrderWithItems = RouterOutputs["order"]["getOrderWithItems"];
