@@ -8,7 +8,7 @@ import {
 
 export default async function AdminDashboardPage() {
   return (
-    <div className="container py-6">
+    <div className="container p-6">
       <h1 className="mb-6 text-3xl font-bold">Admin Dashboard</h1>
 
       <div className="grid gap-6 md:grid-cols-2 lg:grid-cols-3">
