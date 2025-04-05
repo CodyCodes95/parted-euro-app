@@ -11,7 +11,6 @@ import {
   Shield,
   PhoneCall,
   ShoppingBag,
-  Search,
 } from "lucide-react";
 import { cn } from "~/lib/utils";
 import { useCartStore } from "~/stores/useCartStore";
@@ -22,6 +21,7 @@ import {
   DialogTitle,
 } from "~/components/ui/dialog";
 import { Input } from "~/components/ui/input";
+import { SearchCommand } from "~/components/search";
 
 const navLinks = [
   { href: "/browse", label: "Browse Store", icon: Home },
@@ -33,7 +33,6 @@ const navLinks = [
 export function MobileNav() {
   const [isOpen, setIsOpen] = useState(false);
   const [activeIndex, setActiveIndex] = useState(-1);
-  const [searchOpen, setSearchOpen] = useState(false);
   const { toggleCart, cart } = useCartStore();
 
   const itemCount = cart.reduce((count, item) => count + item.quantity, 0);
@@ -59,13 +58,9 @@ export function MobileNav() {
   return (
     <div className="flex items-center space-x-1.5 md:hidden">
       {/* Search Button */}
-      <button
-        onClick={() => setSearchOpen(true)}
-        aria-label="Search"
-        className="relative flex h-10 w-10 items-center justify-center rounded-full bg-primary/10 p-2 text-primary transition-all duration-300 hover:bg-primary/20"
-      >
-        <Search className="h-5 w-5" />
-      </button>
+      <div className="block md:hidden">
+        <SearchCommand className="h-10 w-10 rounded-full bg-primary/10 text-primary hover:bg-primary/20" />
+      </div>
 
       {/* Cart Button */}
       <button
@@ -107,57 +102,6 @@ export function MobileNav() {
           )}
         />
       </button>
-
-      {/* Search Dialog */}
-      <Dialog open={searchOpen} onOpenChange={setSearchOpen}>
-        <DialogContent className="sm:max-w-md">
-          <DialogHeader>
-            <DialogTitle>Search</DialogTitle>
-          </DialogHeader>
-          <div className="flex items-center space-x-2">
-            <div className="grid flex-1 gap-2">
-              <Input
-                type="search"
-                placeholder="Search for parts..."
-                className="h-10"
-                autoFocus
-              />
-            </div>
-            <button
-              type="submit"
-              className="inline-flex h-10 items-center justify-center rounded-md bg-primary px-4 py-2 text-sm font-medium text-primary-foreground shadow transition-colors hover:bg-primary/90 focus-visible:outline-none focus-visible:ring-1 focus-visible:ring-ring"
-            >
-              Search
-            </button>
-          </div>
-          <div className="mt-4">
-            <h3 className="text-sm font-medium">Popular searches</h3>
-            <div className="mt-2 flex flex-wrap gap-2">
-              <Link
-                href="/search?q=bmw+e36"
-                className="rounded-full bg-secondary px-3 py-1 text-xs"
-                onClick={() => setSearchOpen(false)}
-              >
-                BMW E36
-              </Link>
-              <Link
-                href="/search?q=headlights"
-                className="rounded-full bg-secondary px-3 py-1 text-xs"
-                onClick={() => setSearchOpen(false)}
-              >
-                Headlights
-              </Link>
-              <Link
-                href="/search?q=engine+parts"
-                className="rounded-full bg-secondary px-3 py-1 text-xs"
-                onClick={() => setSearchOpen(false)}
-              >
-                Engine parts
-              </Link>
-            </div>
-          </div>
-        </DialogContent>
-      </Dialog>
 
       <div
         className={cn(

@@ -328,4 +328,74 @@ export const listingsRouter = createTRPCRouter({
         return { listings, count, hasNextPage, totalPages };
       }
     }),
+  globalSearch: publicProcedure
+    .input(
+      z.object({
+        query: z.string().min(1),
+        limit: z.number().default(10),
+      }),
+    )
+    .query(async ({ ctx, input }) => {
+      const searchTerms = prepareSearchTerms(input.query);
+
+      if (searchTerms.length === 0) {
+        return [];
+      }
+
+      const searchConditions = searchTerms.map((term) => ({
+        OR: [
+          { title: { contains: term, mode: "insensitive" as const } },
+          { description: { contains: term, mode: "insensitive" as const } },
+          {
+            parts: {
+              some: {
+                partDetails: {
+                  partNo: { contains: term, mode: "insensitive" as const },
+                },
+              },
+            },
+          },
+          {
+            parts: {
+              some: {
+                partDetails: {
+                  alternatePartNumbers: {
+                    contains: term,
+                    mode: "insensitive" as const,
+                  },
+                },
+              },
+            },
+          },
+        ],
+      }));
+
+      const listings = await ctx.db.listing.findMany({
+        where: {
+          active: true,
+          AND: searchConditions,
+        },
+        select: {
+          id: true,
+          title: true,
+          price: true,
+          description: true,
+          images: {
+            orderBy: {
+              order: "asc",
+            },
+            take: 1,
+            select: {
+              url: true,
+            },
+          },
+        },
+        take: input.limit,
+        orderBy: {
+          title: "asc",
+        },
+      });
+
+      return listings;
+    }),
 });

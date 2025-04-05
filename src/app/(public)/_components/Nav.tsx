@@ -1,13 +1,14 @@
-import { SearchIcon, UserIcon } from "lucide-react";
+import { UserIcon } from "lucide-react";
 import Image from "next/image";
 import Link from "next/link";
 import React, { Suspense } from "react";
 import { MobileNav } from "./mobile-nav";
-import { Button, buttonVariants } from "~/components/ui/button";
+import { buttonVariants } from "~/components/ui/button";
 import { cn } from "~/lib/utils";
 import { CartDrawer } from "~/components/cart-drawer";
 import CartButton from "./cart-button";
 import AdminMenu from "./admin-menu";
+import { SearchCommand } from "~/components/search";
 
 const Nav = () => {
   return (
@@ -67,9 +68,7 @@ const Nav = () => {
         </nav>
 
         <div className="hidden items-center gap-2 md:flex">
-          <Button variant="ghost" size="icon">
-            <SearchIcon className="h-5 w-5" />
-          </Button>
+          <SearchCommand />
           <CartButton />
           <Suspense fallback={null}>
             <AdminMenu />
