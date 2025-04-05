@@ -28,6 +28,15 @@ export default function RootLayout({
       className={`${GeistSans.variable}`}
       suppressHydrationWarning
     >
+      {process.env.NODE_ENV === "development" && (
+        <head>
+          <script
+            async
+            crossOrigin="anonymous"
+            src="//unpkg.com/react-scan/dist/auto.global.js"
+          />
+        </head>
+      )}
       <body>
         <TRPCReactProvider>
           <NextSSRPlugin routerConfig={extractRouterConfig(uploadRouter)} />
