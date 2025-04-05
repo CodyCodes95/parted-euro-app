@@ -267,19 +267,3 @@ model AnalyticsSummary {
     createdAt        DateTime @default(now())
     updatedAt        DateTime @updatedAt
 }
-
-// model Notification {
-//   id        String   @id @default(cuid())
-//   message   String
-//   read      Boolean  @default(false)
-//   createdAt DateTime @default(now())
-//   updatedAt DateTime @updatedAt
-// }
-
-// model HomePageImage {
-//   id        String   @id @default(cuid())
-//   url       String
-//   order     Int
-//   createdAt DateTime @default(now())
-//   updatedAt DateTime @updatedAt
-// }
