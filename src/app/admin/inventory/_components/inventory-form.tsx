@@ -81,6 +81,18 @@ export function InventoryForm({
     },
   });
 
+  // Create a separate form for location creation
+  const locationForm = useForm({
+    defaultValues: {
+      name: "",
+    },
+    resolver: zodResolver(
+      z.object({
+        name: z.string().min(1, "Location name is required"),
+      }),
+    ),
+  });
+
   // Mutations for create, update, and create new location
   const createMutation = api.inventory.create.useMutation({
     onSuccess: () => {
@@ -137,17 +149,15 @@ export function InventoryForm({
   };
 
   const handleCreateLocation = () => {
-    if (!newLocationName.trim()) {
-      toast.error("Location name is required");
-      return;
-    }
-
-    setIsCreatingLocation(true);
-    createLocationMutation.mutate({ name: newLocationName.trim() });
+    void locationForm.handleSubmit((values) => {
+      setIsCreatingLocation(true);
+      createLocationMutation.mutate({ name: values.name });
+    })();
   };
 
   // Show the create location dialog
   const handleAddNewLocation = () => {
+    locationForm.reset({ name: "" });
     setIsLocationModalOpen(true);
   };
 
@@ -321,37 +331,45 @@ export function InventoryForm({
           <DialogHeader>
             <DialogTitle>Create New Location</DialogTitle>
           </DialogHeader>
-          <div className="space-y-4">
-            <FormItem>
-              <FormLabel>Location Name*</FormLabel>
-              <FormControl>
-                <Input
-                  placeholder="Enter location name"
-                  value={newLocationName}
-                  onChange={(e) => setNewLocationName(e.target.value)}
-                />
-              </FormControl>
-            </FormItem>
-            <DialogFooter>
-              <Button
-                type="button"
-                variant="outline"
-                onClick={() => setIsLocationModalOpen(false)}
-                disabled={isCreatingLocation}
-              >
-                Cancel
-              </Button>
-              <Button
-                onClick={handleCreateLocation}
-                disabled={isCreatingLocation}
-              >
-                {isCreatingLocation && (
-                  <Loader2 className="mr-2 h-4 w-4 animate-spin" />
+          <Form {...locationForm}>
+            <form
+              onSubmit={locationForm.handleSubmit((values) => {
+                setIsCreatingLocation(true);
+                createLocationMutation.mutate({ name: values.name });
+              })}
+              className="space-y-4"
+            >
+              <FormField
+                control={locationForm.control}
+                name="name"
+                render={({ field }) => (
+                  <FormItem>
+                    <FormLabel>Location Name*</FormLabel>
+                    <FormControl>
+                      <Input placeholder="Enter location name" {...field} />
+                    </FormControl>
+                    <FormMessage />
+                  </FormItem>
                 )}
-                Create
-              </Button>
-            </DialogFooter>
-          </div>
+              />
+              <DialogFooter>
+                <Button
+                  type="button"
+                  variant="outline"
+                  onClick={() => setIsLocationModalOpen(false)}
+                  disabled={isCreatingLocation}
+                >
+                  Cancel
+                </Button>
+                <Button type="submit" disabled={isCreatingLocation}>
+                  {isCreatingLocation && (
+                    <Loader2 className="mr-2 h-4 w-4 animate-spin" />
+                  )}
+                  Create
+                </Button>
+              </DialogFooter>
+            </form>
+          </Form>
         </DialogContent>
       </Dialog>
     </>
