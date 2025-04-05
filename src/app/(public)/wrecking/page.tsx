@@ -15,6 +15,7 @@ import {
   Calendar,
   Gauge,
 } from "lucide-react";
+import Link from "next/link";
 
 // UI Components
 import { Button } from "~/components/ui/button";
@@ -490,77 +491,77 @@ export default function WreckingPage() {
           {donors.data && donors.data.donors.length > 0 && (
             <div className="grid grid-cols-1 gap-4 sm:grid-cols-2 lg:grid-cols-3">
               {donors.data.donors.map((donor: Donor) => (
-                <Card
+                <Link
                   key={donor.vin}
-                  className="group cursor-pointer overflow-hidden transition-all duration-200 hover:scale-[1.02] hover:shadow-md"
-                  onClick={() =>
-                    (window.location.href = `/wrecking/${donor.vin}`)
-                  }
+                  href={`/wrecking/${donor.vin}`}
+                  className="block"
                 >
-                  <div className="relative h-[200px] w-full bg-muted">
-                    {donor.images?.[0] ? (
-                      <img
-                        src={donor.images[0].url}
-                        alt={`${donor.car.make} ${donor.car.model}`}
-                        className="h-full w-full object-cover transition-transform duration-300 group-hover:scale-105"
-                      />
-                    ) : donor.imageUrl ? (
-                      <img
-                        src={donor.imageUrl}
-                        alt={`${donor.car.make} ${donor.car.model}`}
-                        className="h-full w-full object-cover transition-transform duration-300 group-hover:scale-105"
-                      />
-                    ) : (
-                      <div className="flex h-full w-full items-center justify-center bg-muted">
-                        <Car className="h-12 w-12 text-muted-foreground" />
-                      </div>
-                    )}
-                  </div>
-                  <CardContent className="p-4">
-                    <div className="mb-2 flex items-center justify-between">
-                      <h3 className="line-clamp-1 text-lg font-medium">
-                        {donor.car.make} {donor.car.series} {donor.car.model}
-                      </h3>
-                      <Badge>{donor.year}</Badge>
+                  <Card className="group cursor-pointer overflow-hidden transition-all duration-200 hover:scale-[1.02] hover:shadow-md">
+                    <div className="relative h-[200px] w-full bg-muted">
+                      {donor.images?.[0] ? (
+                        <img
+                          src={donor.images[0].url}
+                          alt={`${donor.car.make} ${donor.car.model}`}
+                          className="h-full w-full object-cover transition-transform duration-300 group-hover:scale-105"
+                        />
+                      ) : donor.imageUrl ? (
+                        <img
+                          src={donor.imageUrl}
+                          alt={`${donor.car.make} ${donor.car.model}`}
+                          className="h-full w-full object-cover transition-transform duration-300 group-hover:scale-105"
+                        />
+                      ) : (
+                        <div className="flex h-full w-full items-center justify-center bg-muted">
+                          <Car className="h-12 w-12 text-muted-foreground" />
+                        </div>
+                      )}
                     </div>
-
-                    <div className="mb-4 space-y-1">
-                      <div className="flex items-center text-sm text-muted-foreground">
-                        <span className="font-medium">VIN:</span>
-                        <span className="ml-2">{donor.vin}</span>
+                    <CardContent className="p-4">
+                      <div className="mb-2 flex items-center justify-between">
+                        <h3 className="line-clamp-1 text-lg font-medium">
+                          {donor.car.make} {donor.car.series} {donor.car.model}
+                        </h3>
+                        <Badge>{donor.year}</Badge>
                       </div>
 
-                      <div className="flex items-center text-sm text-muted-foreground">
-                        <Gauge className="mr-1 h-3 w-3" />
-                        <span className="font-medium">Mileage:</span>
-                        <span className="ml-2">
-                          {donor.mileage.toLocaleString()} km
-                        </span>
+                      <div className="mb-4 space-y-1">
+                        <div className="flex items-center text-sm text-muted-foreground">
+                          <span className="font-medium">VIN:</span>
+                          <span className="ml-2">{donor.vin}</span>
+                        </div>
+
+                        <div className="flex items-center text-sm text-muted-foreground">
+                          <Gauge className="mr-1 h-3 w-3" />
+                          <span className="font-medium">Mileage:</span>
+                          <span className="ml-2">
+                            {donor.mileage.toLocaleString()} km
+                          </span>
+                        </div>
+
+                        <div className="flex items-center text-sm text-muted-foreground">
+                          <Calendar className="mr-1 h-3 w-3" />
+                          <span className="font-medium">Date In Stock:</span>
+                          <span className="ml-2">
+                            {formatDate(donor.dateInStock)}
+                          </span>
+                        </div>
                       </div>
 
-                      <div className="flex items-center text-sm text-muted-foreground">
-                        <Calendar className="mr-1 h-3 w-3" />
-                        <span className="font-medium">Date In Stock:</span>
-                        <span className="ml-2">
-                          {formatDate(donor.dateInStock)}
-                        </span>
+                      <div className="flex items-center justify-between">
+                        <Badge variant="outline">
+                          {donor.parts.length} parts available
+                        </Badge>
+                        <Button
+                          variant="outline"
+                          size="sm"
+                          className="relative z-10"
+                        >
+                          View Parts
+                        </Button>
                       </div>
-                    </div>
-
-                    <div className="flex items-center justify-between">
-                      <Badge variant="outline">
-                        {donor.parts.length} parts available
-                      </Badge>
-                      <Button
-                        variant="outline"
-                        size="sm"
-                        className="relative z-10"
-                      >
-                        View Parts
-                      </Button>
-                    </div>
-                  </CardContent>
-                </Card>
+                    </CardContent>
+                  </Card>
+                </Link>
               ))}
             </div>
           )}

@@ -112,10 +112,10 @@ export const donorRouter = createTRPCRouter({
 
     // Sort series and models
     Object.keys(seriesByMake).forEach((make) => {
-      seriesByMake[make].sort();
+      seriesByMake[make]?.sort();
     });
     Object.keys(modelsByMake).forEach((make) => {
-      modelsByMake[make].sort();
+      modelsByMake[make]?.sort();
     });
 
     return {
@@ -314,5 +314,85 @@ export const donorRouter = createTRPCRouter({
         where: { vin },
       });
       return { success: true };
+    }),
+
+  // Get a donor by VIN
+  getDonorByVin: publicProcedure
+    .input(z.object({ vin: z.string() }))
+    .query(async ({ ctx, input }) => {
+      const donor = await ctx.db.donor.findUnique({
+        where: { vin: input.vin },
+        include: {
+          car: true,
+          images: {
+            orderBy: {
+              order: "asc",
+            },
+          },
+          parts: true,
+        },
+      });
+
+      return donor;
+    }),
+
+  // Get donor parts with listings
+  getDonorParts: publicProcedure
+    .input(z.object({ vin: z.string() }))
+    .query(async ({ ctx, input }) => {
+      // Find all parts for the donor that have listings
+      const parts = await ctx.db.part.findMany({
+        where: {
+          donorVin: input.vin,
+          listing: {
+            some: {
+              active: true,
+            },
+          },
+        },
+        include: {
+          partDetails: {
+            include: {
+              partTypes: {
+                include: {
+                  parent: true,
+                },
+              },
+            },
+          },
+          listing: {
+            include: {
+              images: {
+                orderBy: {
+                  order: "asc",
+                },
+                take: 1,
+              },
+            },
+          },
+        },
+      });
+
+      // Transform the data to match the expected format
+      const listings = parts.flatMap((part) =>
+        part.listing.map((listing) => ({
+          id: listing.id,
+          title: listing.title,
+          price: listing.price,
+          description: listing.description,
+          imageUrl: listing.images[0]?.url ?? null,
+          partCategoryId: part.partDetails.partTypes[0]?.id ?? "",
+          partSubcategoryId: part.partDetails.partTypes[0]?.parentId ?? "",
+          partCategory: {
+            name: part.partDetails.partTypes[0]?.name ?? "Uncategorized",
+          },
+          partSubcategory: {
+            name:
+              part.partDetails.partTypes[0]?.parent?.name ?? "Uncategorized",
+          },
+        })),
+      );
+
+      return listings;
     }),
 });
