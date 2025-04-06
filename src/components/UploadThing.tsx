@@ -33,7 +33,13 @@ export function HomepageImageUploader() {
   );
 }
 
-export function HomepageImageUploadZone({ className }: { className?: string }) {
+export function HomepageImageUploadZone({
+  className,
+  onUploadComplete,
+}: {
+  className?: string;
+  onUploadComplete?: () => void;
+}) {
   const router = useRouter();
 
   const onUploadError = useCallback((error: Error) => {
@@ -42,10 +48,13 @@ export function HomepageImageUploadZone({ className }: { className?: string }) {
 
   return (
     <UploadDropzone
+      config={{
+        mode: "auto",
+      }}
       endpoint="homepageImage"
       onClientUploadComplete={() => {
         toast.success("Images uploaded successfully!");
-        router.refresh();
+        onUploadComplete?.();
       }}
       onUploadError={onUploadError}
       className={cn(

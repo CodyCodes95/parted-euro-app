@@ -153,11 +153,13 @@ export const inventoryRouter = createTRPCRouter({
             quantity: inventoryData.quantity,
             images: images
               ? {
-                  create: images.map((img) => ({
-                    id: img.id,
-                    url: img.url,
-                    order: img.order,
-                  })),
+                  createMany: {
+                    data: images.map((image) => ({
+                      id: image.id,
+                      url: image.url,
+                      order: image.order,
+                    })),
+                  },
                 }
               : undefined,
           },
@@ -213,11 +215,13 @@ export const inventoryRouter = createTRPCRouter({
             quantity: updateData.quantity,
             images: images
               ? {
-                  create: images.map((img) => ({
-                    id: img.id,
-                    url: img.url,
-                    order: img.order,
-                  })),
+                  createMany: {
+                    data: images.map((image) => ({
+                      id: image.id,
+                      url: image.url,
+                      order: image.order,
+                    })),
+                  },
                 }
               : undefined,
           },

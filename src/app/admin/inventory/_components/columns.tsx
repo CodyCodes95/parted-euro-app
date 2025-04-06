@@ -25,30 +25,6 @@ export function getInventoryColumns({
 }: InventoryColumnsProps): ColumnDef<AdminInventoryItem>[] {
   return [
     {
-      id: "images",
-      header: "Image",
-      cell: ({ row }) => {
-        const item = row.original;
-        const hasImages = item.images && item.images.length > 0;
-
-        return (
-          <Avatar className="h-10 w-10">
-            {hasImages ? (
-              <AvatarImage
-                src={item.images[0].url}
-                alt={item.partDetails.name}
-              />
-            ) : (
-              <AvatarFallback className="bg-muted">
-                <ImageIcon className="h-4 w-4" />
-              </AvatarFallback>
-            )}
-          </Avatar>
-        );
-      },
-      enableSorting: false,
-    },
-    {
       accessorKey: "partDetails.name",
       header: ({ column }) => (
         <DataTableColumnHeader column={column} title="Part Name" />

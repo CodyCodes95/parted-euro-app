@@ -1,12 +1,15 @@
 "use client";
 
-
 import { HomepageImageList } from "~/components/HomepageImageList";
 import { HomepageImageUploadZone } from "~/components/UploadThing";
 import { api } from "~/trpc/react";
 
 export function HomepageImageManager() {
-  const { data: images, isLoading } = api.homepageImage.getAll.useQuery();
+  const {
+    data: images,
+    isLoading,
+    refetch,
+  } = api.homepageImage.getAll.useQuery();
 
   if (isLoading) {
     return <div className="h-48 animate-pulse rounded-md bg-muted" />;
@@ -21,7 +24,11 @@ export function HomepageImageManager() {
           in the order shown below.
         </p>
         <div className="mt-4">
-          <HomepageImageUploadZone />
+          <HomepageImageUploadZone
+            onUploadComplete={() => {
+              void refetch();
+            }}
+          />
         </div>
       </div>
 

@@ -720,7 +720,7 @@ export function InventoryForm({
     setSelectedPartTypes([]);
     setPartSearchOpen(false);
   };
-
+  console.log(images);
   return (
     <>
       <Dialog open={open} onOpenChange={onOpenChange}>
@@ -1186,6 +1186,7 @@ export function InventoryForm({
                       <div className="rounded-md border p-4">
                         <div className="mb-4">
                           <UploadDropzone
+                            config={{ mode: "auto" }}
                             endpoint="inventoryImage"
                             onClientUploadComplete={(res) => {
                               if (res) {
