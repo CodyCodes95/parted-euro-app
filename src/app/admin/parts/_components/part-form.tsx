@@ -378,7 +378,11 @@ export function PartForm({
               render={({ field }) => (
                 <FormItem className="flex flex-col">
                   <FormLabel>Compatible Cars</FormLabel>
-                  <Popover open={carsOpen} onOpenChange={setCarsOpen}>
+                  <Popover
+                    modal={true}
+                    open={carsOpen}
+                    onOpenChange={setCarsOpen}
+                  >
                     <PopoverTrigger asChild>
                       <FormControl>
                         <Button
@@ -405,6 +409,7 @@ export function PartForm({
                           <CommandList>
                             {carOptions.map((car) => (
                               <CommandItem
+                                keywords={[car.label]}
                                 key={car.value}
                                 value={car.value}
                                 onSelect={() => handleCarSelect(car.value)}
@@ -495,6 +500,7 @@ export function PartForm({
                           <CommandList>
                             {partTypeOptions.map((type) => (
                               <CommandItem
+                                keywords={[type.label]}
                                 key={type.value}
                                 value={type.value}
                                 onSelect={() =>

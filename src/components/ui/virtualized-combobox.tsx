@@ -151,6 +151,7 @@ export const VirtualizedCommand = ({
 
               return (
                 <CommandItem
+                  keywords={[option.label]}
                   key={option.value}
                   disabled={isKeyboardNavActive}
                   className={cn(
@@ -238,7 +239,7 @@ export function VirtualizedCombobox({
 
   return (
     <div className="relative w-full">
-      <Popover open={open} onOpenChange={setOpen}>
+      <Popover modal={true} open={open} onOpenChange={setOpen}>
         <PopoverTrigger asChild>
           <Button
             variant="outline"

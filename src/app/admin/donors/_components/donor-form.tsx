@@ -224,6 +224,7 @@ export function DonorForm({
                         <CommandGroup className="max-h-[300px] overflow-y-auto">
                           {(carOptions ?? []).map((car) => (
                             <CommandItem
+                              keywords={[car.label]}
                               key={car.value}
                               value={car.label}
                               onSelect={() => {

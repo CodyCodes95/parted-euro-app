@@ -454,6 +454,7 @@ export function ListingForm({
                           <CommandList>
                             {partOptions.map((part) => (
                               <CommandItem
+                                keywords={[part.label]}
                                 key={part.value}
                                 value={part.value}
                                 onSelect={() => handlePartSelect(part.value)}

@@ -18,7 +18,7 @@ import { RelatedListings } from "./related-listings";
 import { ListingAnalytics } from "./listing-analytics";
 
 type Props = {
-  params: { id: string };
+  params: Promise<{ id: string }>;
 };
 
 export async function generateMetadata({ params }: Props): Promise<Metadata> {
@@ -45,7 +45,7 @@ export async function generateMetadata({ params }: Props): Promise<Metadata> {
 }
 
 export default async function ListingPage({ params }: Props) {
-  const { id } = params;
+  const { id } = await params;
   const listing = await api.listings.getListing({ id });
 
   if (!listing) {
