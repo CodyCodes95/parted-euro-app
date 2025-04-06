@@ -78,7 +78,7 @@ export function DataTable<TData, TValue>({
   });
 
   return (
-    <div className="space-y-4">
+    <div className="flex w-full flex-col gap-4">
       {filterableColumns.length > 0 && (
         <DataTableToolbar
           table={table}

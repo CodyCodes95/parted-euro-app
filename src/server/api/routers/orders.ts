@@ -1,5 +1,6 @@
 import { z } from "zod";
 import { createTRPCRouter, publicProcedure, adminProcedure } from "../trpc";
+import { type Prisma } from "@prisma/client";
 
 export const ordersRouter = createTRPCRouter({
   getOrderById: publicProcedure
@@ -55,23 +56,38 @@ export const ordersRouter = createTRPCRouter({
       const { search, sortBy, sortOrder } = input;
 
       // Build the where clause for search
-      let whereClause = {};
+      let whereClause: Prisma.OrderWhereInput = {
+        status: {
+          not: "PENDING",
+        },
+      };
       if (search) {
         const searchTerm = `%${search}%`;
         whereClause = {
-          OR: [
-            { id: { contains: searchTerm } },
-            { name: { contains: searchTerm } },
-            { email: { contains: searchTerm } },
-            { status: { contains: searchTerm } },
+          AND: [
+            {
+              status: {
+                not: "PENDING",
+              },
+            },
+            {
+              OR: [
+                { id: { contains: searchTerm, mode: "insensitive" } },
+                { name: { contains: searchTerm, mode: "insensitive" } },
+                { email: { contains: searchTerm, mode: "insensitive" } },
+                { status: { contains: searchTerm, mode: "insensitive" } },
+              ],
+            },
           ],
         };
       }
 
       // Build the order by clause
-      let orderBy: any = [{ createdAt: "desc" }]; // Default sort
+      let orderBy: Prisma.OrderOrderByWithRelationInput[] = [
+        { createdAt: "desc" },
+      ]; // Default sort
       if (sortBy) {
-        orderBy = [{ [sortBy]: sortOrder || "desc" }];
+        orderBy = [{ [sortBy]: sortOrder ?? "desc" }];
       }
 
       // Execute the query
@@ -104,7 +120,13 @@ export const ordersRouter = createTRPCRouter({
       }
 
       return {
-        items: orders,
+        items: orders.map((order) => {
+          return {
+            ...order,
+            subtotal: (order.subtotal ?? 0) / 100,
+            shipping: (order.shipping ?? 0) / 100,
+          };
+        }),
         nextCursor,
       };
     }),

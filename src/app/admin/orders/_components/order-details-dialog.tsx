@@ -17,7 +17,9 @@ import {
   TableRow,
 } from "~/components/ui/table";
 import { Badge } from "~/components/ui/badge";
-import { type OrderItem } from "../page";
+import { formatCurrency } from "~/lib/formatters";
+import { formatPhoneNumber } from "~/lib/formatters";
+import { type AdminOrdersItem } from "~/trpc/shared";
 
 // Format currency
 const formatter = new Intl.NumberFormat("en-AU", {
@@ -53,7 +55,7 @@ const getStatusBadge = (status: string) => {
 interface OrderDetailsDialogProps {
   open: boolean;
   onOpenChange: (open: boolean) => void;
-  order: OrderItem;
+  order: AdminOrdersItem;
 }
 
 export function OrderDetailsDialog({

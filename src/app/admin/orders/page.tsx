@@ -10,43 +10,16 @@ import { type SortingState } from "@tanstack/react-table";
 import { AddTrackingDialog } from "./_components/add-tracking-dialog";
 import { OrderDetailsDialog } from "./_components/order-details-dialog";
 import { UpdateStatusDialog } from "./_components/update-status-dialog";
-
-export type OrderItem = {
-  id: string;
-  name: string;
-  email: string;
-  phoneNumber: string | null;
-  status: string;
-  subtotal: number;
-  shipping: number | null;
-  shippingMethod: string | null;
-  shippingAddress: string | null;
-  trackingNumber: string | null;
-  carrier: string | null;
-  createdAt: Date;
-  updatedAt: Date;
-  orderItems: {
-    id: string;
-    listingId: string;
-    quantity: number;
-    listing: {
-      id: string;
-      title: string;
-      price: number;
-      images: {
-        id: string;
-        url: string;
-      }[];
-    };
-  }[];
-};
+import { type AdminOrdersItem } from "~/trpc/shared";
 
 export default function OrdersAdminPage() {
   const [searchTerm, setSearchTerm] = useState("");
   const [sorting, setSorting] = useState<SortingState>([
     { id: "createdAt", desc: true },
   ]);
-  const [selectedOrder, setSelectedOrder] = useState<OrderItem | null>(null);
+  const [selectedOrder, setSelectedOrder] = useState<AdminOrdersItem | null>(
+    null,
+  );
   const [isOrderDetailsOpen, setIsOrderDetailsOpen] = useState(false);
   const [isAddTrackingOpen, setIsAddTrackingOpen] = useState(false);
   const [isUpdateStatusOpen, setIsUpdateStatusOpen] = useState(false);
@@ -76,24 +49,24 @@ export default function OrdersAdminPage() {
 
   const updateStatusMutation = api.orders?.updateStatus.useMutation();
 
-  const orders = (ordersQuery?.data?.items ?? []) as OrderItem[];
+  const orders = ordersQuery?.data?.items ?? [];
   const isLoading = ordersQuery?.isLoading ?? true;
 
   const handleSearch = (term: string) => {
     setSearchTerm(term);
   };
 
-  const handleViewOrderDetails = (order: OrderItem) => {
+  const handleViewOrderDetails = (order: AdminOrdersItem) => {
     setSelectedOrder(order);
     setIsOrderDetailsOpen(true);
   };
 
-  const handleAddTracking = (order: OrderItem) => {
+  const handleAddTracking = (order: AdminOrdersItem) => {
     setSelectedOrder(order);
     setIsAddTrackingOpen(true);
   };
 
-  const handleReadyForPickup = (order: OrderItem) => {
+  const handleReadyForPickup = (order: AdminOrdersItem) => {
     // Call the tRPC procedure to update the order status
     if (order.id) {
       updateStatusMutation.mutate(
@@ -111,7 +84,7 @@ export default function OrdersAdminPage() {
     }
   };
 
-  const handleUpdateStatus = (order: OrderItem) => {
+  const handleUpdateStatus = (order: AdminOrdersItem) => {
     setSelectedOrder(order);
     setIsUpdateStatusOpen(true);
   };
@@ -124,7 +97,7 @@ export default function OrdersAdminPage() {
   });
 
   return (
-    <div className="container p-6">
+    <div className="p-6">
       <h1 className="mb-6 text-3xl font-bold">Orders Management</h1>
 
       <div className="mb-4">

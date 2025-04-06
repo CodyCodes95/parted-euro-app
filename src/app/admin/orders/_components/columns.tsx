@@ -25,7 +25,9 @@ import {
   DropdownMenuSubTrigger,
 } from "~/components/ui/dropdown-menu";
 import { Badge } from "~/components/ui/badge";
-import { type OrderItem } from "../page";
+import { type AdminOrdersItem } from "~/trpc/shared";
+import { formatDistanceToNow } from "date-fns";
+import { CreditCard, FileText, SendHorizontal, Tag } from "lucide-react";
 
 // Format currency
 const formatter = new Intl.NumberFormat("en-AU", {
@@ -59,24 +61,27 @@ const getStatusBadge = (status: string) => {
 };
 
 interface OrderColumnsProps {
-  onViewDetails: (order: OrderItem) => void;
-  onAddTracking: (order: OrderItem) => void;
-  onReadyForPickup: (order: OrderItem) => void;
-  onUpdateStatus: (order: OrderItem) => void;
+  onViewDetails: (order: AdminOrdersItem) => void;
+  onAddTracking: (order: AdminOrdersItem) => void;
+  onReadyForPickup: (order: AdminOrdersItem) => void;
+  onUpdateStatus: (order: AdminOrdersItem) => void;
 }
 
+/**
+ * Returns the columns for the orders data table
+ */
 export function getOrderColumns({
   onViewDetails,
   onAddTracking,
   onReadyForPickup,
   onUpdateStatus,
-}: OrderColumnsProps): ColumnDef<OrderItem>[] {
+}: OrderColumnsProps): ColumnDef<AdminOrdersItem>[] {
   return [
     {
-      accessorKey: "id",
+      accessorKey: "xeroInvoiceRef",
       header: "Order ID",
       cell: ({ row }) => (
-        <span className="font-mono text-xs">{row.original.id}</span>
+        <span className="font-mono text-xs">{row.original.xeroInvoiceId}</span>
       ),
     },
     {
@@ -143,8 +148,8 @@ export function getOrderColumns({
       header: "Shipping",
       cell: ({ row }) => (
         <div className="flex flex-col">
-          <span>{row.original.shippingMethod || "Not specified"}</span>
-          {row.original.shipping && (
+          <span>{row.original.shippingMethod ?? ""}</span>
+          {row.original.shipping > 0 && (
             <span className="text-xs text-muted-foreground">
               {formatPrice(row.original.shipping)}
             </span>

@@ -30,7 +30,8 @@ import {
 import { Button } from "~/components/ui/button";
 import { toast } from "sonner";
 import { api } from "~/trpc/react";
-import { type OrderItem } from "../page";
+import { formatCurrency } from "~/lib/formatters";
+import { type AdminOrdersItem } from "~/trpc/shared";
 
 const formSchema = z.object({
   status: z.string().min(1, {
@@ -43,7 +44,7 @@ type FormData = z.infer<typeof formSchema>;
 interface UpdateStatusDialogProps {
   open: boolean;
   onOpenChange: (open: boolean) => void;
-  order: OrderItem;
+  order: AdminOrdersItem;
   onSuccess: () => void;
 }
 

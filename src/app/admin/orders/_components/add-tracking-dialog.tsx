@@ -24,7 +24,7 @@ import { Input } from "~/components/ui/input";
 import { Button } from "~/components/ui/button";
 import { toast } from "sonner";
 import { api } from "~/trpc/react";
-import { type OrderItem } from "../page";
+import { type AdminOrdersItem } from "~/trpc/shared";
 
 const formSchema = z.object({
   trackingNumber: z.string().min(1, {
@@ -38,7 +38,7 @@ type FormData = z.infer<typeof formSchema>;
 interface AddTrackingDialogProps {
   open: boolean;
   onOpenChange: (open: boolean) => void;
-  order: OrderItem;
+  order: AdminOrdersItem;
   onSuccess: () => void;
 }
 
