@@ -86,7 +86,7 @@ export default function CategoriesAdminPage() {
   });
 
   return (
-    <div className="container p-6">
+    <div className="p-6">
       <div className="mb-6 flex items-center justify-between">
         <h1 className="text-3xl font-bold">Category Management</h1>
         <Button size="sm" onClick={handleAddCategory}>
