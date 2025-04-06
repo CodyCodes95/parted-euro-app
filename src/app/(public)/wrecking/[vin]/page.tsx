@@ -8,11 +8,11 @@ import { Badge } from "~/components/ui/badge";
 import { DonorPartsSearch } from "./parts-search";
 
 type Props = {
-  params: { vin: string };
+  params: Promise<{ vin: string }>;
 };
 
 export async function generateMetadata({ params }: Props): Promise<Metadata> {
-  const { vin } = params;
+  const { vin } = await params;
   const donor = await api.donor.getDonorByVin({ vin });
 
   if (!donor) {

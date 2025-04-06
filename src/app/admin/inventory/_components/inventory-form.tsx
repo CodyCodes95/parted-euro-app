@@ -32,16 +32,17 @@ import { Input } from "~/components/ui/input";
 import { Button } from "~/components/ui/button";
 import { toast } from "sonner";
 import { Loader2, Plus } from "lucide-react";
-import { type InventoryItem } from "../page";
+
 import {
   VirtualizedCombobox,
   type VirtualizedOption,
 } from "~/components/ui/virtualized-combobox";
+import { type AdminInventoryItem } from "~/trpc/shared";
 
 interface InventoryFormProps {
   open: boolean;
   onOpenChange: (open: boolean) => void;
-  defaultValues?: InventoryItem;
+  defaultValues?: AdminInventoryItem;
   isEditing?: boolean;
 }
 
