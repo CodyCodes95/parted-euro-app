@@ -46,105 +46,38 @@ export const inventoryRouter = createTRPCRouter({
   }),
 
   // Get all inventory items
-  getAll: adminProcedure
-    .input(
-      z.object({
-        limit: z.number().min(1).max(1000).optional().default(100),
-        cursor: z.string().optional(),
-        search: z.string().optional(),
-        sortBy: z.string().optional(),
-        sortOrder: z.enum(["asc", "desc"]).optional(),
-      }),
-    )
-    .query(async ({ ctx, input }) => {
-      const { limit, cursor, search, sortBy, sortOrder } = input;
-
-      // Create the base query
-      const query = {
-        take: limit + 1,
-        ...(cursor ? { cursor: { id: cursor } } : {}),
-        orderBy: sortBy
-          ? sortBy.startsWith("partDetails_")
-            ? {
-                partDetails: {
-                  [sortBy.replace("partDetails_", "")]: sortOrder ?? "asc",
-                },
-              }
-            : sortBy.startsWith("inventoryLocation_")
-              ? {
-                  inventoryLocation: {
-                    [sortBy.replace("inventoryLocation_", "")]:
-                      sortOrder ?? "asc",
-                  },
-                }
-              : { [sortBy]: sortOrder ?? "asc" }
-          : { id: "desc" },
-        where: {
-          ...(search
-            ? {
-                OR: [
-                  {
-                    partDetails: {
-                      OR: [
-                        { partNo: { contains: search, mode: "insensitive" } },
-                        { name: { contains: search, mode: "insensitive" } },
-                        {
-                          alternatePartNumbers: {
-                            contains: search,
-                            mode: "insensitive",
-                          },
-                        },
-                      ],
-                    },
-                  },
-                  { donorVin: { contains: search, mode: "insensitive" } },
-                  { variant: { contains: search, mode: "insensitive" } },
-                ],
-              }
-            : {}),
-        },
-        include: {
-          partDetails: {
-            select: {
-              partNo: true,
-              name: true,
-              alternatePartNumbers: true,
-            },
-          },
-          donor: {
-            select: {
-              vin: true,
-            },
-          },
-          inventoryLocation: {
-            select: {
-              id: true,
-              name: true,
-            },
-          },
-          listing: {
-            select: {
-              id: true,
-            },
+  getAll: adminProcedure.query(async ({ ctx }) => {
+    // Execute the query
+    const inventory = await ctx.db.part.findMany({
+      include: {
+        partDetails: {
+          select: {
+            partNo: true,
+            name: true,
+            alternatePartNumbers: true,
           },
         },
-      } as Prisma.PartFindManyArgs;
+        donor: {
+          select: {
+            vin: true,
+          },
+        },
+        inventoryLocation: {
+          select: {
+            id: true,
+            name: true,
+          },
+        },
+        listing: {
+          select: {
+            id: true,
+          },
+        },
+      },
+    });
 
-      // Execute the query
-      const inventory = await ctx.db.part.findMany(query);
-
-      // Check if we have more items
-      let nextCursor: typeof cursor | undefined = undefined;
-      if (inventory.length > limit) {
-        const nextItem = inventory.pop();
-        nextCursor = nextItem?.id;
-      }
-
-      return {
-        items: inventory,
-        nextCursor,
-      };
-    }),
+    return inventory;
+  }),
 
   // Get an inventory item by ID
   getById: adminProcedure
@@ -184,7 +117,7 @@ export const inventoryRouter = createTRPCRouter({
               input.inventoryLocationId === "none"
                 ? null
                 : input.inventoryLocationId,
-            variant: input.variant || null,
+            variant: input.variant ?? null,
             quantity: input.quantity,
           },
           include: {
@@ -225,7 +158,7 @@ export const inventoryRouter = createTRPCRouter({
               data.inventoryLocationId === "none"
                 ? null
                 : data.inventoryLocationId,
-            variant: data.variant || null,
+            variant: data.variant ?? null,
             quantity: data.quantity,
           },
           include: {

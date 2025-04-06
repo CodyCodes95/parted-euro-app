@@ -22,30 +22,12 @@ export default function InventoryAdminPage() {
   const [searchTerm, setSearchTerm] = useState("");
   const [sorting, setSorting] = useState<SortingState>([]);
 
-  // Get the current sort parameters from the sorting state
-  const sortConfig =
-    sorting.length > 0
-      ? {
-          sortBy: sorting[0]?.id.includes(".")
-            ? sorting[0]?.id.replace(".", "_")
-            : sorting[0]?.id,
-          sortOrder: sorting[0]?.desc ? ("desc" as const) : ("asc" as const),
-        }
-      : null;
-
   // Fetch inventory with pagination, search, and sorting
-  const inventoryQuery = api.inventory.getAll.useQuery(
-    {
-      limit: 100,
-      search: searchTerm,
-      ...(sortConfig ?? {}),
-    },
-    {
-      placeholderData: keepPreviousData,
-    },
-  );
+  const inventoryQuery = api.inventory.getAll.useQuery(undefined, {
+    placeholderData: keepPreviousData,
+  });
 
-  const inventory = inventoryQuery.data?.items ?? [];
+  const inventory = inventoryQuery.data ?? [];
   const isLoading = inventoryQuery.isLoading;
 
   const handleAddInventory = () => {
