@@ -11,6 +11,15 @@ const inventorySchema = z.object({
   inventoryLocationId: z.string().optional().nullable(),
   variant: z.string().optional().nullable(),
   quantity: z.coerce.number().int().min(1, "Quantity must be at least 1"),
+  images: z
+    .array(
+      z.object({
+        id: z.string(),
+        url: z.string(),
+        order: z.number(),
+      }),
+    )
+    .optional(),
 });
 
 export const inventoryRouter = createTRPCRouter({
@@ -73,6 +82,16 @@ export const inventoryRouter = createTRPCRouter({
             id: true,
           },
         },
+        images: {
+          select: {
+            id: true,
+            url: true,
+            order: true,
+          },
+          orderBy: {
+            order: "asc",
+          },
+        },
       },
     });
 
@@ -91,6 +110,16 @@ export const inventoryRouter = createTRPCRouter({
           donor: true,
           inventoryLocation: true,
           listing: true,
+          images: {
+            select: {
+              id: true,
+              url: true,
+              order: true,
+            },
+            orderBy: {
+              order: "asc",
+            },
+          },
         },
       });
 
@@ -109,21 +138,34 @@ export const inventoryRouter = createTRPCRouter({
     .input(inventorySchema)
     .mutation(async ({ ctx, input }) => {
       try {
+        const { images, ...inventoryData } = input;
+
         const inventory = await ctx.db.part.create({
           data: {
-            partDetailsId: input.partDetailsId,
-            donorVin: input.donorVin === "none" ? null : input.donorVin,
+            partDetailsId: inventoryData.partDetailsId,
+            donorVin:
+              inventoryData.donorVin === "none" ? null : inventoryData.donorVin,
             inventoryLocationId:
-              input.inventoryLocationId === "none"
+              inventoryData.inventoryLocationId === "none"
                 ? null
-                : input.inventoryLocationId,
-            variant: input.variant ?? null,
-            quantity: input.quantity,
+                : inventoryData.inventoryLocationId,
+            variant: inventoryData.variant ?? null,
+            quantity: inventoryData.quantity,
+            images: images
+              ? {
+                  create: images.map((img) => ({
+                    id: img.id,
+                    url: img.url,
+                    order: img.order,
+                  })),
+                }
+              : undefined,
           },
           include: {
             partDetails: true,
             donor: true,
             inventoryLocation: true,
+            images: true,
           },
         });
 
@@ -147,24 +189,47 @@ export const inventoryRouter = createTRPCRouter({
     )
     .mutation(async ({ ctx, input }) => {
       const { id, data } = input;
+      const { images, ...updateData } = data;
 
       try {
+        // First delete all existing images for this part
+        if (images) {
+          await ctx.db.image.deleteMany({
+            where: { partId: id },
+          });
+        }
+
         const updatedInventory = await ctx.db.part.update({
           where: { id },
           data: {
-            partDetailsId: data.partDetailsId,
-            donorVin: data.donorVin === "none" ? null : data.donorVin,
+            partDetailsId: updateData.partDetailsId,
+            donorVin:
+              updateData.donorVin === "none" ? null : updateData.donorVin,
             inventoryLocationId:
-              data.inventoryLocationId === "none"
+              updateData.inventoryLocationId === "none"
                 ? null
-                : data.inventoryLocationId,
-            variant: data.variant ?? null,
-            quantity: data.quantity,
+                : updateData.inventoryLocationId,
+            variant: updateData.variant ?? null,
+            quantity: updateData.quantity,
+            images: images
+              ? {
+                  create: images.map((img) => ({
+                    id: img.id,
+                    url: img.url,
+                    order: img.order,
+                  })),
+                }
+              : undefined,
           },
           include: {
             partDetails: true,
             donor: true,
             inventoryLocation: true,
+            images: {
+              orderBy: {
+                order: "asc",
+              },
+            },
           },
         });
 
@@ -185,6 +250,11 @@ export const inventoryRouter = createTRPCRouter({
       const { id } = input;
 
       try {
+        // Delete related images first
+        await ctx.db.image.deleteMany({
+          where: { partId: id },
+        });
+
         await ctx.db.part.delete({
           where: { id },
         });

@@ -1,7 +1,7 @@
 "use client";
 
 import { type ColumnDef } from "@tanstack/react-table";
-import { MoreHorizontal, Pencil, Trash } from "lucide-react";
+import { MoreHorizontal, Pencil, Trash, ImageIcon } from "lucide-react";
 import { Button } from "~/components/ui/button";
 import {
   DropdownMenu,
@@ -12,6 +12,7 @@ import {
 import { Badge } from "~/components/ui/badge";
 import { type AdminInventoryItem } from "~/trpc/shared";
 import { DataTableColumnHeader } from "~/components/data-table/data-table-column-header";
+import { Avatar, AvatarFallback, AvatarImage } from "~/components/ui/avatar";
 
 interface InventoryColumnsProps {
   onEdit: (inventory: AdminInventoryItem) => void;
@@ -23,6 +24,30 @@ export function getInventoryColumns({
   onDelete,
 }: InventoryColumnsProps): ColumnDef<AdminInventoryItem>[] {
   return [
+    {
+      id: "images",
+      header: "Image",
+      cell: ({ row }) => {
+        const item = row.original;
+        const hasImages = item.images && item.images.length > 0;
+
+        return (
+          <Avatar className="h-10 w-10">
+            {hasImages ? (
+              <AvatarImage
+                src={item.images[0].url}
+                alt={item.partDetails.name}
+              />
+            ) : (
+              <AvatarFallback className="bg-muted">
+                <ImageIcon className="h-4 w-4" />
+              </AvatarFallback>
+            )}
+          </Avatar>
+        );
+      },
+      enableSorting: false,
+    },
     {
       accessorKey: "partDetails.name",
       header: ({ column }) => (

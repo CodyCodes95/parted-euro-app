@@ -51,12 +51,114 @@ import {
 import { Input } from "~/components/ui/input";
 import { Button } from "~/components/ui/button";
 import { toast } from "sonner";
-import { Check, ChevronsUpDown, Loader2, Plus, Search } from "lucide-react";
+import {
+  Check,
+  ChevronsUpDown,
+  Loader2,
+  Plus,
+  Search,
+  X,
+  GripVertical,
+  Image as ImageIcon,
+} from "lucide-react";
 import { cn } from "~/lib/utils";
 import { Badge } from "~/components/ui/badge";
 import { type AdminInventoryItem } from "~/trpc/shared";
 import { useDebounce } from "~/hooks/use-debounce";
 import { VirtualizedMultiSelect } from "~/components/ui/virtualized-multi-select";
+import { AspectRatio } from "~/components/ui/aspect-ratio";
+import { UploadButton, UploadDropzone } from "~/components/UploadThing";
+import {
+  DndContext,
+  closestCenter,
+  KeyboardSensor,
+  PointerSensor,
+  useSensor,
+  useSensors,
+  type DragEndEvent,
+} from "@dnd-kit/core";
+import {
+  SortableContext,
+  sortableKeyboardCoordinates,
+  useSortable,
+  verticalListSortingStrategy,
+  arrayMove,
+} from "@dnd-kit/sortable";
+import { CSS } from "@dnd-kit/utilities";
+import { restrictToVerticalAxis } from "@dnd-kit/modifiers";
+
+// Define image item type for DnD
+type ImageItem = {
+  id: string;
+  url: string;
+  order: number;
+};
+
+// Define interfaces for API requests
+interface CreateInventoryInput {
+  partDetailsId: string;
+  donorVin?: string | null;
+  inventoryLocationId?: string | null;
+  variant?: string | null;
+  quantity: number;
+  images?: ImageItem[];
+}
+
+interface UpdateInventoryInput {
+  id: string;
+  data: CreateInventoryInput;
+}
+
+// Sortable image component
+const SortableImage = ({
+  image,
+  onRemove,
+}: {
+  image: ImageItem;
+  onRemove: (id: string) => void;
+}) => {
+  const { attributes, listeners, setNodeRef, transform, transition } =
+    useSortable({
+      id: image.id,
+    });
+
+  const style = {
+    transform: CSS.Transform.toString(transform),
+    transition,
+  };
+
+  return (
+    <div
+      ref={setNodeRef}
+      style={style}
+      className="group relative flex items-center gap-2 rounded-md bg-muted/40 p-2"
+    >
+      <div className="cursor-grab touch-none" {...attributes} {...listeners}>
+        <GripVertical className="h-5 w-5 text-muted-foreground" />
+      </div>
+
+      <div className="relative h-16 w-16 overflow-hidden rounded-md">
+        <AspectRatio ratio={1}>
+          <img
+            src={image.url}
+            alt="Part"
+            className="h-full w-full object-cover"
+          />
+        </AspectRatio>
+      </div>
+
+      <Button
+        type="button"
+        variant="ghost"
+        size="icon"
+        className="absolute right-1 top-1 h-6 w-6 bg-muted/50 text-foreground opacity-0 transition-opacity hover:bg-muted group-hover:opacity-100"
+        onClick={() => onRemove(image.id)}
+      >
+        <X className="h-3 w-3" />
+      </Button>
+    </div>
+  );
+};
 
 interface InventoryFormProps {
   open: boolean;
@@ -65,6 +167,7 @@ interface InventoryFormProps {
   isEditing?: boolean;
 }
 
+// Split the validation for better type safety
 // Combined schema for part and inventory
 const formSchema = z
   .object({
@@ -74,9 +177,18 @@ const formSchema = z
     inventoryLocationId: z.string().optional().nullable(),
     variant: z.string().optional().nullable(),
     quantity: z.coerce.number().int().min(1, "Quantity must be at least 1"),
+    images: z
+      .array(
+        z.object({
+          id: z.string(),
+          url: z.string(),
+          order: z.number(),
+        }),
+      )
+      .optional(),
 
     // Part fields
-    partDetailsId: z.string().min(1, "Part is required"),
+    partDetailsId: z.string().optional(), // Make this optional to allow new part creation
     isNewPart: z.boolean().default(false),
     partNo: z.string().optional(),
     alternatePartNumbers: z.string().optional(),
@@ -89,20 +201,21 @@ const formSchema = z
     cars: z.array(z.string()).default([]),
     partTypes: z.array(z.string()).default([]),
   })
+  // Validate existing part selection (when isNewPart is false)
+  .refine(({ isNewPart, partDetailsId }) => isNewPart || !!partDetailsId, {
+    message: "Part selection is required",
+    path: ["partDetailsId"],
+  })
+  // Validate new part fields (when isNewPart is true)
   .refine(
-    (data) => {
-      if (data.isNewPart) {
-        return (
-          !!data.partNo &&
-          !!data.name &&
-          data.weight !== undefined &&
-          data.length !== undefined &&
-          data.width !== undefined &&
-          data.height !== undefined
-        );
-      }
-      return true;
-    },
+    ({ isNewPart, partNo, name, weight, length, width, height }) =>
+      !isNewPart ||
+      (!!partNo &&
+        !!name &&
+        weight !== undefined &&
+        length !== undefined &&
+        width !== undefined &&
+        height !== undefined),
     {
       message: "Required fields missing for new part",
       path: ["partNo"],
@@ -125,6 +238,7 @@ export function InventoryForm({
   const [selectedCars, setSelectedCars] = useState<string[]>([]);
   const [selectedPartTypes, setSelectedPartTypes] = useState<string[]>([]);
   const [searchTerm, setSearchTerm] = useState("");
+  const [images, setImages] = useState<ImageItem[]>([]);
   const debouncedSearchTerm = useDebounce(searchTerm, 300);
   const [initialPartValues, setInitialPartValues] = useState<{
     partNo: string;
@@ -157,6 +271,14 @@ export function InventoryForm({
   const { data: carOptions = [] } = api.part.getAllCars.useQuery();
   const { data: partTypeOptions = [] } = api.part.getAllPartTypes.useQuery();
 
+  // DnD sensors for image reordering
+  const sensors = useSensors(
+    useSensor(PointerSensor),
+    useSensor(KeyboardSensor, {
+      coordinateGetter: sortableKeyboardCoordinates,
+    }),
+  );
+
   // Create form
   const form = useForm<FormValues>({
     resolver: zodResolver(formSchema),
@@ -178,6 +300,7 @@ export function InventoryForm({
       costPrice: 0,
       cars: [],
       partTypes: [],
+      images: [],
     },
   });
 
@@ -195,37 +318,18 @@ export function InventoryForm({
 
   // Mutations for create, update, and create new location
   const createInventoryMutation = api.inventory.create.useMutation({
-    onSuccess: () => {
-      toast.success("Inventory item created successfully");
-      onOpenChange(false);
-      void utils.inventory.getAll.invalidate();
-    },
     onError: (error) => {
       toast.error(`Error creating inventory item: ${error.message}`);
     },
   });
 
   const updateInventoryMutation = api.inventory.update.useMutation({
-    onSuccess: () => {
-      toast.success("Inventory item updated successfully");
-      onOpenChange(false);
-      void utils.inventory.getAll.invalidate();
-    },
     onError: (error) => {
       toast.error(`Error updating inventory item: ${error.message}`);
     },
   });
 
   const createPartMutation = api.part.create.useMutation({
-    onSuccess: (data) => {
-      toast.success("Part created successfully");
-      if (data && data.partNo) {
-        form.setValue("partDetailsId", data.partNo);
-        setIsNewPart(false);
-        void utils.part.getAllPartDetails.invalidate();
-        void utils.part.getById.invalidate({ partNo: data.partNo });
-      }
-    },
     onError: (error) => {
       toast.error(`Error creating part: ${error.message}`);
     },
@@ -248,11 +352,6 @@ export function InventoryForm({
   });
 
   const updatePartMutation = api.part.update.useMutation({
-    onSuccess: () => {
-      toast.success("Part updated successfully");
-      void utils.part.getAllPartDetails.invalidate();
-      void utils.part.getById.invalidate({ partNo: form.getValues("partNo") });
-    },
     onError: (error) => {
       toast.error(`Error updating part: ${error.message}`);
     },
@@ -354,10 +453,74 @@ export function InventoryForm({
     }
   }, [isNewPart]);
 
+  // Initialize images from default values
+  useEffect(() => {
+    if (defaultValues?.images) {
+      setImages(
+        defaultValues.images.map((img) => ({
+          id: img.id,
+          url: img.url,
+          order: img.order,
+        })),
+      );
+    } else {
+      setImages([]);
+    }
+  }, [defaultValues]);
+
+  // Handle image upload completion
+  const handleImageUpload = (results: { url: string }[]) => {
+    const newImages = results.map((result, index) => ({
+      id: crypto.randomUUID(),
+      url: result.url,
+      order: images.length + index,
+    }));
+
+    setImages((prev) => [...prev, ...newImages]);
+  };
+
+  // Handle image removal
+  const handleImageRemove = (id: string) => {
+    setImages((prev) => prev.filter((img) => img.id !== id));
+  };
+
+  // Handle image reordering
+  const handleDragEnd = (event: DragEndEvent) => {
+    const { active, over } = event;
+
+    // If there's no target, return
+    if (!over) return;
+
+    const activeId = active.id.toString();
+    const overId = over.id.toString();
+
+    // If the item was dropped on itself, return
+    if (activeId === overId) return;
+
+    setImages((items) => {
+      // Find the indexes in a type-safe way
+      const oldIndex = items.findIndex((item) => item.id === activeId);
+      const newIndex = items.findIndex((item) => item.id === overId);
+
+      // If either item is not found, return the original array
+      if (oldIndex === -1 || newIndex === -1) return items;
+
+      // Create a new ordered array
+      return arrayMove(items, oldIndex, newIndex);
+    });
+  };
+
   const onSubmit = async (values: FormValues) => {
     try {
       setFormErrors(null);
-      // If it's a new part, create it first
+
+      // Include ordered images
+      const imagesWithOrder = images.map((img, index) => ({
+        ...img,
+        order: index, // Update order based on current array position
+      }));
+
+      // If it's a new part, create it first and get the partDetailsId
       if (isNewPart) {
         const partData = {
           partNo: values.partNo ?? "",
@@ -372,10 +535,49 @@ export function InventoryForm({
           partTypes: selectedPartTypes,
         };
 
-        await createPartMutation.mutateAsync(partData);
-        // The partDetailsId will be updated in the onSuccess handler of createPartMutation
+        try {
+          const newPart = await createPartMutation.mutateAsync(partData);
+          toast.success("Part created successfully");
+
+          // After creating the part, proceed with inventory creation using the new partDetailsId
+          if (newPart && newPart.partNo) {
+            const inventoryData: CreateInventoryInput = {
+              partDetailsId: newPart.partNo,
+              donorVin: values.donorVin,
+              inventoryLocationId: values.inventoryLocationId,
+              variant: values.variant,
+              quantity: values.quantity,
+              images: imagesWithOrder,
+            };
+
+            if (isEditing && defaultValues) {
+              await updateInventoryMutation.mutateAsync({
+                id: defaultValues.id,
+                data: inventoryData,
+              });
+              toast.success("Inventory item updated successfully");
+            } else {
+              await createInventoryMutation.mutateAsync(inventoryData);
+              toast.success("Inventory item created successfully");
+            }
+
+            // Success - close the form
+            onOpenChange(false);
+            void utils.inventory.getAll.invalidate();
+            void utils.part.getAllPartDetails.invalidate();
+            void utils.part.getById.invalidate({ partNo: newPart.partNo });
+          } else {
+            setFormErrors("Failed to create part. Please try again.");
+          }
+        } catch (error) {
+          console.error("Error creating part:", error);
+          setFormErrors(
+            "Error creating part: " +
+              (error instanceof Error ? error.message : String(error)),
+          );
+        }
       } else {
-        // Check if part details have been modified
+        // Handle existing part updates
         const hasPartChanges =
           initialPartValues &&
           (values.partNo !== initialPartValues.partNo ||
@@ -394,43 +596,76 @@ export function InventoryForm({
 
         // If part details have changed, update the part
         if (hasPartChanges && values.partDetailsId) {
-          await updatePartMutation.mutateAsync({
-            partNo: values.partDetailsId,
-            data: {
-              partNo: values.partNo ?? "",
-              alternatePartNumbers: values.alternatePartNumbers ?? "",
-              name: values.name ?? "",
-              weight: values.weight ?? 0,
-              length: values.length ?? 0,
-              width: values.width ?? 0,
-              height: values.height ?? 0,
-              costPrice: values.costPrice ?? 0,
-              cars: selectedCars,
-              partTypes: selectedPartTypes,
-            },
-          });
+          try {
+            await updatePartMutation.mutateAsync({
+              partNo: values.partDetailsId,
+              data: {
+                partNo: values.partNo ?? "",
+                alternatePartNumbers: values.alternatePartNumbers ?? "",
+                name: values.name ?? "",
+                weight: values.weight ?? 0,
+                length: values.length ?? 0,
+                width: values.width ?? 0,
+                height: values.height ?? 0,
+                costPrice: values.costPrice ?? 0,
+                cars: selectedCars,
+                partTypes: selectedPartTypes,
+              },
+            });
+            toast.success("Part updated successfully");
+          } catch (error) {
+            console.error("Error updating part:", error);
+            setFormErrors(
+              "Error updating part: " +
+                (error instanceof Error ? error.message : String(error)),
+            );
+            return;
+          }
         }
 
         // Update or create inventory item
-        if (isEditing && defaultValues) {
-          updateInventoryMutation.mutate({
-            id: defaultValues.id,
-            data: {
-              partDetailsId: values.partDetailsId,
+        try {
+          if (isEditing && defaultValues) {
+            const updateData: UpdateInventoryInput = {
+              id: defaultValues.id,
+              data: {
+                partDetailsId: values.partDetailsId ?? "",
+                donorVin: values.donorVin,
+                inventoryLocationId: values.inventoryLocationId,
+                variant: values.variant,
+                quantity: values.quantity,
+                images: imagesWithOrder,
+              },
+            };
+            await updateInventoryMutation.mutateAsync(updateData);
+            toast.success("Inventory item updated successfully");
+          } else {
+            const createData: CreateInventoryInput = {
+              partDetailsId: values.partDetailsId ?? "",
               donorVin: values.donorVin,
               inventoryLocationId: values.inventoryLocationId,
               variant: values.variant,
               quantity: values.quantity,
-            },
-          });
-        } else {
-          createInventoryMutation.mutate({
-            partDetailsId: values.partDetailsId,
-            donorVin: values.donorVin,
-            inventoryLocationId: values.inventoryLocationId,
-            variant: values.variant,
-            quantity: values.quantity,
-          });
+              images: imagesWithOrder,
+            };
+            await createInventoryMutation.mutateAsync(createData);
+            toast.success("Inventory item created successfully");
+          }
+
+          // Success - close the form
+          onOpenChange(false);
+          void utils.inventory.getAll.invalidate();
+          if (values.partDetailsId) {
+            void utils.part.getById.invalidate({
+              partNo: values.partDetailsId,
+            });
+          }
+        } catch (error) {
+          console.error("Error with inventory operation:", error);
+          setFormErrors(
+            "Error with inventory: " +
+              (error instanceof Error ? error.message : String(error)),
+          );
         }
       }
     } catch (error) {
@@ -945,6 +1180,62 @@ export function InventoryForm({
                         </FormItem>
                       )}
                     />
+
+                    <div className="space-y-2">
+                      <FormLabel>Images</FormLabel>
+                      <div className="rounded-md border p-4">
+                        <div className="mb-4">
+                          <UploadDropzone
+                            endpoint="inventoryImage"
+                            onClientUploadComplete={(res) => {
+                              if (res) {
+                                handleImageUpload(res);
+                                toast.success("Images uploaded successfully");
+                              }
+                            }}
+                            onUploadError={(error: Error) => {
+                              toast.error(
+                                `Error uploading images: ${error.message}`,
+                              );
+                            }}
+                            className="ut-label:text-lg ut-allowed-content:text-muted-foreground ut-upload-icon:text-muted-foreground rounded-lg border-2 border-dashed border-muted-foreground/25 p-4 transition-all hover:border-muted-foreground/50"
+                          />
+                        </div>
+
+                        <div className="my-4 border-t pt-4">
+                          <div className="mb-2 flex items-center">
+                            <ImageIcon className="mr-2 h-4 w-4" />
+                            <span className="text-sm font-medium">
+                              {images.length === 0
+                                ? "No images added yet"
+                                : `${images.length} image${images.length > 1 ? "s" : ""} (drag to reorder)`}
+                            </span>
+                          </div>
+
+                          <DndContext
+                            sensors={sensors}
+                            collisionDetection={closestCenter}
+                            onDragEnd={handleDragEnd}
+                            modifiers={[restrictToVerticalAxis]}
+                          >
+                            <SortableContext
+                              items={images.map((i) => i.id)}
+                              strategy={verticalListSortingStrategy}
+                            >
+                              <div className="grid gap-2">
+                                {images.map((image) => (
+                                  <SortableImage
+                                    key={image.id}
+                                    image={image}
+                                    onRemove={handleImageRemove}
+                                  />
+                                ))}
+                              </div>
+                            </SortableContext>
+                          </DndContext>
+                        </div>
+                      </div>
+                    </div>
                   </AccordionContent>
                 </AccordionItem>
               </Accordion>
