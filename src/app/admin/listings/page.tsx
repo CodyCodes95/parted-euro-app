@@ -13,11 +13,9 @@ import { CreateOrderDialog } from "./_components/create-order-dialog";
 import { ListOnEbayDialog } from "./_components/list-on-ebay-dialog";
 import { type AdminListingsItem } from "~/trpc/shared";
 import { useQueryState } from "nuqs";
-import { useRouter } from "next/navigation";
 
 export default function ListingsAdminPage() {
   const [code, setCode] = useQueryState("code");
-  const router = useRouter();
   const [isAddListingOpen, setIsAddListingOpen] = useState(false);
   const [isEditListingOpen, setIsEditListingOpen] = useState(false);
   const [isDeleteListingOpen, setIsDeleteListingOpen] = useState(false);

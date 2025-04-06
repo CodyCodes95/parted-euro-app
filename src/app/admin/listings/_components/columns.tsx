@@ -29,7 +29,7 @@ const formatter = new Intl.NumberFormat("en-AU", {
   minimumFractionDigits: 2,
 });
 
-const formatPrice = (price: number) => formatter.format(price).split("A")[1];
+const formatPrice = (price: number) => formatter.format(price);
 
 interface ListingColumnsProps {
   onEdit: (listing: AdminListingsItem) => void;
@@ -133,7 +133,11 @@ export function getListingColumns({
           </Button>
         );
       },
-      cell: ({ row }) => formatPrice(row.original.price),
+      cell: ({ row }) => (
+        <span className="font-mono text-xs">
+          {formatPrice(row.original.price)}
+        </span>
+      ),
     },
     {
       accessorKey: "quantity",
