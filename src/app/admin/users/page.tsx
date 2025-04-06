@@ -42,7 +42,7 @@ export default function UsersAdminPage() {
   const columns = getUserColumns();
 
   return (
-    <div className="container p-6">
+    <div className="p-6">
       <div className="mb-6 flex items-center justify-between">
         <h1 className="text-3xl font-bold">Users Management</h1>
       </div>

@@ -5,7 +5,7 @@ import { Card } from "~/components/ui/card";
 
 export default function ImagesSettingsPage() {
   return (
-    <div className="container p-6">
+    <div className="p-6">
       <div className="flex items-center justify-between">
         <h1 className="text-3xl font-bold">Image Settings</h1>
       </div>

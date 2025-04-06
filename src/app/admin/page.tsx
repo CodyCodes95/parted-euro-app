@@ -14,7 +14,7 @@ export default async function AdminDashboardPage() {
     const stats = await api.analytics.getDailyStats();
 
     return (
-      <div className="container p-6">
+      <div className="p-6">
         <h1 className="mb-6 text-3xl font-bold">Admin Dashboard</h1>
 
         <div className="grid gap-6 md:grid-cols-2 lg:grid-cols-3">
@@ -59,7 +59,7 @@ export default async function AdminDashboardPage() {
   } catch (error) {
     console.error("Error fetching analytics data:", error);
     return (
-      <div className="container p-6">
+      <div className="p-6">
         <h1 className="mb-6 text-3xl font-bold">Admin Dashboard</h1>
         <p>Error loading analytics data. Please try again later.</p>
       </div>
