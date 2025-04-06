@@ -1,13 +1,14 @@
 import { createUploadthing, type FileRouter } from "uploadthing/next";
 import { auth } from "~/server/auth";
 import { db } from "~/server/db";
+import { z } from "zod";
 
 const f = createUploadthing();
 
 // FileRouter for your app, can contain multiple FileRoutes
 export const uploadRouter = {
   // Define as many FileRoutes as you like, each with a unique routeSlug
-  homepageImage: f({ image: { maxFileCount: 10 } })
+  homepageImage: f({ image: { maxFileCount: 10 , maxFileSize: "32MB"} })
     // Set permissions and file types for this FileRoute
     .middleware(async () => {
       // This code runs on your server before upload
@@ -46,7 +47,7 @@ export const uploadRouter = {
     }),
 
   // Add inventory image upload endpoint
-  inventoryImage: f({ image: { maxFileCount: 10 } })
+  inventoryImage: f({ image: { maxFileCount: 10 , maxFileSize: "32MB"} })
     .middleware(async ({ files }) => {
       // This code runs on your server before upload
       const session = await auth();
@@ -65,7 +66,7 @@ export const uploadRouter = {
     }),
 
   // Add part image upload endpoint
-  partImage: f({ image: { maxFileCount: 10 } })
+  partImage: f({ image: { maxFileCount: 10 , maxFileSize: "32MB"} })
     .middleware(async ({ req }) => {
       // This code runs on your server before upload
       const session = await auth();
@@ -75,9 +76,8 @@ export const uploadRouter = {
         throw new Error("Unauthorized");
       }
 
-      // Get partNo from query parameter
-      const url = new URL(req.url);
-      const partNo = url.searchParams.get("partNo");
+      // Get partNo from headers
+      const partNo = req.headers.get("partNo");
 
       if (!partNo) {
         throw new Error("Part number is required");
