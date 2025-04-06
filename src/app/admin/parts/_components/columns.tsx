@@ -1,7 +1,7 @@
 "use client";
 
 import { type ColumnDef } from "@tanstack/react-table";
-import { ArrowUpDown, MoreHorizontal } from "lucide-react";
+import { MoreHorizontal } from "lucide-react";
 import { Button } from "~/components/ui/button";
 import {
   DropdownMenu,
@@ -9,6 +9,7 @@ import {
   DropdownMenuItem,
   DropdownMenuTrigger,
 } from "~/components/ui/dropdown-menu";
+import { DataTableColumnHeader } from "~/components/data-table/data-table-column-header";
 
 // Define the Part type based on the schema
 export type Part = {
@@ -49,25 +50,13 @@ export const getPartColumns = ({
   {
     accessorKey: "partNo",
     header: ({ column }) => (
-      <Button
-        variant="ghost"
-        onClick={() => column.toggleSorting(column.getIsSorted() === "asc")}
-      >
-        Part Number
-        <ArrowUpDown className="ml-2 h-4 w-4" />
-      </Button>
+      <DataTableColumnHeader column={column} title="Part Number" />
     ),
   },
   {
     accessorKey: "name",
     header: ({ column }) => (
-      <Button
-        variant="ghost"
-        onClick={() => column.toggleSorting(column.getIsSorted() === "asc")}
-      >
-        Name
-        <ArrowUpDown className="ml-2 h-4 w-4" />
-      </Button>
+      <DataTableColumnHeader column={column} title="Name" />
     ),
   },
   {
@@ -89,13 +78,7 @@ export const getPartColumns = ({
   {
     accessorKey: "weight",
     header: ({ column }) => (
-      <Button
-        variant="ghost"
-        onClick={() => column.toggleSorting(column.getIsSorted() === "asc")}
-      >
-        Weight
-        <ArrowUpDown className="ml-2 h-4 w-4" />
-      </Button>
+      <DataTableColumnHeader column={column} title="Weight" />
     ),
     cell: ({ row }) => {
       const value = row.getValue<number>("weight");
@@ -105,13 +88,7 @@ export const getPartColumns = ({
   {
     accessorKey: "costPrice",
     header: ({ column }) => (
-      <Button
-        variant="ghost"
-        onClick={() => column.toggleSorting(column.getIsSorted() === "asc")}
-      >
-        Cost
-        <ArrowUpDown className="ml-2 h-4 w-4" />
-      </Button>
+      <DataTableColumnHeader column={column} title="Cost" />
     ),
     cell: ({ row }) => {
       const value = row.getValue<number | null>("costPrice");

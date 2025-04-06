@@ -1,14 +1,7 @@
 "use client";
 
 import { type ColumnDef } from "@tanstack/react-table";
-import {
-  MoreHorizontal,
-  Pencil,
-  Trash,
-  ArrowUpDown,
-  ArrowUp,
-  ArrowDown,
-} from "lucide-react";
+import { MoreHorizontal, Pencil, Trash } from "lucide-react";
 import { Button } from "~/components/ui/button";
 import {
   DropdownMenu,
@@ -18,6 +11,7 @@ import {
 } from "~/components/ui/dropdown-menu";
 import { Badge } from "~/components/ui/badge";
 import { type AdminInventoryItem } from "~/trpc/shared";
+import { DataTableColumnHeader } from "~/components/data-table/data-table-column-header";
 
 interface InventoryColumnsProps {
   onEdit: (inventory: AdminInventoryItem) => void;
@@ -31,80 +25,28 @@ export function getInventoryColumns({
   return [
     {
       accessorKey: "partDetails.name",
-      header: ({ column }) => {
-        const isSorted = column.getIsSorted();
-        return (
-          <Button
-            variant="ghost"
-            onClick={() => column.toggleSorting(column.getIsSorted() === "asc")}
-            className="-ml-4"
-          >
-            Part Name
-            {isSorted ? (
-              isSorted === "asc" ? (
-                <ArrowUp className="ml-2 h-4 w-4" />
-              ) : (
-                <ArrowDown className="ml-2 h-4 w-4" />
-              )
-            ) : (
-              <ArrowUpDown className="ml-2 h-4 w-4 opacity-50" />
-            )}
-          </Button>
-        );
-      },
+      header: ({ column }) => (
+        <DataTableColumnHeader column={column} title="Part Name" />
+      ),
     },
     {
       accessorKey: "partDetails.partNo",
-      header: ({ column }) => {
-        const isSorted = column.getIsSorted();
-        return (
-          <Button
-            variant="ghost"
-            onClick={() => column.toggleSorting(column.getIsSorted() === "asc")}
-            className="-ml-4"
-          >
-            Part Number
-            {isSorted ? (
-              isSorted === "asc" ? (
-                <ArrowUp className="ml-2 h-4 w-4" />
-              ) : (
-                <ArrowDown className="ml-2 h-4 w-4" />
-              )
-            ) : (
-              <ArrowUpDown className="ml-2 h-4 w-4 opacity-50" />
-            )}
-          </Button>
-        );
-      },
+      header: ({ column }) => (
+        <DataTableColumnHeader column={column} title="Part Number" />
+      ),
     },
     {
       accessorKey: "inventoryLocation.name",
-      header: "Location",
+      header: ({ column }) => (
+        <DataTableColumnHeader column={column} title="Location" />
+      ),
       cell: ({ row }) => row.original.inventoryLocation?.name ?? "Not assigned",
     },
     {
       accessorKey: "quantity",
-      header: ({ column }) => {
-        const isSorted = column.getIsSorted();
-        return (
-          <Button
-            variant="ghost"
-            onClick={() => column.toggleSorting(column.getIsSorted() === "asc")}
-            className="-ml-4"
-          >
-            Quantity
-            {isSorted ? (
-              isSorted === "asc" ? (
-                <ArrowUp className="ml-2 h-4 w-4" />
-              ) : (
-                <ArrowDown className="ml-2 h-4 w-4" />
-              )
-            ) : (
-              <ArrowUpDown className="ml-2 h-4 w-4 opacity-50" />
-            )}
-          </Button>
-        );
-      },
+      header: ({ column }) => (
+        <DataTableColumnHeader column={column} title="Quantity" />
+      ),
     },
     {
       accessorKey: "variant",

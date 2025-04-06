@@ -5,9 +5,6 @@ import {
   MoreHorizontal,
   Pencil,
   Trash,
-  ArrowUpDown,
-  ArrowUp,
-  ArrowDown,
   ShoppingCart,
   ExternalLink,
 } from "lucide-react";
@@ -22,6 +19,7 @@ import {
 import { Badge } from "~/components/ui/badge";
 import { type AdminListingsItem } from "~/trpc/shared";
 import { Link } from "~/components/link";
+import { DataTableColumnHeader } from "~/components/data-table/data-table-column-header";
 
 const formatter = new Intl.NumberFormat("en-AU", {
   style: "currency",
@@ -47,27 +45,9 @@ export function getListingColumns({
   return [
     {
       accessorKey: "title",
-      header: ({ column }) => {
-        const isSorted = column.getIsSorted();
-        return (
-          <Button
-            variant="ghost"
-            onClick={() => column.toggleSorting(column.getIsSorted() === "asc")}
-            className="-ml-4"
-          >
-            Title
-            {isSorted ? (
-              isSorted === "asc" ? (
-                <ArrowUp className="ml-2 h-4 w-4" />
-              ) : (
-                <ArrowDown className="ml-2 h-4 w-4" />
-              )
-            ) : (
-              <ArrowUpDown className="ml-2 h-4 w-4 opacity-50" />
-            )}
-          </Button>
-        );
-      },
+      header: ({ column }) => (
+        <DataTableColumnHeader column={column} title="Title" />
+      ),
       cell: ({ row }) => {
         return (
           <Link href={`/admin/listings/${row.original.id}`}>
@@ -112,27 +92,9 @@ export function getListingColumns({
     },
     {
       accessorKey: "price",
-      header: ({ column }) => {
-        const isSorted = column.getIsSorted();
-        return (
-          <Button
-            variant="ghost"
-            onClick={() => column.toggleSorting(column.getIsSorted() === "asc")}
-            className="-ml-4"
-          >
-            Price
-            {isSorted ? (
-              isSorted === "asc" ? (
-                <ArrowUp className="ml-2 h-4 w-4" />
-              ) : (
-                <ArrowDown className="ml-2 h-4 w-4" />
-              )
-            ) : (
-              <ArrowUpDown className="ml-2 h-4 w-4 opacity-50" />
-            )}
-          </Button>
-        );
-      },
+      header: ({ column }) => (
+        <DataTableColumnHeader column={column} title="Price" />
+      ),
       cell: ({ row }) => (
         <span className="font-mono text-xs">
           {formatPrice(row.original.price)}
@@ -150,27 +112,9 @@ export function getListingColumns({
     },
     {
       accessorKey: "createdAt",
-      header: ({ column }) => {
-        const isSorted = column.getIsSorted();
-        return (
-          <Button
-            variant="ghost"
-            onClick={() => column.toggleSorting(column.getIsSorted() === "asc")}
-            className="-ml-4"
-          >
-            Listed On
-            {isSorted ? (
-              isSorted === "asc" ? (
-                <ArrowUp className="ml-2 h-4 w-4" />
-              ) : (
-                <ArrowDown className="ml-2 h-4 w-4" />
-              )
-            ) : (
-              <ArrowUpDown className="ml-2 h-4 w-4 opacity-50" />
-            )}
-          </Button>
-        );
-      },
+      header: ({ column }) => (
+        <DataTableColumnHeader column={column} title="Listed On" />
+      ),
       cell: ({ row }) => {
         const date = new Date(row.original.createdAt);
         return date.toLocaleDateString();

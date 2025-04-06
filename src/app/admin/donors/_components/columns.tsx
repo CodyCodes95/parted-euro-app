@@ -2,7 +2,7 @@ import { type ColumnDef } from "@tanstack/react-table";
 import { Button } from "~/components/ui/button";
 import { type Car, type Donor } from "@prisma/client";
 import { formatDate, formatCurrency } from "~/lib/utils";
-import { MoreHorizontal, Pencil, Trash, ArrowUpDown } from "lucide-react";
+import { MoreHorizontal, Pencil, Trash } from "lucide-react";
 import {
   DropdownMenu,
   DropdownMenuContent,
@@ -11,6 +11,7 @@ import {
   DropdownMenuSeparator,
   DropdownMenuTrigger,
 } from "~/components/ui/dropdown-menu";
+import { DataTableColumnHeader } from "~/components/data-table/data-table-column-header";
 
 // Extend Donor type to include the Car relationship
 export type DonorWithCar = Donor & {
@@ -31,20 +32,15 @@ export function getDonorColumns({
     {
       accessorKey: "vin",
       header: ({ column }) => (
-        <Button
-          variant="ghost"
-          onClick={() => column.toggleSorting(column.getIsSorted() === "asc")}
-          className="p-0 hover:bg-transparent"
-        >
-          VIN
-          <ArrowUpDown className="ml-2 h-4 w-4" />
-        </Button>
+        <DataTableColumnHeader column={column} title="VIN" />
       ),
       cell: ({ row }) => <div className="font-medium">{row.original.vin}</div>,
     },
     {
       id: "car",
-      header: "Car",
+      header: ({ column }) => (
+        <DataTableColumnHeader column={column} title="Make & Model" />
+      ),
       cell: ({ row }) => {
         const car = row.original.car;
         return (
@@ -58,56 +54,28 @@ export function getDonorColumns({
     {
       accessorKey: "year",
       header: ({ column }) => (
-        <Button
-          variant="ghost"
-          onClick={() => column.toggleSorting(column.getIsSorted() === "asc")}
-          className="p-0 hover:bg-transparent"
-        >
-          Year
-          <ArrowUpDown className="ml-2 h-4 w-4" />
-        </Button>
+        <DataTableColumnHeader column={column} title="Year" />
       ),
       cell: ({ row }) => <div>{row.original.year}</div>,
     },
     {
       accessorKey: "mileage",
       header: ({ column }) => (
-        <Button
-          variant="ghost"
-          onClick={() => column.toggleSorting(column.getIsSorted() === "asc")}
-          className="p-0 hover:bg-transparent"
-        >
-          Mileage
-          <ArrowUpDown className="ml-2 h-4 w-4" />
-        </Button>
+        <DataTableColumnHeader column={column} title="Mileage" />
       ),
       cell: ({ row }) => <div>{row.original.mileage.toLocaleString()}</div>,
     },
     {
       accessorKey: "cost",
       header: ({ column }) => (
-        <Button
-          variant="ghost"
-          onClick={() => column.toggleSorting(column.getIsSorted() === "asc")}
-          className="p-0 hover:bg-transparent"
-        >
-          Cost
-          <ArrowUpDown className="ml-2 h-4 w-4" />
-        </Button>
+        <DataTableColumnHeader column={column} title="Cost" />
       ),
       cell: ({ row }) => <div>{formatCurrency(row.original.cost)}</div>,
     },
     {
       accessorKey: "dateInStock",
       header: ({ column }) => (
-        <Button
-          variant="ghost"
-          onClick={() => column.toggleSorting(column.getIsSorted() === "asc")}
-          className="p-0 hover:bg-transparent"
-        >
-          Date In Stock
-          <ArrowUpDown className="ml-2 h-4 w-4" />
-        </Button>
+        <DataTableColumnHeader column={column} title="Date In Stock" />
       ),
       cell: ({ row }) => {
         const date = row.original.dateInStock;

@@ -12,6 +12,8 @@ import {
   ArrowUpDown,
   ArrowUp,
   ArrowDown,
+  Pencil,
+  Trash,
 } from "lucide-react";
 import { Button } from "~/components/ui/button";
 import {
@@ -28,11 +30,12 @@ import { Badge } from "~/components/ui/badge";
 import { type AdminOrdersItem } from "~/trpc/shared";
 import { formatDistanceToNow } from "date-fns";
 import { CreditCard, FileText, SendHorizontal, Tag } from "lucide-react";
+import { DataTableColumnHeader } from "~/components/data-table/data-table-column-header";
 
 // Format currency
-const formatter = new Intl.NumberFormat("en-AU", {
+const formatter = new Intl.NumberFormat("en-US", {
   style: "currency",
-  currency: "AUD",
+  currency: "USD",
   minimumFractionDigits: 2,
 });
 
@@ -48,11 +51,11 @@ const getStatusBadge = (status: string) => {
     case "processing":
       return "default";
     case "shipped":
-      return "success";
+      return "default";
     case "ready for pickup":
-      return "success";
+      return "default";
     case "completed":
-      return "success";
+      return "default";
     case "cancelled":
       return "destructive";
     default:
@@ -79,34 +82,18 @@ export function getOrderColumns({
   return [
     {
       accessorKey: "xeroInvoiceRef",
-      header: "Order ID",
+      header: ({ column }) => (
+        <DataTableColumnHeader column={column} title="Order ID" />
+      ),
       cell: ({ row }) => (
         <span className="font-mono text-xs">{row.original.xeroInvoiceId}</span>
       ),
     },
     {
       accessorKey: "createdAt",
-      header: ({ column }) => {
-        const isSorted = column.getIsSorted();
-        return (
-          <Button
-            variant="ghost"
-            onClick={() => column.toggleSorting(column.getIsSorted() === "asc")}
-            className="-ml-4"
-          >
-            Date
-            {isSorted ? (
-              isSorted === "asc" ? (
-                <ArrowUp className="ml-2 h-4 w-4" />
-              ) : (
-                <ArrowDown className="ml-2 h-4 w-4" />
-              )
-            ) : (
-              <ArrowUpDown className="ml-2 h-4 w-4 opacity-50" />
-            )}
-          </Button>
-        );
-      },
+      header: ({ column }) => (
+        <DataTableColumnHeader column={column} title="Created At" />
+      ),
       cell: ({ row }) => {
         const date = new Date(row.original.createdAt);
         return date.toLocaleDateString("en-US", {
@@ -189,27 +176,9 @@ export function getOrderColumns({
     },
     {
       accessorKey: "subtotal",
-      header: ({ column }) => {
-        const isSorted = column.getIsSorted();
-        return (
-          <Button
-            variant="ghost"
-            onClick={() => column.toggleSorting(column.getIsSorted() === "asc")}
-            className="-ml-4"
-          >
-            Total
-            {isSorted ? (
-              isSorted === "asc" ? (
-                <ArrowUp className="ml-2 h-4 w-4" />
-              ) : (
-                <ArrowDown className="ml-2 h-4 w-4" />
-              )
-            ) : (
-              <ArrowUpDown className="ml-2 h-4 w-4 opacity-50" />
-            )}
-          </Button>
-        );
-      },
+      header: ({ column }) => (
+        <DataTableColumnHeader column={column} title="Total" />
+      ),
       cell: ({ row }) => {
         const subtotal = row.original.subtotal;
         const shipping = row.original.shipping || 0;

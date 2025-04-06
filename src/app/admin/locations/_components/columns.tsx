@@ -1,14 +1,7 @@
 "use client";
 
 import { ColumnDef } from "@tanstack/react-table";
-import {
-  MoreHorizontal,
-  Pencil,
-  Trash,
-  ArrowUpDown,
-  ArrowUp,
-  ArrowDown,
-} from "lucide-react";
+import { MoreHorizontal, Pencil, Trash } from "lucide-react";
 import { Button } from "~/components/ui/button";
 import {
   DropdownMenu,
@@ -16,6 +9,7 @@ import {
   DropdownMenuItem,
   DropdownMenuTrigger,
 } from "~/components/ui/dropdown-menu";
+import { DataTableColumnHeader } from "~/components/data-table/data-table-column-header";
 
 export type Location = {
   id: string;
@@ -36,51 +30,15 @@ export function getLocationColumns({
   return [
     {
       accessorKey: "name",
-      header: ({ column }) => {
-        const isSorted = column.getIsSorted();
-        return (
-          <Button
-            variant="ghost"
-            onClick={() => column.toggleSorting(column.getIsSorted() === "asc")}
-            className="-ml-4"
-          >
-            Name
-            {isSorted ? (
-              isSorted === "asc" ? (
-                <ArrowUp className="ml-2 h-4 w-4" />
-              ) : (
-                <ArrowDown className="ml-2 h-4 w-4" />
-              )
-            ) : (
-              <ArrowUpDown className="ml-2 h-4 w-4 opacity-50" />
-            )}
-          </Button>
-        );
-      },
+      header: ({ column }) => (
+        <DataTableColumnHeader column={column} title="Name" />
+      ),
     },
     {
       accessorKey: "createdAt",
-      header: ({ column }) => {
-        const isSorted = column.getIsSorted();
-        return (
-          <Button
-            variant="ghost"
-            onClick={() => column.toggleSorting(column.getIsSorted() === "asc")}
-            className="-ml-4"
-          >
-            Created At
-            {isSorted ? (
-              isSorted === "asc" ? (
-                <ArrowUp className="ml-2 h-4 w-4" />
-              ) : (
-                <ArrowDown className="ml-2 h-4 w-4" />
-              )
-            ) : (
-              <ArrowUpDown className="ml-2 h-4 w-4 opacity-50" />
-            )}
-          </Button>
-        );
-      },
+      header: ({ column }) => (
+        <DataTableColumnHeader column={column} title="Created At" />
+      ),
       cell: ({ row }) => {
         const createdAt = row.original.createdAt;
         return createdAt ? new Date(createdAt).toLocaleDateString() : "N/A";

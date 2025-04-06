@@ -1,14 +1,7 @@
 "use client";
 
 import { ColumnDef } from "@tanstack/react-table";
-import {
-  MoreHorizontal,
-  Pencil,
-  Trash,
-  ArrowUpDown,
-  ArrowUp,
-  ArrowDown,
-} from "lucide-react";
+import { MoreHorizontal, Pencil, Trash } from "lucide-react";
 import { Button } from "~/components/ui/button";
 import {
   DropdownMenu,
@@ -17,6 +10,7 @@ import {
   DropdownMenuTrigger,
 } from "~/components/ui/dropdown-menu";
 import { type AdminCarItem } from "~/trpc/shared";
+import { DataTableColumnHeader } from "~/components/data-table/data-table-column-header";
 
 interface CarColumnsProps {
   onEdit: (car: AdminCarItem) => void;
@@ -30,99 +24,27 @@ export function getCarColumns({
   return [
     {
       accessorKey: "make",
-      header: ({ column }) => {
-        const isSorted = column.getIsSorted();
-        return (
-          <Button
-            variant="ghost"
-            onClick={() => column.toggleSorting(column.getIsSorted() === "asc")}
-            className="-ml-4"
-          >
-            Make
-            {isSorted ? (
-              isSorted === "asc" ? (
-                <ArrowUp className="ml-2 h-4 w-4" />
-              ) : (
-                <ArrowDown className="ml-2 h-4 w-4" />
-              )
-            ) : (
-              <ArrowUpDown className="ml-2 h-4 w-4 opacity-50" />
-            )}
-          </Button>
-        );
-      },
+      header: ({ column }) => (
+        <DataTableColumnHeader column={column} title="Make" />
+      ),
     },
     {
       accessorKey: "series",
-      header: ({ column }) => {
-        const isSorted = column.getIsSorted();
-        return (
-          <Button
-            variant="ghost"
-            onClick={() => column.toggleSorting(column.getIsSorted() === "asc")}
-            className="-ml-4"
-          >
-            Series
-            {isSorted ? (
-              isSorted === "asc" ? (
-                <ArrowUp className="ml-2 h-4 w-4" />
-              ) : (
-                <ArrowDown className="ml-2 h-4 w-4" />
-              )
-            ) : (
-              <ArrowUpDown className="ml-2 h-4 w-4 opacity-50" />
-            )}
-          </Button>
-        );
-      },
+      header: ({ column }) => (
+        <DataTableColumnHeader column={column} title="Series" />
+      ),
     },
     {
       accessorKey: "generation",
-      header: ({ column }) => {
-        const isSorted = column.getIsSorted();
-        return (
-          <Button
-            variant="ghost"
-            onClick={() => column.toggleSorting(column.getIsSorted() === "asc")}
-            className="-ml-4"
-          >
-            Generation
-            {isSorted ? (
-              isSorted === "asc" ? (
-                <ArrowUp className="ml-2 h-4 w-4" />
-              ) : (
-                <ArrowDown className="ml-2 h-4 w-4" />
-              )
-            ) : (
-              <ArrowUpDown className="ml-2 h-4 w-4 opacity-50" />
-            )}
-          </Button>
-        );
-      },
+      header: ({ column }) => (
+        <DataTableColumnHeader column={column} title="Generation" />
+      ),
     },
     {
       accessorKey: "model",
-      header: ({ column }) => {
-        const isSorted = column.getIsSorted();
-        return (
-          <Button
-            variant="ghost"
-            onClick={() => column.toggleSorting(column.getIsSorted() === "asc")}
-            className="-ml-4"
-          >
-            Model
-            {isSorted ? (
-              isSorted === "asc" ? (
-                <ArrowUp className="ml-2 h-4 w-4" />
-              ) : (
-                <ArrowDown className="ml-2 h-4 w-4" />
-              )
-            ) : (
-              <ArrowUpDown className="ml-2 h-4 w-4 opacity-50" />
-            )}
-          </Button>
-        );
-      },
+      header: ({ column }) => (
+        <DataTableColumnHeader column={column} title="Model" />
+      ),
     },
     {
       id: "actions",

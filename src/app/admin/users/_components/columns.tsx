@@ -1,11 +1,11 @@
 "use client";
 
 import { type ColumnDef } from "@tanstack/react-table";
-import { ArrowDown, ArrowUp, ArrowUpDown } from "lucide-react";
 import { Button } from "~/components/ui/button";
 import { Switch } from "~/components/ui/switch";
 import { api } from "~/trpc/react";
 import { toast } from "sonner";
+import { DataTableColumnHeader } from "~/components/data-table/data-table-column-header";
 
 export type User = {
   id: string;
@@ -20,27 +20,9 @@ export function getUserColumns(): ColumnDef<User>[] {
   return [
     {
       accessorKey: "name",
-      header: ({ column }) => {
-        const isSorted = column.getIsSorted();
-        return (
-          <Button
-            variant="ghost"
-            onClick={() => column.toggleSorting(column.getIsSorted() === "asc")}
-            className="-ml-4"
-          >
-            Name
-            {isSorted ? (
-              isSorted === "asc" ? (
-                <ArrowUp className="ml-2 h-4 w-4" />
-              ) : (
-                <ArrowDown className="ml-2 h-4 w-4" />
-              )
-            ) : (
-              <ArrowUpDown className="ml-2 h-4 w-4 opacity-50" />
-            )}
-          </Button>
-        );
-      },
+      header: ({ column }) => (
+        <DataTableColumnHeader column={column} title="Name" />
+      ),
       cell: ({ row }) => {
         const name = row.getValue<string>("name");
         return <div>{name || "Unnamed User"}</div>;
@@ -48,27 +30,9 @@ export function getUserColumns(): ColumnDef<User>[] {
     },
     {
       accessorKey: "email",
-      header: ({ column }) => {
-        const isSorted = column.getIsSorted();
-        return (
-          <Button
-            variant="ghost"
-            onClick={() => column.toggleSorting(column.getIsSorted() === "asc")}
-            className="-ml-4"
-          >
-            Email
-            {isSorted ? (
-              isSorted === "asc" ? (
-                <ArrowUp className="ml-2 h-4 w-4" />
-              ) : (
-                <ArrowDown className="ml-2 h-4 w-4" />
-              )
-            ) : (
-              <ArrowUpDown className="ml-2 h-4 w-4 opacity-50" />
-            )}
-          </Button>
-        );
-      },
+      header: ({ column }) => (
+        <DataTableColumnHeader column={column} title="Email" />
+      ),
     },
     // {
     //   accessorKey: "emailVerified",
