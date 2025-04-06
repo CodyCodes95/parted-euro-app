@@ -138,6 +138,7 @@ export function InventoryForm({
     cars: string[];
     partTypes: string[];
   } | null>(null);
+  const [formErrors, setFormErrors] = useState<string | null>(null);
 
   const utils = api.useUtils();
 
@@ -355,6 +356,7 @@ export function InventoryForm({
 
   const onSubmit = async (values: FormValues) => {
     try {
+      setFormErrors(null);
       // If it's a new part, create it first
       if (isNewPart) {
         const partData = {
@@ -433,8 +435,16 @@ export function InventoryForm({
       }
     } catch (error) {
       console.error("Error in form submission:", error);
+      setFormErrors("An error occurred while submitting the form");
     }
   };
+
+  // Debug form errors
+  useEffect(() => {
+    if (Object.keys(form.formState.errors).length > 0) {
+      console.log("Form validation errors:", form.formState.errors);
+    }
+  }, [form.formState.errors]);
 
   const handleCreateLocation = () => {
     void locationForm.handleSubmit((values) => {
@@ -487,6 +497,26 @@ export function InventoryForm({
           </DialogHeader>
           <Form {...form}>
             <form onSubmit={form.handleSubmit(onSubmit)} className="space-y-4">
+              {formErrors && (
+                <div className="rounded bg-destructive/15 p-3 text-sm text-destructive">
+                  {formErrors}
+                </div>
+              )}
+
+              {form.formState.errors.root?.message && (
+                <div className="rounded bg-destructive/15 p-3 text-sm text-destructive">
+                  {form.formState.errors.root.message}
+                </div>
+              )}
+
+              {Object.keys(form.formState.errors).length > 0 &&
+                !formErrors &&
+                !form.formState.errors.root?.message && (
+                  <div className="rounded bg-destructive/15 p-3 text-sm text-destructive">
+                    Please fix the highlighted errors below to continue.
+                  </div>
+                )}
+
               <div className="space-y-2">
                 <FormLabel>Part Selection*</FormLabel>
                 <Popover open={partSearchOpen} onOpenChange={setPartSearchOpen}>
@@ -928,13 +958,35 @@ export function InventoryForm({
                 >
                   Cancel
                 </Button>
-                <Button type="submit" disabled={isSubmitting}>
+                <Button
+                  type="submit"
+                  disabled={isSubmitting}
+                  onClick={() => {
+                    if (Object.keys(form.formState.errors).length > 0) {
+                      console.log(
+                        "Validation errors on submit:",
+                        form.formState.errors,
+                      );
+                    }
+                  }}
+                >
                   {isSubmitting && (
                     <Loader2 className="mr-2 h-4 w-4 animate-spin" />
                   )}
                   {isEditing ? "Update" : "Create"}
                 </Button>
               </DialogFooter>
+
+              {/* Debug section in development only */}
+              {process.env.NODE_ENV === "development" &&
+                Object.keys(form.formState.errors).length > 0 && (
+                  <div className="mt-4 rounded border border-amber-300 bg-amber-50 p-3 text-xs">
+                    <strong>Form validation errors:</strong>
+                    <pre className="mt-2 overflow-auto">
+                      {JSON.stringify(form.formState.errors, null, 2)}
+                    </pre>
+                  </div>
+                )}
             </form>
           </Form>
         </DialogContent>
