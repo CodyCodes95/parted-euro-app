@@ -431,7 +431,7 @@ export function PartForm({
                     </PopoverContent>
                   </Popover>
                   {selectedCars.length > 0 && (
-                    <div className="mt-1 flex max-h-40 flex-wrap gap-1 overflow-y-auto border p-2">
+                    <div className="mt-1 relative flex max-h-40 flex-wrap gap-1 overflow-y-auto border p-2">
                       {selectedCars.map((id) => {
                         const car = carOptions.find((c) => c.value === id);
                         return (
@@ -524,7 +524,7 @@ export function PartForm({
                     </PopoverContent>
                   </Popover>
                   {selectedPartTypes.length > 0 && (
-                    <div className="mt-1 flex flex-wrap gap-1">
+                    <div className="mt-1 relative flex flex-wrap gap-1">
                       {selectedPartTypes.map((id) => {
                         const type = partTypeOptions.find(
                           (t) => t.value === id,

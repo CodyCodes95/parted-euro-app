@@ -492,6 +492,7 @@ export default function WreckingPage() {
             <div className="grid grid-cols-1 gap-4 sm:grid-cols-2 lg:grid-cols-3">
               {donors.data.donors.map((donor: Donor) => (
                 <Link
+                  prefetch={true}
                   key={donor.vin}
                   href={`/wrecking/${donor.vin}`}
                   className="block"

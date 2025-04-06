@@ -43,6 +43,7 @@ import {
   PaginationPrevious,
 } from "~/components/ui/pagination";
 import { SelectCarModal } from "~/components/SelectCarModal";
+import { Link } from "~/components/link";
 
 export default function ListingsPage() {
   // URL State Management
@@ -218,7 +219,7 @@ export default function ListingsPage() {
         <PaginationContent>
           <PaginationItem>
             <PaginationPrevious
-              onClick={() => void setPage(Math.max(1, page - 1))}
+              onMouseDown={() => void setPage(Math.max(1, page - 1))}
               aria-disabled={page === 1}
               className={page === 1 ? "pointer-events-none opacity-50" : ""}
             />
@@ -233,7 +234,7 @@ export default function ListingsPage() {
               <PaginationItem key={pageNum}>
                 <PaginationLink
                   isActive={page === pageNum}
-                  onClick={() => void setPage(pageNum)}
+                  onMouseDown={() => void setPage(pageNum)}
                 >
                   {pageNum}
                 </PaginationLink>
@@ -243,7 +244,7 @@ export default function ListingsPage() {
 
           <PaginationItem>
             <PaginationNext
-              onClick={() => void setPage(Math.min(totalPages, page + 1))}
+              onMouseDown={() => void setPage(Math.min(totalPages, page + 1))}
               aria-disabled={page === totalPages}
               className={
                 page === totalPages ? "pointer-events-none opacity-50" : ""
@@ -265,7 +266,7 @@ export default function ListingsPage() {
           <Button
             variant="default"
             className="flex items-center gap-2 whitespace-nowrap"
-            onClick={() => setSelectCarModalOpen(true)}
+            onMouseDown={() => setSelectCarModalOpen(true)}
           >
             <Car className="h-4 w-4" />
             <span>Select Car</span>
@@ -288,7 +289,7 @@ export default function ListingsPage() {
                 variant="ghost"
                 size="icon"
                 className="absolute right-1 top-1/2 h-7 w-7 -translate-y-1/2 transform"
-                onClick={() => {
+                onMouseDown={() => {
                   void setSearch("");
                   void setPage(1);
                 }}
@@ -362,7 +363,7 @@ export default function ListingsPage() {
                 <Button
                   variant="default"
                   className="flex items-center gap-2"
-                  onClick={() => {
+                  onMouseDown={() => {
                     setSelectCarModalOpen(true);
                     setSidebarOpen(false);
                   }}
@@ -396,7 +397,7 @@ export default function ListingsPage() {
                   <Button
                     variant="ghost"
                     size="sm"
-                    onClick={clearFilters}
+                    onMouseDown={clearFilters}
                     className="h-auto p-0 text-xs text-muted-foreground"
                   >
                     Clear all
@@ -419,7 +420,7 @@ export default function ListingsPage() {
                   <Button
                     variant="ghost"
                     size="icon"
-                    onClick={() => void setCategory("")}
+                    onMouseDown={() => void setCategory("")}
                     className="h-4 w-4 p-0"
                   >
                     <X className="h-3 w-3" />
@@ -432,7 +433,7 @@ export default function ListingsPage() {
                   <Button
                     variant="ghost"
                     size="icon"
-                    onClick={() => void setSubcat("")}
+                    onMouseDown={() => void setSubcat("")}
                     className="h-4 w-4 p-0"
                   >
                     <X className="h-3 w-3" />
@@ -448,7 +449,7 @@ export default function ListingsPage() {
                   <Button
                     variant="ghost"
                     size="icon"
-                    onClick={() => {
+                    onMouseDown={() => {
                       void setMake("");
                       void setGeneration("");
                       void setModel("");
@@ -463,7 +464,7 @@ export default function ListingsPage() {
               <Button
                 variant="ghost"
                 size="sm"
-                onClick={clearFilters}
+                onMouseDown={clearFilters}
                 className="h-auto text-xs text-muted-foreground"
               >
                 Clear all
@@ -516,7 +517,7 @@ export default function ListingsPage() {
                 <Button
                   variant="outline"
                   className="mt-4"
-                  onClick={clearFilters}
+                  onMouseDown={clearFilters}
                 >
                   Clear all filters
                 </Button>
@@ -528,47 +529,49 @@ export default function ListingsPage() {
           {listings.data && listings.data.listings.length > 0 && (
             <div className="grid grid-cols-1 gap-4 sm:grid-cols-2 lg:grid-cols-3">
               {listings.data.listings.map((listing) => (
-                <Card
+                <Link
+                  prefetch={true}
                   key={listing.id}
-                  className="group cursor-pointer overflow-hidden transition-all duration-200 hover:scale-[1.02] hover:shadow-md"
-                  onClick={() =>
-                    (window.location.href = `/listings/${listing.id}`)
-                  }
+                  href={`/listings/${listing.id}`}
                 >
-                  <div className="relative h-[200px] w-full bg-muted">
-                    {listing.images?.[0] ? (
-                      <img
-                        src={listing.images[0].url}
-                        alt={listing.title}
-                        className="h-full w-full object-cover transition-transform duration-300 group-hover:scale-105"
-                      />
-                    ) : (
-                      <div className="flex h-full w-full items-center justify-center bg-muted">
-                        <span className="text-muted-foreground">No image</span>
-                      </div>
-                    )}
-                  </div>
-                  <CardContent className="p-4">
-                    <h3 className="mb-2 line-clamp-1 text-lg font-medium">
-                      {listing.title}
-                    </h3>
-                    <p className="mb-2 line-clamp-2 text-sm text-muted-foreground">
-                      {listing.description || "No description available"}
-                    </p>
-                    <div className="flex items-center justify-between">
-                      <p className="text-lg font-bold">
-                        ${listing.price.toFixed(2)}
-                      </p>
-                      <Button
-                        variant="outline"
-                        size="sm"
-                        className="relative z-10"
-                      >
-                        View
-                      </Button>
+                  <Card className="group cursor-pointer overflow-hidden transition-all duration-200 hover:scale-[1.02] hover:shadow-md">
+                    <div className="relative h-[200px] w-full bg-muted">
+                      {listing.images?.[0] ? (
+                        <img
+                          src={listing.images[0].url}
+                          alt={listing.title}
+                          className="h-full w-full object-cover transition-transform duration-300 group-hover:scale-105"
+                        />
+                      ) : (
+                        <div className="flex h-full w-full items-center justify-center bg-muted">
+                          <span className="text-muted-foreground">
+                            No image
+                          </span>
+                        </div>
+                      )}
                     </div>
-                  </CardContent>
-                </Card>
+                    <CardContent className="p-4">
+                      <h3 className="mb-2 line-clamp-1 text-lg font-medium">
+                        {listing.title}
+                      </h3>
+                      <p className="mb-2 line-clamp-2 text-sm text-muted-foreground">
+                        {listing.description || "No description available"}
+                      </p>
+                      <div className="flex items-center justify-between">
+                        <p className="text-lg font-bold">
+                          ${listing.price.toFixed(2)}
+                        </p>
+                        <Button
+                          variant="outline"
+                          size="sm"
+                          className="relative z-10"
+                        >
+                          View
+                        </Button>
+                      </div>
+                    </CardContent>
+                  </Card>
+                </Link>
               ))}
             </div>
           )}
@@ -597,7 +600,7 @@ export default function ListingsPage() {
                   variant={category === cat.name ? "default" : "ghost"}
                   size="sm"
                   className="w-full justify-start text-left"
-                  onClick={() => handleCategoryChange(cat.name)}
+                  onMouseDown={() => handleCategoryChange(cat.name)}
                 >
                   {cat.name}
                 </Button>
@@ -618,7 +621,7 @@ export default function ListingsPage() {
                         }
                         size="sm"
                         className="w-full justify-start text-left text-sm"
-                        onClick={() =>
+                        onMouseDown={() =>
                           handleSubcategoryChange(subcategory.name)
                         }
                       >
@@ -676,7 +679,7 @@ export default function ListingsPage() {
                 variant="ghost"
                 size="sm"
                 className="mt-2 w-full text-destructive"
-                onClick={() => {
+                onMouseDown={() => {
                   void setMake("");
                   void setGeneration("");
                   void setModel("");
@@ -697,7 +700,7 @@ export default function ListingsPage() {
                 variant="outline"
                 size="sm"
                 className="mt-2"
-                onClick={() => setSelectCarModalOpen(true)}
+                onMouseDown={() => setSelectCarModalOpen(true)}
               >
                 Select Car
               </Button>
@@ -708,7 +711,7 @@ export default function ListingsPage() {
         {/* Apply Filters Button (Mobile only) */}
         <Button
           className="mt-2 w-full md:hidden"
-          onClick={() => setSidebarOpen(false)}
+          onMouseDown={() => setSidebarOpen(false)}
         >
           Apply Filters
         </Button>

@@ -476,7 +476,7 @@ export function ListingForm({
                     </PopoverContent>
                   </Popover>
                   {selectedParts.length > 0 && (
-                    <div className="mt-1 flex max-h-40 flex-wrap gap-1 overflow-y-auto border p-2">
+                    <div className="relative mt-1 flex max-h-40 flex-wrap gap-1 overflow-y-auto border p-2">
                       {selectedParts.map((id) => {
                         const part = partOptions.find((p) => p.value === id);
                         return (

@@ -64,11 +64,13 @@ export default function InventoryAdminPage() {
       )}
 
       {!isLoading && <DataTable columns={columns} data={inventory} />}
-
-      <InventoryForm
-        open={isAddInventoryOpen}
-        onOpenChange={setIsAddInventoryOpen}
-      />
+      
+      {isAddInventoryOpen && (
+        <InventoryForm
+          open={isAddInventoryOpen}
+          onOpenChange={setIsAddInventoryOpen}
+        />
+      )}
 
       {selectedInventory && (
         <>
