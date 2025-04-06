@@ -1,6 +1,6 @@
 "use client";
 
-import { useState } from "react";
+import { useEffect, useState } from "react";
 import { api } from "~/trpc/react";
 import { DataTable } from "~/components/data-table/data-table";
 import { getListingColumns } from "./_components/columns";
@@ -12,8 +12,12 @@ import { Plus } from "lucide-react";
 import { CreateOrderDialog } from "./_components/create-order-dialog";
 import { ListOnEbayDialog } from "./_components/list-on-ebay-dialog";
 import { type AdminListingsItem } from "~/trpc/shared";
+import { useQueryState } from "nuqs";
+import { useRouter } from "next/navigation";
 
 export default function ListingsAdminPage() {
+  const [code, setCode] = useQueryState("code");
+  const router = useRouter();
   const [isAddListingOpen, setIsAddListingOpen] = useState(false);
   const [isEditListingOpen, setIsEditListingOpen] = useState(false);
   const [isDeleteListingOpen, setIsDeleteListingOpen] = useState(false);
@@ -60,6 +64,18 @@ export default function ListingsAdminPage() {
     onCreateOrder: handleCreateOrder,
     onListOnEbay: handleListOnEbay,
   });
+
+  const updateRefreshToken = api.ebay.setTokenSet.useMutation();
+
+  useEffect(() => {
+    if (code) {
+      const updateTokenRes = updateRefreshToken.mutateAsync({
+        code: code,
+      });
+
+      void setCode(null);
+    }
+  }, [code]);
 
   return (
     <div className="p-6">

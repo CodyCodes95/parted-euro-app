@@ -14,6 +14,8 @@ import { ordersRouter } from "./routers/orders";
 import { partCategoryRouter } from "./routers/partCategory";
 import { inventoryRouter } from "./routers/inventory";
 import { analyticsRouter } from "./routers/analytics";
+import { ebayRouter } from "./routers/ebay";
+import { xeroRouter } from "./routers/xero";
 /**
  * This is the primary router for your server.
  *
@@ -35,6 +37,8 @@ export const appRouter = createTRPCRouter({
   partCategory: partCategoryRouter,
   inventory: inventoryRouter,
   analytics: analyticsRouter,
+  ebay: ebayRouter,
+  xero: xeroRouter,
 });
 
 // export type definition of API

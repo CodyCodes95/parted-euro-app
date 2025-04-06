@@ -61,12 +61,12 @@ export const xeroRouter = createTRPCRouter({
   updateTokenset: adminProcedure
     .input(
       z.object({
-        code: z.string(),
+        url: z.string(),
       }),
     )
     .mutation(async ({ ctx, input }) => {
       try {
-        const tokenSet = await xero.apiCallback(input.code);
+        const tokenSet = await xero.apiCallback(input.url);
         const creds = await ctx.db.xeroCreds.findFirst();
         if (!creds) throw new Error("Xero credentials not found");
         const updatedCreds = await ctx.db.xeroCreds.update({
