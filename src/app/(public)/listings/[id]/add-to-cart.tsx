@@ -24,11 +24,7 @@ type AddToCartProps = {
 export function AddToCart({
   listingId,
   listingTitle,
-  listingPrice,
-  listingImage,
   quantity: maxQuantity,
-  dimensions,
-  vin,
 }: AddToCartProps) {
   const [quantity, setQuantity] = useState(1);
   const [isAdded, setIsAdded] = useState(false);

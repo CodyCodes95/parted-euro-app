@@ -9,6 +9,11 @@ import {
 } from "~/components/ui/sidebar";
 import { auth } from "~/server/auth";
 import { ThemeProvider } from "~/components/theme-provider";
+import { type Metadata } from "next";
+
+export const metadata: Metadata = {
+  title: "Admin",
+};
 
 export default async function AdminLayout({
   children,
