@@ -26,82 +26,31 @@ export const categoryRouter = createTRPCRouter({
       });
     }),
   // Get all categories
-  getAll: adminProcedure
-    .input(
-      z.object({
-        limit: z.number().min(1).max(1000).optional().default(100),
-        cursor: z.string().optional(),
-        search: z.string().optional(),
-        sortBy: z.string().optional(),
-        sortOrder: z.enum(["asc", "desc"]).optional(),
-        parentId: z.string().optional(),
-      }),
-    )
-    .query(async ({ ctx, input }) => {
-      const { limit, cursor, search, sortBy, sortOrder, parentId } = input;
-
-      // Build the orderBy object based on sortBy
-      let orderByConfig: Prisma.PartTypesOrderByWithRelationInput = {
-        name: "asc",
-      }; // Default sorting
-
-      if (sortBy) {
-        if (sortBy === "parentName") {
-          // Handle sorting by parent name
-          orderByConfig = {
-            parent: {
-              name: sortOrder ?? "asc",
-            },
-          };
-        } else {
-          // Handle normal field sorting
-          orderByConfig = { [sortBy]: sortOrder ?? "asc" };
-        }
-      }
-
-      // Create the base query
-      const query = {
-        take: limit + 1,
-        ...(cursor ? { cursor: { id: cursor } } : {}),
-        orderBy: orderByConfig,
-        where: {
-          ...(search
-            ? {
-                name: { contains: search, mode: "insensitive" },
-              }
-            : {}),
-          ...(parentId !== undefined ? { parentId } : {}),
-        },
-        include: {
-          parent: {
-            select: {
-              name: true,
-            },
+  getAll: adminProcedure.query(async ({ ctx }) => {
+    // Get all categories with their parent relationship
+    const categories = await ctx.db.partTypes.findMany({
+      include: {
+        parent: {
+          select: {
+            name: true,
           },
         },
-      } as Prisma.PartTypesFindManyArgs;
+      },
+      orderBy: {
+        name: "asc",
+      },
+    });
 
-      // Execute the query
-      const categories = await ctx.db.partTypes.findMany(query);
+    // Map the results to include the parent name
+    const mappedCategories = categories.map((category) => ({
+      ...category,
+      parentName: category.parent?.name || null,
+    }));
 
-      // Check if we have more items
-      let nextCursor: typeof cursor | undefined = undefined;
-      if (categories.length > limit) {
-        const nextItem = categories.pop();
-        nextCursor = nextItem?.id;
-      }
-
-      // Map the results to include the parent name
-      const mappedCategories = categories.map((category) => ({
-        ...category,
-        parentName: category.parent?.name || null,
-      }));
-
-      return {
-        items: mappedCategories,
-        nextCursor,
-      };
-    }),
+    return {
+      items: mappedCategories,
+    };
+  }),
 
   // Get all parent categories (for filter dropdown)
   getAllParents: adminProcedure.query(async ({ ctx }) => {

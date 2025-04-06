@@ -10,48 +10,16 @@ const locationSchema = z.object({
 
 export const locationRouter = createTRPCRouter({
   // Get all locations
-  getAll: adminProcedure
-    .input(
-      z.object({
-        limit: z.number().min(1).max(1000).optional().default(100),
-        cursor: z.string().optional(),
-        search: z.string().optional(),
-        sortBy: z.string().optional(),
-        sortOrder: z.enum(["asc", "desc"]).optional(),
-      }),
-    )
-    .query(async ({ ctx, input }) => {
-      const { limit, cursor, search, sortBy, sortOrder } = input;
+  getAll: adminProcedure.query(async ({ ctx }) => {
+    // Execute the query to get all locations
+    const locations = await ctx.db.inventoryLocations.findMany({
+      orderBy: { name: "asc" },
+    });
 
-      // Create the base query
-      const query = {
-        take: limit + 1,
-        ...(cursor ? { cursor: { id: cursor } } : {}),
-        orderBy: sortBy ? { [sortBy]: sortOrder ?? "asc" } : { name: "asc" },
-        where: {
-          ...(search
-            ? {
-                name: { contains: search, mode: "insensitive" },
-              }
-            : {}),
-        },
-      } as Prisma.InventoryLocationsFindManyArgs;
-
-      // Execute the query
-      const locations = await ctx.db.inventoryLocations.findMany(query);
-
-      // Check if we have more items
-      let nextCursor: typeof cursor | undefined = undefined;
-      if (locations.length > limit) {
-        const nextItem = locations.pop();
-        nextCursor = nextItem?.id;
-      }
-
-      return {
-        items: locations,
-        nextCursor,
-      };
-    }),
+    return {
+      items: locations,
+    };
+  }),
 
   // Get all locations for inventory form select
   getAllLocations: adminProcedure.query(async ({ ctx }) => {

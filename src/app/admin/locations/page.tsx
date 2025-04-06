@@ -27,26 +27,10 @@ export default function LocationsAdminPage() {
   const [searchTerm, setSearchTerm] = useState("");
   const [sorting, setSorting] = useState<SortingState>([]);
 
-  // Get the current sort parameters from the sorting state
-  const sortConfig =
-    sorting.length > 0
-      ? {
-          sortBy: sorting[0]?.id,
-          sortOrder: sorting[0]?.desc ? ("desc" as const) : ("asc" as const),
-        }
-      : null;
-
-  // Fetch locations with pagination, search, and sorting
-  const locationsQuery = api.location.getAll.useQuery(
-    {
-      limit: 100,
-      search: searchTerm,
-      ...(sortConfig ?? {}),
-    },
-    {
-      placeholderData: keepPreviousData,
-    },
-  );
+  // Fetch all locations
+  const locationsQuery = api.location.getAll.useQuery(undefined, {
+    placeholderData: keepPreviousData,
+  });
 
   const locations = locationsQuery.data?.items ?? [];
   const isLoading = locationsQuery.isLoading;
@@ -63,10 +47,6 @@ export default function LocationsAdminPage() {
   const handleDeleteLocation = (location: Location) => {
     setSelectedLocation(location);
     setIsDeleteLocationOpen(true);
-  };
-
-  const handleSearch = (term: string) => {
-    setSearchTerm(term);
   };
 
   const columns = getLocationColumns({
@@ -90,7 +70,7 @@ export default function LocationsAdminPage() {
           placeholder="Search locations..."
           className="w-full"
           value={searchTerm}
-          onChange={(e) => handleSearch(e.target.value)}
+          onChange={(e) => setSearchTerm(e.target.value)}
         />
         <p className="mt-1 text-xs text-muted-foreground">
           Search by location name
@@ -109,6 +89,7 @@ export default function LocationsAdminPage() {
           data={locations}
           sorting={sorting}
           onSortingChange={setSorting}
+          searchKey="name"
         />
       )}
 
