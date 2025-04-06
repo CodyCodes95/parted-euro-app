@@ -51,10 +51,12 @@ import {
 import { Input } from "~/components/ui/input";
 import { Button } from "~/components/ui/button";
 import { toast } from "sonner";
-import { Check, ChevronsUpDown, Loader2, Plus } from "lucide-react";
+import { Check, ChevronsUpDown, Loader2, Plus, Search } from "lucide-react";
 import { cn } from "~/lib/utils";
 import { Badge } from "~/components/ui/badge";
 import { type AdminInventoryItem } from "~/trpc/shared";
+import { useDebounce } from "~/hooks/use-debounce";
+
 
 interface InventoryFormProps {
   open: boolean;
@@ -130,6 +132,8 @@ export function InventoryForm({
     name: string;
     data?: Record<string, unknown>;
   } | null>(null);
+  const [searchTerm, setSearchTerm] = useState("");
+  const debouncedSearchTerm = useDebounce(searchTerm, 300);
   const [initialPartValues, setInitialPartValues] = useState<{
     partNo: string;
     name: string;
@@ -145,8 +149,15 @@ export function InventoryForm({
 
   const utils = api.useUtils();
 
+  // Fetch search results based on debounced search term
+  const { data: searchResults = [], isLoading: isSearching } =
+    api.part.searchByPartNo.useQuery(
+      { search: debouncedSearchTerm },
+      { enabled: debouncedSearchTerm.length >= 2 },
+    );
+
   // Fetch options for select fields
-  const { data: partOptions = [] } = api.part.getAllPartDetails.useQuery();
+  // Note: We no longer need to fetch all parts upfront
   const { data: donorOptions = [] } = api.donor.getAllDonorsWithCars.useQuery();
   const { data: locationOptions = [] } =
     api.location.getAllLocations.useQuery();
@@ -264,9 +275,9 @@ export function InventoryForm({
   const selectedPartId = form.watch("partDetailsId");
   const selectedPartDetails = React.useMemo(() => {
     return selectedPartId
-      ? partOptions.find((part) => part.value === selectedPartId)
+      ? searchResults.find((part) => part.value === selectedPartId)
       : null;
-  }, [selectedPartId, partOptions]);
+  }, [selectedPartId, searchResults]);
 
   // We need to fetch full part details when selecting a part
   // Let's use getById query instead
@@ -450,6 +461,7 @@ export function InventoryForm({
     form.setValue("isNewPart", false);
     setIsNewPart(false);
     setPartSearchOpen(false);
+    setSearchTerm("");
   };
 
   const handleCreateNewPart = () => {
@@ -528,50 +540,76 @@ export function InventoryForm({
                       {isNewPart
                         ? "Create New Part"
                         : form.watch("partDetailsId")
-                          ? (partOptions.find(
+                          ? searchResults.find(
                               (p) => p.value === form.watch("partDetailsId"),
-                            )?.label ?? "Select a part")
+                            )?.label || partDetails?.name
+                            ? `${partDetails?.name} (${partDetails?.partNo})`
+                            : "Select a part"
                           : "Select or create a part"}
                       <ChevronsUpDown className="ml-2 h-4 w-4 shrink-0 opacity-50" />
                     </Button>
                   </PopoverTrigger>
                   <PopoverContent className="w-[400px] p-0">
                     <Command>
-                      <CommandInput placeholder="Search parts by number or name..." />
-                      <CommandEmpty>
-                        <div className="p-2 text-center">
-                          <p className="text-sm">No parts found</p>
-                          <Button
-                            onClick={handleCreateNewPart}
-                            size="sm"
-                            className="mt-2"
-                          >
-                            <Plus className="mr-2 h-4 w-4" />
-                            Create New Part
-                          </Button>
+                      <div className="flex items-center border-b px-3">
+                        <Search className="mr-2 h-4 w-4 shrink-0 opacity-50" />
+                        <CommandInput
+                          placeholder="Search parts by number or name..."
+                          value={searchTerm}
+                          onValueChange={setSearchTerm}
+                          className="border-0 focus:ring-0"
+                        />
+                      </div>
+                      {isSearching && (
+                        <div className="py-6 text-center">
+                          <Loader2 className="mx-auto h-6 w-6 animate-spin text-muted-foreground" />
                         </div>
-                      </CommandEmpty>
-                      <CommandGroup heading="Existing Parts">
-                        <CommandList className="max-h-[200px] overflow-y-auto">
-                          {partOptions.map((part) => (
-                            <CommandItem
-                              key={part.value}
-                              value={part.value}
-                              onSelect={() => handlePartSelect(part.value)}
+                      )}
+                      {!isSearching &&
+                        debouncedSearchTerm.length >= 2 &&
+                        searchResults.length === 0 && (
+                          <div className="p-4 text-center">
+                            <p className="text-sm text-muted-foreground">
+                              No parts found for "{debouncedSearchTerm}"
+                            </p>
+                            <Button
+                              onClick={handleCreateNewPart}
+                              size="sm"
+                              className="mt-2"
                             >
-                              <Check
-                                className={cn(
-                                  "mr-2 h-4 w-4",
-                                  form.watch("partDetailsId") === part.value
-                                    ? "opacity-100"
-                                    : "opacity-0",
-                                )}
-                              />
-                              {part.label}
-                            </CommandItem>
-                          ))}
-                        </CommandList>
-                      </CommandGroup>
+                              <Plus className="mr-2 h-4 w-4" />
+                              Create New Part
+                            </Button>
+                          </div>
+                        )}
+                      {!isSearching && searchResults.length > 0 && (
+                        <CommandGroup heading="Parts">
+                          <CommandList className="max-h-[200px] overflow-y-auto">
+                            {searchResults.map((part) => (
+                              <CommandItem
+                                key={part.value}
+                                value={part.value}
+                                onSelect={() => handlePartSelect(part.value)}
+                              >
+                                <Check
+                                  className={cn(
+                                    "mr-2 h-4 w-4",
+                                    form.watch("partDetailsId") === part.value
+                                      ? "opacity-100"
+                                      : "opacity-0",
+                                  )}
+                                />
+                                {part.label}
+                              </CommandItem>
+                            ))}
+                          </CommandList>
+                        </CommandGroup>
+                      )}
+                      {!isSearching && debouncedSearchTerm.length < 2 && (
+                        <div className="py-6 text-center text-sm text-muted-foreground">
+                          Type at least 2 characters to search for parts
+                        </div>
+                      )}
                       <CommandSeparator />
                       <CommandGroup>
                         <CommandItem onSelect={handleCreateNewPart}>

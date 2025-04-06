@@ -100,6 +100,43 @@ export const partRouter = createTRPCRouter({
     }));
   }),
 
+  // Search parts by part number or name
+  searchByPartNo: adminProcedure
+    .input(
+      z.object({
+        search: z.string().optional(),
+        limit: z.number().min(1).max(50).optional().default(10),
+      }),
+    )
+    .query(async ({ ctx, input }) => {
+      const { search, limit } = input;
+
+      if (!search || search.length < 2) {
+        return [];
+      }
+
+      const parts = await ctx.db.partDetail.findMany({
+        where: {
+          OR: [
+            { partNo: { contains: search, mode: "insensitive" } },
+            { name: { contains: search, mode: "insensitive" } },
+            { alternatePartNumbers: { contains: search, mode: "insensitive" } },
+          ],
+        },
+        select: {
+          partNo: true,
+          name: true,
+        },
+        take: limit,
+        orderBy: { name: "asc" },
+      });
+
+      return parts.map((part) => ({
+        value: part.partNo,
+        label: `${part.name} (${part.partNo})`,
+      }));
+    }),
+
   // Get a part by ID
   getById: adminProcedure
     .input(z.object({ partNo: z.string() }))
