@@ -17,17 +17,17 @@ import {
   DropdownMenuTrigger,
 } from "~/components/ui/dropdown-menu";
 import { Badge } from "~/components/ui/badge";
-import { type InventoryItem } from "../page";
+import { type AdminInventoryItem } from "~/trpc/shared";
 
 interface InventoryColumnsProps {
-  onEdit: (inventory: InventoryItem) => void;
-  onDelete: (inventory: InventoryItem) => void;
+  onEdit: (inventory: AdminInventoryItem) => void;
+  onDelete: (inventory: AdminInventoryItem) => void;
 }
 
 export function getInventoryColumns({
   onEdit,
   onDelete,
-}: InventoryColumnsProps): ColumnDef<InventoryItem>[] {
+}: InventoryColumnsProps): ColumnDef<AdminInventoryItem>[] {
   return [
     {
       accessorKey: "partDetails.name",

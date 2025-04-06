@@ -19,8 +19,7 @@ export type AdminCarsResult = RouterOutputs["car"]["getAll"];
 export type AdminCarSeriesOption = RouterOutputs["car"]["getAllSeries"][number];
 
 // Admin inventory types
-export type AdminInventoryItem =
-  RouterOutputs["inventory"]["getAll"]["items"][number];
+export type AdminInventoryItem = RouterOutputs["inventory"]["getAll"][number];
 export type AdminInventoryResult = RouterOutputs["inventory"]["getAll"];
 
 // Admin listings types
