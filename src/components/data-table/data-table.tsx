@@ -23,6 +23,7 @@ import {
 } from "~/components/ui/table";
 import { DataTablePagination } from "./data-table-pagination";
 import { DataTableToolbar } from "./data-table-toolbar";
+import { DataTableFilter } from "../data-table-filter";
 
 interface DataTableProps<TData, TValue> {
   columns: ColumnDef<TData, TValue>[];
@@ -79,6 +80,7 @@ export function DataTable<TData, TValue>({
 
   return (
     <div className="flex w-full flex-col gap-4">
+      {columns.some((c) => c.filterFn) && <DataTableFilter table={table} />}
       {filterableColumns.length > 0 && (
         <DataTableToolbar
           table={table}
