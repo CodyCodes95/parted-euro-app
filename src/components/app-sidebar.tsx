@@ -65,6 +65,18 @@ export function AppSidebar({
       url: "/admin/inventory",
       icon: Boxes,
       isActive: pathname.startsWith("/admin/inventory"),
+      items: [
+        {
+          title: "All Inventory",
+          url: "/admin/inventory",
+          isActive: pathname === "/admin/inventory",
+        },
+        {
+          title: "Mobile Image Upload",
+          url: "/admin/inventory/mobile-upload",
+          isActive: pathname === "/admin/inventory/mobile-upload",
+        },
+      ],
     },
     {
       title: "Donors",

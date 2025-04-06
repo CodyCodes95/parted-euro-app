@@ -1,0 +1,245 @@
+"use client";
+
+import { useState, useEffect } from "react";
+import { useForm } from "react-hook-form";
+import { zodResolver } from "@hookform/resolvers/zod";
+import { z } from "zod";
+import { api } from "~/trpc/react";
+import { toast } from "sonner";
+import { UploadDropzone } from "~/components/UploadThing";
+import { Image as ImageIcon, Plus, Undo2, Check } from "lucide-react";
+import { Button } from "~/components/ui/button";
+import { Input } from "~/components/ui/input";
+import {
+  Form,
+  FormControl,
+  FormField,
+  FormItem,
+  FormLabel,
+  FormMessage,
+} from "~/components/ui/form";
+import {
+  Card,
+  CardContent,
+  CardDescription,
+  CardFooter,
+  CardHeader,
+  CardTitle,
+} from "~/components/ui/card";
+import { AspectRatio } from "~/components/ui/aspect-ratio";
+
+// Define the form schema
+const formSchema = z.object({
+  partNo: z.string().min(1, "Part number is required"),
+});
+
+type FormValues = z.infer<typeof formSchema>;
+
+export default function MobileUploadPage() {
+  const [currentPartNo, setCurrentPartNo] = useState<string>("");
+  const [uploadedImages, setUploadedImages] = useState<
+    { url: string; id: string }[]
+  >([]);
+  const [uploading, setUploading] = useState(false);
+  const [uploadComplete, setUploadComplete] = useState(false);
+  const [successCount, setSuccessCount] = useState(0);
+
+  // Create form
+  const form = useForm<FormValues>({
+    resolver: zodResolver(formSchema),
+    defaultValues: {
+      partNo: "",
+    },
+  });
+
+  // Reset the form state when starting a new upload session
+  const resetForm = () => {
+    form.reset({ partNo: "" });
+    setCurrentPartNo("");
+    setUploadedImages([]);
+    setUploadComplete(false);
+    setSuccessCount((prev) => prev); // Maintain the success count
+  };
+
+  // Handle form submission
+  const onSubmit = (values: FormValues) => {
+    setCurrentPartNo(values.partNo.trim());
+    setUploadedImages([]);
+    setUploadComplete(false);
+  };
+
+  // Handle image upload completion
+  const handleImageUpload = (results: { url: string }[]) => {
+    const newImages = results.map((result) => ({
+      url: result.url,
+      id: crypto.randomUUID(),
+    }));
+
+    setUploadedImages((prev) => [...prev, ...newImages]);
+    setSuccessCount((prev) => prev + results.length);
+    setUploadComplete(true);
+  };
+
+  return (
+    <div className="container mx-auto p-4 md:p-6">
+      <div className="mb-6">
+        <h1 className="text-2xl font-bold md:text-3xl">Mobile Image Upload</h1>
+        <p className="mt-1 text-muted-foreground">
+          Upload part images on-the-go to assign to inventory items later
+        </p>
+      </div>
+
+      <div className="mb-4 rounded-md bg-blue-50 p-4 text-sm text-blue-800 dark:bg-blue-900/30 dark:text-blue-400">
+        <div className="flex items-center">
+          <span className="mr-2 rounded-full bg-blue-100 px-2.5 py-0.5 text-xs font-medium text-blue-800 dark:bg-blue-900 dark:text-blue-300">
+            Tip
+          </span>
+          <p>
+            You&apos;ve successfully uploaded <strong>{successCount}</strong>{" "}
+            images in this session.
+          </p>
+        </div>
+      </div>
+
+      <div className="grid gap-6 md:grid-cols-2">
+        <Card>
+          <CardHeader>
+            <CardTitle>Step 1: Enter Part Number</CardTitle>
+            <CardDescription>
+              Enter the part number to associate with the uploaded images
+            </CardDescription>
+          </CardHeader>
+          <CardContent>
+            <Form {...form}>
+              <form
+                onSubmit={form.handleSubmit(onSubmit)}
+                className="space-y-4"
+              >
+                <FormField
+                  control={form.control}
+                  name="partNo"
+                  render={({ field }) => (
+                    <FormItem>
+                      <FormLabel>Part Number</FormLabel>
+                      <FormControl>
+                        <Input
+                          placeholder="Enter part number"
+                          {...field}
+                          disabled={!!currentPartNo}
+                        />
+                      </FormControl>
+                      <FormMessage />
+                    </FormItem>
+                  )}
+                />
+                <Button
+                  type="submit"
+                  className="w-full"
+                  disabled={!!currentPartNo}
+                >
+                  {currentPartNo ? (
+                    <>
+                      <Check className="mr-2 h-4 w-4" />
+                      Part number set
+                    </>
+                  ) : (
+                    "Continue to upload"
+                  )}
+                </Button>
+              </form>
+            </Form>
+          </CardContent>
+        </Card>
+
+        <Card>
+          <CardHeader>
+            <CardTitle>Step 2: Upload Images</CardTitle>
+            <CardDescription>
+              {currentPartNo
+                ? `Upload images for part number: ${currentPartNo}`
+                : "First enter a part number"}
+            </CardDescription>
+          </CardHeader>
+          <CardContent>
+            {currentPartNo ? (
+              <div className="space-y-4">
+                <UploadDropzone
+                  config={{ mode: "auto" }}
+                  endpoint="partImage"
+                  input={{ partNo: currentPartNo }}
+                  onBeforeUploadBegin={() => {
+                    setUploading(true);
+                  }}
+                  onClientUploadComplete={(res) => {
+                    if (res) {
+                      handleImageUpload(res);
+                      toast.success(
+                        `${res.length} image${res.length !== 1 ? "s" : ""} uploaded successfully`,
+                      );
+                    }
+                    setUploading(false);
+                  }}
+                  onUploadError={(error: Error) => {
+                    toast.error(`Error uploading images: ${error.message}`);
+                    setUploading(false);
+                  }}
+                  className="ut-label:text-lg ut-allowed-content:text-muted-foreground ut-upload-icon:text-muted-foreground rounded-lg border-2 border-dashed border-muted-foreground/25 p-4 transition-all hover:border-muted-foreground/50"
+                />
+
+                {uploadedImages.length > 0 && (
+                  <div className="mt-4">
+                    <div className="mb-2 flex items-center">
+                      <ImageIcon className="mr-2 h-4 w-4" />
+                      <span className="text-sm font-medium">
+                        {uploadedImages.length} image
+                        {uploadedImages.length !== 1 ? "s" : ""} uploaded
+                      </span>
+                    </div>
+                    <div className="grid grid-cols-3 gap-2">
+                      {uploadedImages.map((image) => (
+                        <div
+                          key={image.id}
+                          className="overflow-hidden rounded-md border"
+                        >
+                          <AspectRatio ratio={1}>
+                            <img
+                              src={image.url}
+                              alt="Uploaded part"
+                              className="h-full w-full object-cover"
+                            />
+                          </AspectRatio>
+                        </div>
+                      ))}
+                    </div>
+                  </div>
+                )}
+              </div>
+            ) : (
+              <div className="flex h-40 items-center justify-center rounded-md border-2 border-dashed border-muted p-4">
+                <div className="text-center text-muted-foreground">
+                  <ImageIcon className="mx-auto h-10 w-10 opacity-50" />
+                  <p className="mt-2">Enter a part number first</p>
+                </div>
+              </div>
+            )}
+          </CardContent>
+          <CardFooter className="flex justify-between">
+            {currentPartNo && (
+              <Button variant="outline" onClick={resetForm}>
+                <Undo2 className="mr-2 h-4 w-4" />
+                Start new part
+              </Button>
+            )}
+
+            {uploadComplete && (
+              <Button onClick={resetForm} className="ml-auto">
+                <Plus className="mr-2 h-4 w-4" />
+                Add another part
+              </Button>
+            )}
+          </CardFooter>
+        </Card>
+      </div>
+    </div>
+  );
+}

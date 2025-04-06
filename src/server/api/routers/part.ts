@@ -231,4 +231,22 @@ export const partRouter = createTRPCRouter({
       });
       return { success: true };
     }),
+
+  // Get images by partNo
+  getImagesByPartNo: adminProcedure
+    .input(z.object({ partNo: z.string() }))
+    .query(async ({ ctx, input }) => {
+      const { partNo } = input;
+      const images = await ctx.db.image.findMany({
+        where: { partNo },
+        orderBy: { order: "asc" },
+        select: {
+          id: true,
+          url: true,
+          order: true,
+          partNo: true,
+        },
+      });
+      return images;
+    }),
 });

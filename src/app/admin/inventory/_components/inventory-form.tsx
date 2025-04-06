@@ -94,6 +94,14 @@ type ImageItem = {
   order: number;
 };
 
+// Add an interface for part images
+interface PartImage {
+  id: string;
+  url: string;
+  order: number;
+  partNo: string | null;
+}
+
 // Define interfaces for API requests
 interface CreateInventoryInput {
   partDetailsId: string;
@@ -370,6 +378,18 @@ export function InventoryForm({
       ? searchResults.find((part) => part.value === selectedPartId)
       : null;
   }, [selectedPartId, searchResults]);
+
+  // Try to fetch part images if the API endpoint exists
+  const partImagesQuery = api.part.getImagesByPartNo
+    ? api.part.getImagesByPartNo.useQuery(
+        { partNo: selectedPartId ?? "" },
+        {
+          enabled: !!selectedPartId && !isNewPart,
+        },
+      )
+    : { data: undefined };
+
+  const partImages = partImagesQuery.data ?? [];
 
   // We need to fetch full part details when selecting a part
   // Let's use getById query instead
@@ -1203,6 +1223,98 @@ export function InventoryForm({
                           />
                         </div>
 
+                        {Array.isArray(partImages) &&
+                          partImages.length > 0 &&
+                          !isNewPart && (
+                            <div className="mb-4 space-y-2">
+                              <div className="flex items-center justify-between">
+                                <div className="text-sm font-medium">
+                                  {partImages.length} image
+                                  {partImages.length !== 1 ? "s" : ""} available
+                                  for this part
+                                </div>
+                                <Button
+                                  type="button"
+                                  size="sm"
+                                  variant="outline"
+                                  onClick={() => {
+                                    // Add all part images to the current images
+                                    const newImages = partImages
+                                      .filter(
+                                        (img) =>
+                                          !images.some(
+                                            (existing) =>
+                                              existing.url === img.url,
+                                          ),
+                                      )
+                                      .map((img) => ({
+                                        id: img.id,
+                                        url: img.url,
+                                        order:
+                                          images.length +
+                                          partImages.indexOf(img),
+                                      }));
+
+                                    setImages((prev) => [
+                                      ...prev,
+                                      ...newImages,
+                                    ]);
+                                  }}
+                                >
+                                  Use all images
+                                </Button>
+                              </div>
+                              <div className="grid grid-cols-4 gap-2">
+                                {partImages.map((image) => (
+                                  <div
+                                    key={image.id}
+                                    className="group relative cursor-pointer overflow-hidden rounded-md border"
+                                    onClick={() => {
+                                      // Check if this image is already in the selection
+                                      const isAlreadyAdded = images.some(
+                                        (img) => img.url === image.url,
+                                      );
+
+                                      if (!isAlreadyAdded) {
+                                        setImages((prev) => [
+                                          ...prev,
+                                          {
+                                            id: image.id,
+                                            url: image.url,
+                                            order: images.length,
+                                          },
+                                        ]);
+                                        toast.success(
+                                          "Image added to selection",
+                                        );
+                                      } else {
+                                        toast.info(
+                                          "Image already in selection",
+                                        );
+                                      }
+                                    }}
+                                  >
+                                    <AspectRatio ratio={1}>
+                                      <img
+                                        src={image.url}
+                                        alt="Part"
+                                        className="h-full w-full object-cover transition-opacity group-hover:opacity-80"
+                                      />
+                                      <div className="absolute inset-0 flex items-center justify-center bg-black/40 opacity-0 transition-opacity group-hover:opacity-100">
+                                        <Button variant="secondary" size="sm">
+                                          {images.some(
+                                            (img) => img.url === image.url,
+                                          )
+                                            ? "Already added"
+                                            : "Add to selection"}
+                                        </Button>
+                                      </div>
+                                    </AspectRatio>
+                                  </div>
+                                ))}
+                              </div>
+                            </div>
+                          )}
                         <div className="my-4 border-t pt-4">
                           <div className="mb-2 flex items-center">
                             <ImageIcon className="mr-2 h-4 w-4" />

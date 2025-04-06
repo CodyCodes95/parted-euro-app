@@ -47,7 +47,7 @@ export const uploadRouter = {
 
   // Add inventory image upload endpoint
   inventoryImage: f({ image: { maxFileSize: "8MB", maxFileCount: 10 } })
-    .middleware(async () => {
+    .middleware(async ({files}) => {
       // This code runs on your server before upload
       const session = await auth();
 
@@ -62,6 +62,56 @@ export const uploadRouter = {
     .onUploadComplete(async ({ metadata, file }) => {
       // Just return the URL and let the client handle image tracking
       return { url: file.url };
+    }),
+
+  // Add part image upload endpoint
+  partImage: f({ image: { maxFileSize: "8MB", maxFileCount: 10 } })
+    .middleware(async ({ req }) => {
+      // This code runs on your server before upload
+      const session = await auth();
+
+      // If you throw, the user will not be able to upload
+      if (!session?.user.isAdmin) {
+        throw new Error("Unauthorized");
+      }
+
+      // Get partNo from query parameter
+      const url = new URL(req.url);
+      const partNo = url.searchParams.get("partNo");
+
+      if (!partNo) {
+        throw new Error("Part number is required");
+      }
+
+      // Whatever is returned here is accessible in onUploadComplete as `metadata`
+      return { userId: session.user.id, partNo };
+    })
+    .onUploadComplete(async ({ metadata, file }) => {
+      const { partNo } = metadata;
+      const { url } = file;
+
+      // Get the latest order number for this part
+      const latestImage = await db.image.findFirst({
+        where: {
+          partNo,
+        },
+        orderBy: {
+          order: "desc",
+        },
+      });
+
+      const order = latestImage ? latestImage.order + 1 : 0;
+
+      // Store the image with partNo reference in the database
+      await db.image.create({
+        data: {
+          url,
+          partNo,
+          order,
+        },
+      });
+
+      return { url, partNo };
     }),
 } satisfies FileRouter;
 
