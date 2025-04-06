@@ -11,9 +11,9 @@ import { Card, CardContent, CardHeader, CardTitle } from "~/components/ui/card";
 export default async function OrderConfirmationPage({
   params,
 }: {
-  params: { id: string };
+  params: Promise<{ id: string }>;
 }) {
-  const { id } = params;
+  const { id } = await params;
 
   // Fetch order data with items
   const order = await api.order.getOrderWithItems(id);
