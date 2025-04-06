@@ -219,6 +219,7 @@ export function InventoryForm({
         form.setValue("partDetailsId", data.partNo);
         setIsNewPart(false);
         void utils.part.getAllPartDetails.invalidate();
+        void utils.part.getById.invalidate({ partNo: data.partNo });
       }
     },
     onError: (error) => {
@@ -246,6 +247,7 @@ export function InventoryForm({
     onSuccess: () => {
       toast.success("Part updated successfully");
       void utils.part.getAllPartDetails.invalidate();
+      void utils.part.getById.invalidate({ partNo: form.getValues("partNo") });
     },
     onError: (error) => {
       toast.error(`Error updating part: ${error.message}`);
@@ -522,7 +524,6 @@ export function InventoryForm({
                       role="combobox"
                       aria-expanded={partSearchOpen}
                       className="w-full justify-between"
-                      disabled={isEditing}
                     >
                       {isNewPart
                         ? "Create New Part"
@@ -603,7 +604,6 @@ export function InventoryForm({
                               <Input
                                 placeholder="Enter part number"
                                 {...field}
-                                disabled={isEditing}
                                 value={field.value ?? ""}
                               />
                             </FormControl>
@@ -621,7 +621,6 @@ export function InventoryForm({
                               <Input
                                 placeholder="Comma separated alternate numbers"
                                 {...field}
-                                disabled={isEditing}
                                 value={field.value ?? ""}
                               />
                             </FormControl>
@@ -641,7 +640,6 @@ export function InventoryForm({
                             <Input
                               placeholder="Enter part name"
                               {...field}
-                              disabled={isEditing}
                               value={field.value ?? ""}
                             />
                           </FormControl>
@@ -662,7 +660,6 @@ export function InventoryForm({
                                 type="number"
                                 placeholder="Weight in kg"
                                 {...field}
-                                disabled={isEditing}
                                 min={0}
                                 step={0.01}
                                 value={field.value ?? 0}
@@ -683,7 +680,6 @@ export function InventoryForm({
                                 type="number"
                                 placeholder="Cost price"
                                 {...field}
-                                disabled={isEditing}
                                 min={0}
                                 step={0.01}
                                 value={field.value ?? 0}
@@ -707,7 +703,6 @@ export function InventoryForm({
                                 type="number"
                                 placeholder="Length"
                                 {...field}
-                                disabled={isEditing}
                                 min={0}
                                 step={0.1}
                                 value={field.value ?? 0}
@@ -728,7 +723,6 @@ export function InventoryForm({
                                 type="number"
                                 placeholder="Width"
                                 {...field}
-                                disabled={isEditing}
                                 min={0}
                                 step={0.1}
                                 value={field.value ?? 0}
@@ -749,7 +743,6 @@ export function InventoryForm({
                                 type="number"
                                 placeholder="Height"
                                 {...field}
-                                disabled={isEditing}
                                 min={0}
                                 step={0.1}
                                 value={field.value ?? 0}
@@ -787,7 +780,6 @@ export function InventoryForm({
                                     !selectedCars.length &&
                                       "text-muted-foreground",
                                   )}
-                                  disabled={isEditing}
                                 >
                                   {selectedCars.length > 0
                                     ? `${selectedCars.length} car${
@@ -848,7 +840,6 @@ export function InventoryForm({
                                         variant="ghost"
                                         className="h-4 w-4 p-0 hover:bg-transparent"
                                         onClick={() => handleCarSelect(id)}
-                                        disabled={isEditing}
                                       >
                                         <span className="sr-only">Remove</span>
                                         <span className="text-xs">×</span>
@@ -890,7 +881,6 @@ export function InventoryForm({
                                     !selectedPartTypes.length &&
                                       "text-muted-foreground",
                                   )}
-                                  disabled={isEditing}
                                 >
                                   {selectedPartTypes.length > 0
                                     ? `${selectedPartTypes.length} categor${
@@ -955,7 +945,6 @@ export function InventoryForm({
                                         variant="ghost"
                                         className="h-4 w-4 p-0 hover:bg-transparent"
                                         onClick={() => handlePartTypeSelect(id)}
-                                        disabled={isEditing}
                                       >
                                         <span className="sr-only">Remove</span>
                                         <span className="text-xs">×</span>

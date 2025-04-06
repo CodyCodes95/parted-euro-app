@@ -41,8 +41,7 @@ export const partRouter = createTRPCRouter({
           },
         },
       },
-      take: 10,
-      orderBy: { partNo: "asc" },
+      orderBy: { name: "asc" },
     });
 
     return {
