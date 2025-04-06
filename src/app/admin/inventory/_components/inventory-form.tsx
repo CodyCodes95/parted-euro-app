@@ -56,7 +56,7 @@ import { cn } from "~/lib/utils";
 import { Badge } from "~/components/ui/badge";
 import { type AdminInventoryItem } from "~/trpc/shared";
 import { useDebounce } from "~/hooks/use-debounce";
-
+import { VirtualizedMultiSelect } from "~/components/ui/virtualized-multi-select";
 
 interface InventoryFormProps {
   open: boolean;
@@ -124,14 +124,6 @@ export function InventoryForm({
   const [isNewPart, setIsNewPart] = useState(false);
   const [selectedCars, setSelectedCars] = useState<string[]>([]);
   const [selectedPartTypes, setSelectedPartTypes] = useState<string[]>([]);
-  const [carsOpen, setCarsOpen] = useState(false);
-  const [partTypesOpen, setPartTypesOpen] = useState(false);
-  const [selectedPart, setSelectedPart] = useState<{
-    id: string;
-    partNo: string;
-    name: string;
-    data?: Record<string, unknown>;
-  } | null>(null);
   const [searchTerm, setSearchTerm] = useState("");
   const debouncedSearchTerm = useDebounce(searchTerm, 300);
   const [initialPartValues, setInitialPartValues] = useState<{
@@ -484,38 +476,6 @@ export function InventoryForm({
     setPartSearchOpen(false);
   };
 
-  const handleCarSelect = (value: string) => {
-    setSelectedCars((current) => {
-      if (current.includes(value)) {
-        return current.filter((id) => id !== value);
-      } else {
-        return [...current, value];
-      }
-    });
-    form.setValue(
-      "cars",
-      selectedCars.includes(value)
-        ? selectedCars.filter((id) => id !== value)
-        : [...selectedCars, value],
-    );
-  };
-
-  const handlePartTypeSelect = (value: string) => {
-    setSelectedPartTypes((current) => {
-      if (current.includes(value)) {
-        return current.filter((id) => id !== value);
-      } else {
-        return [...current, value];
-      }
-    });
-    form.setValue(
-      "partTypes",
-      selectedPartTypes.includes(value)
-        ? selectedPartTypes.filter((id) => id !== value)
-        : [...selectedPartTypes, value],
-    );
-  };
-
   return (
     <>
       <Dialog open={open} onOpenChange={onOpenChange}>
@@ -570,7 +530,8 @@ export function InventoryForm({
                         searchResults.length === 0 && (
                           <div className="p-4 text-center">
                             <p className="text-sm text-muted-foreground">
-                              No parts found for "{debouncedSearchTerm}"
+                              No parts found for &quot;{debouncedSearchTerm}
+                              &quot;
                             </p>
                             <Button
                               onClick={handleCreateNewPart}
@@ -798,96 +759,20 @@ export function InventoryForm({
                       render={({ field }) => (
                         <FormItem className="flex flex-col">
                           <FormLabel>Compatible Cars</FormLabel>
-                          <Popover
-                            modal={true}
-                            open={carsOpen && (isNewPart || isEditing)}
-                            onOpenChange={(open) =>
-                              isNewPart || isEditing
-                                ? setCarsOpen(open)
-                                : undefined
-                            }
-                          >
-                            <PopoverTrigger asChild>
-                              <FormControl>
-                                <Button
-                                  variant="outline"
-                                  role="combobox"
-                                  aria-expanded={carsOpen}
-                                  className={cn(
-                                    "justify-between",
-                                    !selectedCars.length &&
-                                      "text-muted-foreground",
-                                  )}
-                                >
-                                  {selectedCars.length > 0
-                                    ? `${selectedCars.length} car${
-                                        selectedCars.length > 1 ? "s" : ""
-                                      } selected`
-                                    : "Select cars"}
-                                  <ChevronsUpDown className="ml-2 h-4 w-4 shrink-0 opacity-50" />
-                                </Button>
-                              </FormControl>
-                            </PopoverTrigger>
-                            <PopoverContent className="w-[400px] p-0">
-                              <Command>
-                                <CommandInput placeholder="Search cars..." />
-                                <CommandEmpty>No car found.</CommandEmpty>
-                                <CommandGroup className="relative max-h-64 overflow-y-auto">
-                                  <CommandList>
-                                    {carOptions.map((car) => (
-                                      <CommandItem
-                                        keywords={[car.label]}
-                                        key={car.value}
-                                        value={car.value}
-                                        onSelect={() =>
-                                          handleCarSelect(car.value)
-                                        }
-                                      >
-                                        <Check
-                                          className={cn(
-                                            "mr-2 h-4 w-4",
-                                            selectedCars.includes(car.value)
-                                              ? "opacity-100"
-                                              : "opacity-0",
-                                          )}
-                                        />
-                                        {car.label}
-                                      </CommandItem>
-                                    ))}
-                                  </CommandList>
-                                </CommandGroup>
-                              </Command>
-                            </PopoverContent>
-                          </Popover>
-                          {selectedCars.length > 0 && (
-                            <div className="relative mt-1 flex max-h-40 flex-wrap gap-1 overflow-y-auto border p-2">
-                              {selectedCars.map((id) => {
-                                const car = carOptions.find(
-                                  (c) => c.value === id,
-                                );
-                                return (
-                                  car && (
-                                    <Badge
-                                      key={id}
-                                      variant="secondary"
-                                      className="flex items-center gap-1"
-                                    >
-                                      {car.label}
-                                      <Button
-                                        type="button"
-                                        variant="ghost"
-                                        className="h-4 w-4 p-0 hover:bg-transparent"
-                                        onClick={() => handleCarSelect(id)}
-                                      >
-                                        <span className="sr-only">Remove</span>
-                                        <span className="text-xs">×</span>
-                                      </Button>
-                                    </Badge>
-                                  )
-                                );
-                              })}
-                            </div>
-                          )}
+                          <FormControl>
+                            <VirtualizedMultiSelect
+                              options={carOptions}
+                              value={selectedCars}
+                              onChange={(values) => {
+                                setSelectedCars(values);
+                                form.setValue("cars", values);
+                              }}
+                              placeholder="Select cars"
+                              searchPlaceholder="Search cars..."
+                              height="300px"
+                              disabled={!isNewPart && !isEditing}
+                            />
+                          </FormControl>
                           <FormMessage />
                         </FormItem>
                       )}
@@ -899,100 +784,20 @@ export function InventoryForm({
                       render={({ field }) => (
                         <FormItem className="flex flex-col">
                           <FormLabel>Part Categories</FormLabel>
-                          <Popover
-                            modal={true}
-                            open={partTypesOpen && (isNewPart || isEditing)}
-                            onOpenChange={(open) =>
-                              isNewPart || isEditing
-                                ? setPartTypesOpen(open)
-                                : undefined
-                            }
-                          >
-                            <PopoverTrigger asChild>
-                              <FormControl>
-                                <Button
-                                  variant="outline"
-                                  role="combobox"
-                                  aria-expanded={partTypesOpen}
-                                  className={cn(
-                                    "justify-between",
-                                    !selectedPartTypes.length &&
-                                      "text-muted-foreground",
-                                  )}
-                                >
-                                  {selectedPartTypes.length > 0
-                                    ? `${selectedPartTypes.length} categor${
-                                        selectedPartTypes.length > 1
-                                          ? "ies"
-                                          : "y"
-                                      } selected`
-                                    : "Select categories"}
-                                  <ChevronsUpDown className="ml-2 h-4 w-4 shrink-0 opacity-50" />
-                                </Button>
-                              </FormControl>
-                            </PopoverTrigger>
-                            <PopoverContent className="w-[400px] p-0">
-                              <Command>
-                                <CommandInput placeholder="Search categories..." />
-                                <CommandEmpty>No category found.</CommandEmpty>
-                                <CommandGroup className="max-h-64 overflow-y-auto">
-                                  <CommandList>
-                                    {partTypeOptions.map((type) => (
-                                      <CommandItem
-                                        keywords={[type.label]}
-                                        key={type.value}
-                                        value={type.value}
-                                        onSelect={() =>
-                                          handlePartTypeSelect(type.value)
-                                        }
-                                      >
-                                        <Check
-                                          className={cn(
-                                            "mr-2 h-4 w-4",
-                                            selectedPartTypes.includes(
-                                              type.value,
-                                            )
-                                              ? "opacity-100"
-                                              : "opacity-0",
-                                          )}
-                                        />
-                                        {type.label}
-                                      </CommandItem>
-                                    ))}
-                                  </CommandList>
-                                </CommandGroup>
-                              </Command>
-                            </PopoverContent>
-                          </Popover>
-                          {selectedPartTypes.length > 0 && (
-                            <div className="relative mt-1 flex flex-wrap gap-1">
-                              {selectedPartTypes.map((id) => {
-                                const type = partTypeOptions.find(
-                                  (t) => t.value === id,
-                                );
-                                return (
-                                  type && (
-                                    <Badge
-                                      key={id}
-                                      variant="secondary"
-                                      className="flex items-center gap-1"
-                                    >
-                                      {type.label}
-                                      <Button
-                                        type="button"
-                                        variant="ghost"
-                                        className="h-4 w-4 p-0 hover:bg-transparent"
-                                        onClick={() => handlePartTypeSelect(id)}
-                                      >
-                                        <span className="sr-only">Remove</span>
-                                        <span className="text-xs">×</span>
-                                      </Button>
-                                    </Badge>
-                                  )
-                                );
-                              })}
-                            </div>
-                          )}
+                          <FormControl>
+                            <VirtualizedMultiSelect
+                              options={partTypeOptions}
+                              value={selectedPartTypes}
+                              onChange={(values) => {
+                                setSelectedPartTypes(values);
+                                form.setValue("partTypes", values);
+                              }}
+                              placeholder="Select categories"
+                              searchPlaceholder="Search categories..."
+                              height="300px"
+                              disabled={!isNewPart && !isEditing}
+                            />
+                          </FormControl>
                           <FormMessage />
                         </FormItem>
                       )}
