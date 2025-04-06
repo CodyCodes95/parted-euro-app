@@ -7,7 +7,7 @@ const f = createUploadthing();
 // FileRouter for your app, can contain multiple FileRoutes
 export const uploadRouter = {
   // Define as many FileRoutes as you like, each with a unique routeSlug
-  homepageImage: f({ image: { maxFileSize: "8MB", maxFileCount: 10 } })
+  homepageImage: f({ image: { maxFileCount: 10 } })
     // Set permissions and file types for this FileRoute
     .middleware(async () => {
       // This code runs on your server before upload
@@ -46,8 +46,8 @@ export const uploadRouter = {
     }),
 
   // Add inventory image upload endpoint
-  inventoryImage: f({ image: { maxFileSize: "8MB", maxFileCount: 10 } })
-    .middleware(async ({files}) => {
+  inventoryImage: f({ image: { maxFileCount: 10 } })
+    .middleware(async ({ files }) => {
       // This code runs on your server before upload
       const session = await auth();
 
@@ -65,7 +65,7 @@ export const uploadRouter = {
     }),
 
   // Add part image upload endpoint
-  partImage: f({ image: { maxFileSize: "8MB", maxFileCount: 10 } })
+  partImage: f({ image: { maxFileCount: 10 } })
     .middleware(async ({ req }) => {
       // This code runs on your server before upload
       const session = await auth();
