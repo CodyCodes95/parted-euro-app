@@ -117,6 +117,7 @@ model Part {
     soldParentPrice     Int?
     inventoryLocationId String?
     variant             String?
+    images              Image[]
     quantity            Int                 @default(1)
     createdAt           DateTime            @default(now())
     updatedAt           DateTime            @updatedAt
@@ -143,6 +144,8 @@ model Image {
     url       String
     listingId String?
     listing   Listing? @relation(fields: [listingId], references: [id], onDelete: Cascade)
+    partId    String?
+    part      Part?    @relation(fields: [partId], references: [id])
     createdAt DateTime @default(now())
     updatedAt DateTime @updatedAt
     Donor     Donor?   @relation(fields: [donorVin], references: [vin])
