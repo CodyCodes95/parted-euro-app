@@ -10,6 +10,7 @@ import { listingsRouter } from "~/server/api/routers/listings";
 import { checkoutRouter } from "./routers/checkout";
 import { cartRouter } from "./routers/cart";
 import { orderRouter } from "./routers/order";
+import { ordersRouter } from "./routers/orders";
 import { partCategoryRouter } from "./routers/partCategory";
 import { inventoryRouter } from "./routers/inventory";
 import { analyticsRouter } from "./routers/analytics";
@@ -30,6 +31,7 @@ export const appRouter = createTRPCRouter({
   checkout: checkoutRouter,
   cart: cartRouter,
   order: orderRouter,
+  orders: ordersRouter,
   partCategory: partCategoryRouter,
   inventory: inventoryRouter,
   analytics: analyticsRouter,
