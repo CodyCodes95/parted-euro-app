@@ -5,18 +5,12 @@ import { api } from "~/trpc/react";
 import { DataTable } from "~/components/data-table/data-table";
 import { getOrderColumns } from "./_components/columns";
 import { keepPreviousData } from "@tanstack/react-query";
-import { Input } from "~/components/ui/input";
-import { type SortingState } from "@tanstack/react-table";
 import { AddTrackingDialog } from "./_components/add-tracking-dialog";
 import { OrderDetailsDialog } from "./_components/order-details-dialog";
 import { UpdateStatusDialog } from "./_components/update-status-dialog";
 import { type AdminOrdersItem } from "~/trpc/shared";
 
 export default function OrdersAdminPage() {
-  const [searchTerm, setSearchTerm] = useState("");
-  const [sorting, setSorting] = useState<SortingState>([
-    { id: "createdAt", desc: true },
-  ]);
   const [selectedOrder, setSelectedOrder] = useState<AdminOrdersItem | null>(
     null,
   );
@@ -78,34 +72,13 @@ export default function OrdersAdminPage() {
     <div className="max-w-full p-6">
       <h1 className="mb-6 text-3xl font-bold">Orders Management</h1>
 
-      <div className="mb-4">
-        <Input
-          type="text"
-          placeholder="Search by order ID, name, email or status..."
-          className="w-full"
-          value={searchTerm}
-          onChange={(e) => setSearchTerm(e.target.value)}
-        />
-        <p className="mt-1 text-xs text-muted-foreground">
-          Search by order ID, name, email or status
-        </p>
-      </div>
-
       {isLoading && (
         <div className="flex h-20 items-center justify-center">
           <div className="text-sm text-muted-foreground">Loading...</div>
         </div>
       )}
 
-      {!isLoading && (
-        <DataTable
-          columns={columns}
-          data={orders}
-          sorting={sorting}
-          onSortingChange={setSorting}
-          searchKey="id"
-        />
-      )}
+      {!isLoading && <DataTable columns={columns} data={orders} />}
 
       {selectedOrder && (
         <>
