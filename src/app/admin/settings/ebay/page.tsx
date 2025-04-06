@@ -45,8 +45,8 @@ export default function EbaySettingsPage() {
         <CardHeader>
           <CardTitle>Authentication</CardTitle>
           <CardDescription>
-            Connect your eBay account to enable automatic listing
-            synchronization.
+            {/* Connect your eBay account to enable automatic listing
+            synchronization. */}
           </CardDescription>
         </CardHeader>
         <CardContent>

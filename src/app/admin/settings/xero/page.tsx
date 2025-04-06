@@ -45,8 +45,8 @@ export default function XeroSettingsPage() {
         <CardHeader>
           <CardTitle>Authentication</CardTitle>
           <CardDescription>
-            Connect your Xero account to enable automatic synchronization with
-            your accounting system.
+            {/* Connect your Xero account to enable automatic synchronization with
+            your accounting system. */}
           </CardDescription>
         </CardHeader>
         <CardContent>
