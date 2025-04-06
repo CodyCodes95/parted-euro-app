@@ -97,7 +97,7 @@ export default function OrdersAdminPage() {
   });
 
   return (
-    <div className="p-6">
+    <div className="max-w-full p-6">
       <h1 className="mb-6 text-3xl font-bold">Orders Management</h1>
 
       <div className="mb-4">
