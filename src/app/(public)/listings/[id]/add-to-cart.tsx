@@ -37,15 +37,7 @@ export function AddToCart({
   const handleAddToCart = () => {
     const cartItem: CartItem = {
       listingId,
-      listingTitle,
-      listingPrice,
-      listingImage,
       quantity,
-      length: dimensions.length ?? 0,
-      width: dimensions.width ?? 0,
-      height: dimensions.height ?? 0,
-      weight: dimensions.weight ?? 0,
-      itemVin: vin ?? "",
     };
 
     addItem(cartItem);
