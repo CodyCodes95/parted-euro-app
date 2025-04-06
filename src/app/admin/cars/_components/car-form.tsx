@@ -22,7 +22,7 @@ import {
 } from "~/components/ui/form";
 import { Input } from "~/components/ui/input";
 import { toast } from "sonner";
-import { Car } from "./columns";
+import { type AdminCarItem } from "~/trpc/shared";
 
 export const carFormSchema = z.object({
   id: z.string().optional(),
@@ -38,7 +38,7 @@ export type CarFormValues = z.infer<typeof carFormSchema>;
 interface CarFormProps {
   open: boolean;
   onOpenChange: (open: boolean) => void;
-  defaultValues?: Car;
+  defaultValues?: AdminCarItem;
   isEditing?: boolean;
 }
 
@@ -51,15 +51,14 @@ export function CarForm({
   const router = useRouter();
   const utils = api.useUtils();
 
-  // Convert the Car type to CarFormValues
+  // Convert the AdminCarItem type to CarFormValues
   const formDefaultValues: CarFormValues = defaultValues
     ? {
-        id: defaultValues.id,
         make: defaultValues.make,
         series: defaultValues.series,
         generation: defaultValues.generation,
         model: defaultValues.model,
-        body: defaultValues.body || undefined,
+        body: defaultValues.body || "",
       }
     : {
         make: "",

@@ -16,25 +16,17 @@ import {
   DropdownMenuItem,
   DropdownMenuTrigger,
 } from "~/components/ui/dropdown-menu";
-
-export type Car = {
-  id: string;
-  make: string;
-  series: string;
-  generation: string;
-  model: string;
-  body: string | null;
-};
+import { type AdminCarItem } from "~/trpc/shared";
 
 interface CarColumnsProps {
-  onEdit: (car: Car) => void;
-  onDelete: (car: Car) => void;
+  onEdit: (car: AdminCarItem) => void;
+  onDelete: (car: AdminCarItem) => void;
 }
 
 export function getCarColumns({
   onEdit,
   onDelete,
-}: CarColumnsProps): ColumnDef<Car>[] {
+}: CarColumnsProps): ColumnDef<AdminCarItem>[] {
   return [
     {
       accessorKey: "make",

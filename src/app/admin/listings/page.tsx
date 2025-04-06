@@ -13,30 +13,7 @@ import { Button } from "~/components/ui/button";
 import { Plus } from "lucide-react";
 import { CreateOrderDialog } from "./_components/create-order-dialog";
 import { ListOnEbayDialog } from "./_components/list-on-ebay-dialog";
-
-export type ListingItem = {
-  id: string;
-  title: string;
-  description: string;
-  condition: string;
-  price: number;
-  parts: {
-    id: string;
-    partDetails: {
-      partNo: string;
-      name: string;
-    };
-  }[];
-  images: {
-    id: string;
-    url: string;
-    order: number;
-  }[];
-  active: boolean;
-  listedOnEbay: boolean;
-  createdAt: Date;
-  updatedAt: Date;
-};
+import { type AdminListingsItem } from "~/trpc/shared";
 
 export default function ListingsAdminPage() {
   const [isAddListingOpen, setIsAddListingOpen] = useState(false);
@@ -44,9 +21,8 @@ export default function ListingsAdminPage() {
   const [isDeleteListingOpen, setIsDeleteListingOpen] = useState(false);
   const [isCreateOrderOpen, setIsCreateOrderOpen] = useState(false);
   const [isListOnEbayOpen, setIsListOnEbayOpen] = useState(false);
-  const [selectedListing, setSelectedListing] = useState<ListingItem | null>(
-    null,
-  );
+  const [selectedListing, setSelectedListing] =
+    useState<AdminListingsItem | null>(null);
   const [searchTerm, setSearchTerm] = useState("");
   const [sorting, setSorting] = useState<SortingState>([]);
 
@@ -73,29 +49,29 @@ export default function ListingsAdminPage() {
     },
   );
 
-  const listings = (listingsQuery.data?.items ?? []) as ListingItem[];
+  const listings = listingsQuery.data?.items ?? [];
   const isLoading = listingsQuery.isLoading;
 
   const handleAddListing = () => {
     setIsAddListingOpen(true);
   };
 
-  const handleEditListing = (item: ListingItem) => {
+  const handleEditListing = (item: AdminListingsItem) => {
     setSelectedListing(item);
     setIsEditListingOpen(true);
   };
 
-  const handleDeleteListing = (item: ListingItem) => {
+  const handleDeleteListing = (item: AdminListingsItem) => {
     setSelectedListing(item);
     setIsDeleteListingOpen(true);
   };
 
-  const handleCreateOrder = (item: ListingItem) => {
+  const handleCreateOrder = (item: AdminListingsItem) => {
     setSelectedListing(item);
     setIsCreateOrderOpen(true);
   };
 
-  const handleListOnEbay = (item: ListingItem) => {
+  const handleListOnEbay = (item: AdminListingsItem) => {
     setSelectedListing(item);
     setIsListOnEbayOpen(true);
   };

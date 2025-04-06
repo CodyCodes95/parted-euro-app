@@ -11,40 +11,14 @@ import { Input } from "~/components/ui/input";
 import { type SortingState } from "@tanstack/react-table";
 import { Button } from "~/components/ui/button";
 import { Plus } from "lucide-react";
-
-export type InventoryItem = {
-  id: string;
-  partDetailsId: string;
-  partDetails: {
-    partNo: string;
-    name: string;
-    alternatePartNumbers: string | null;
-  };
-  donorVin: string | null;
-  donor?: {
-    vin: string;
-  } | null;
-  inventoryLocationId: string | null;
-  inventoryLocation?: {
-    id: string;
-    name: string;
-  } | null;
-  variant: string | null;
-  quantity: number;
-  sold: boolean;
-  soldPrice?: number | null;
-  soldParentPrice?: number | null;
-  createdAt?: Date;
-  updatedAt?: Date;
-  listing: { id: string }[];
-};
+import { type AdminInventoryItem } from "~/trpc/shared";
 
 export default function InventoryAdminPage() {
   const [isAddInventoryOpen, setIsAddInventoryOpen] = useState(false);
   const [isEditInventoryOpen, setIsEditInventoryOpen] = useState(false);
   const [isDeleteInventoryOpen, setIsDeleteInventoryOpen] = useState(false);
   const [selectedInventory, setSelectedInventory] =
-    useState<InventoryItem | null>(null);
+    useState<AdminInventoryItem | null>(null);
   const [searchTerm, setSearchTerm] = useState("");
   const [sorting, setSorting] = useState<SortingState>([]);
 
@@ -71,19 +45,19 @@ export default function InventoryAdminPage() {
     },
   );
 
-  const inventory = (inventoryQuery.data?.items ?? []) as InventoryItem[];
+  const inventory = inventoryQuery.data?.items ?? [];
   const isLoading = inventoryQuery.isLoading;
 
   const handleAddInventory = () => {
     setIsAddInventoryOpen(true);
   };
 
-  const handleEditInventory = (item: InventoryItem) => {
+  const handleEditInventory = (item: AdminInventoryItem) => {
     setSelectedInventory(item);
     setIsEditInventoryOpen(true);
   };
 
-  const handleDeleteInventory = (item: InventoryItem) => {
+  const handleDeleteInventory = (item: AdminInventoryItem) => {
     setSelectedInventory(item);
     setIsDeleteInventoryOpen(true);
   };

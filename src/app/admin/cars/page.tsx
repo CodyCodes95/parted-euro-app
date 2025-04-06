@@ -3,7 +3,7 @@
 import { useState } from "react";
 import { api } from "~/trpc/react";
 import { DataTable } from "~/components/data-table/data-table";
-import { getCarColumns, type Car } from "./_components/columns";
+import { getCarColumns } from "./_components/columns";
 import { CarForm } from "./_components/car-form";
 import { DeleteCarDialog } from "./_components/delete-car-dialog";
 import { keepPreviousData } from "@tanstack/react-query";
@@ -18,12 +18,13 @@ import {
 import { type SortingState } from "@tanstack/react-table";
 import { Button } from "~/components/ui/button";
 import { Plus } from "lucide-react";
+import { type AdminCarItem, type AdminCarSeriesOption } from "~/trpc/shared";
 
 export default function CarsAdminPage() {
   const [isAddCarOpen, setIsAddCarOpen] = useState(false);
   const [isEditCarOpen, setIsEditCarOpen] = useState(false);
   const [isDeleteCarOpen, setIsDeleteCarOpen] = useState(false);
-  const [selectedCar, setSelectedCar] = useState<Car | null>(null);
+  const [selectedCar, setSelectedCar] = useState<AdminCarItem | null>(null);
   const [searchTerm, setSearchTerm] = useState("");
   const [seriesFilter, setSeriesFilter] = useState<string | undefined>(
     undefined,
@@ -61,12 +62,12 @@ export default function CarsAdminPage() {
     setIsAddCarOpen(true);
   };
 
-  const handleEditCar = (car: Car) => {
+  const handleEditCar = (car: AdminCarItem) => {
     setSelectedCar(car);
     setIsEditCarOpen(true);
   };
 
-  const handleDeleteCar = (car: Car) => {
+  const handleDeleteCar = (car: AdminCarItem) => {
     setSelectedCar(car);
     setIsDeleteCarOpen(true);
   };

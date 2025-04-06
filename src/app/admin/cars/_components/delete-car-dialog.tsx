@@ -13,12 +13,12 @@ import {
   AlertDialogTitle,
 } from "~/components/ui/alert-dialog";
 import { toast } from "sonner";
-import { type Car } from "./columns";
+import { type AdminCarItem } from "~/trpc/shared";
 
 interface DeleteCarDialogProps {
   open: boolean;
   onOpenChange: (open: boolean) => void;
-  car: Car | null;
+  car: AdminCarItem | null;
 }
 
 export function DeleteCarDialog({
