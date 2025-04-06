@@ -141,7 +141,7 @@ export default function PartsAdminPage() {
       )}
 
       {!isLoading && (
-        <DataTable<Part, unknown>
+        <DataTable
           columns={columns}
           data={parts}
           sorting={sorting}
