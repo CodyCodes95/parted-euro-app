@@ -1,5 +1,5 @@
 import { z } from "zod";
-import { createTRPCRouter, publicProcedure } from "../trpc";
+import { adminProcedure, createTRPCRouter, publicProcedure } from "../trpc";
 import { type Prisma } from "@prisma/client";
 
 const prepareSearchTerms = (search: string | undefined): string[] => {
@@ -11,7 +11,7 @@ const prepareSearchTerms = (search: string | undefined): string[] => {
 };
 
 export const listingsRouter = createTRPCRouter({
-  getAllAdmin: publicProcedure.query(async ({ ctx }) => {
+  getAllAdmin: adminProcedure.query(async ({ ctx }) => {
     const items = await ctx.db.listing.findMany({
       orderBy: {
         createdAt: "desc",
@@ -46,7 +46,7 @@ export const listingsRouter = createTRPCRouter({
     };
   }),
 
-  create: publicProcedure
+  create: adminProcedure
     .input(
       z.object({
         title: z.string().min(1),
@@ -601,4 +601,12 @@ export const listingsRouter = createTRPCRouter({
 
       return listings;
     }),
+  getSitemapListings: publicProcedure.query(async ({ ctx }) => {
+    const listings = await ctx.db.listing.findMany({
+      where: {
+        active: true,
+      },
+    });
+    return listings;
+  }),
 });
