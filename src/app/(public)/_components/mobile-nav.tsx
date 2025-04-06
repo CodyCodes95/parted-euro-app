@@ -16,9 +16,9 @@ import { SearchCommand } from "~/components/search";
 import { useIsMobile } from "~/hooks/use-mobile";
 
 const navLinks = [
-  { href: "/browse", label: "Browse Store", icon: Home },
+  { href: "/listings", label: "Browse Store", icon: Home },
   { href: "/wrecking", label: "Cars Wrecking Now", icon: CarFront },
-  { href: "/warranty", label: "Warranty & Return Policy", icon: Shield },
+  { href: "/returns-refunds", label: "Warranty & Return Policy", icon: Shield },
   { href: "/contact", label: "Contact", icon: PhoneCall },
 ];
 
