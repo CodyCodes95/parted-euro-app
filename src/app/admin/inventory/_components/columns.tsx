@@ -1,7 +1,7 @@
 "use client";
 
 import { type ColumnDef } from "@tanstack/react-table";
-import { MoreHorizontal, Pencil, Trash, ImageIcon } from "lucide-react";
+import { MoreHorizontal, Pencil, Trash } from "lucide-react";
 import { Button } from "~/components/ui/button";
 import {
   DropdownMenu,
@@ -12,7 +12,6 @@ import {
 import { Badge } from "~/components/ui/badge";
 import { type AdminInventoryItem } from "~/trpc/shared";
 import { DataTableColumnHeader } from "~/components/data-table/data-table-column-header";
-import { Avatar, AvatarFallback, AvatarImage } from "~/components/ui/avatar";
 
 interface InventoryColumnsProps {
   onEdit: (inventory: AdminInventoryItem) => void;
@@ -60,16 +59,29 @@ export function getInventoryColumns({
       cell: ({ row }) => row.original.donorVin ?? "",
     },
     {
-      accessorKey: "listed",
-      header: "Listed",
-      cell: ({ row }) => {
-        const isListed =
-          row.original.listing && row.original.listing.length > 0;
-        return (
-          <Badge variant={isListed ? "default" : "outline"}>
-            {isListed ? "Yes" : "No"}
-          </Badge>
-        );
+      accessorKey: "status",
+      header: ({ column }) => (
+        <DataTableColumnHeader column={column} title="Status" />
+      ),
+      accessorFn: (row) => {
+        const hasListing = row.listing && row.listing.length > 0;
+
+        // Since we can't check compatibility directly in the inventory data
+        // We'll infer status based on whether it has a listing or not
+
+        let status = "Unlisted";
+
+        if (hasListing) {
+          status = "Listed";
+        } else {
+          // If no listing exists, we'll show Draft status
+          status = "Draft";
+        }
+
+        return status;
+      },
+      cell: (info) => {
+        return <Badge>{info.getValue<string>()}</Badge>;
       },
     },
     {
