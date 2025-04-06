@@ -463,7 +463,11 @@ export function PartForm({
               render={({ field }) => (
                 <FormItem className="flex flex-col">
                   <FormLabel>Part Categories</FormLabel>
-                  <Popover open={partTypesOpen} onOpenChange={setPartTypesOpen}>
+                  <Popover
+                    modal={true}
+                    open={partTypesOpen}
+                    onOpenChange={setPartTypesOpen}
+                  >
                     <PopoverTrigger asChild>
                       <FormControl>
                         <Button
