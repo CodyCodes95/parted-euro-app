@@ -1,6 +1,6 @@
 "use client";
-
-import { Column } from "@tanstack/react-table";
+"use no memo";
+import { type Column } from "@tanstack/react-table";
 import { ArrowDown, ArrowUp, ArrowUpDown } from "lucide-react";
 import { Button } from "~/components/ui/button";
 import { cn } from "~/lib/utils";
@@ -23,7 +23,16 @@ export function DataTableColumnHeader<TData, TValue>({
   return (
     <Button
       variant="ghost"
-      onClick={() => column.toggleSorting(column.getIsSorted() === "asc")}
+      onClick={() => {
+        const currentSort = column.getIsSorted();
+        if (currentSort === false) {
+          column.toggleSorting(false); // Sort ascending
+        } else if (currentSort === "asc") {
+          column.toggleSorting(true); // Sort descending
+        } else {
+          column.clearSorting(); // Clear sorting
+        }
+      }}
       className={cn("-ml-4", className)}
     >
       {title}
