@@ -166,10 +166,6 @@ export default function MobileUploadPage() {
                 <UploadDropzone
                   config={{ mode: "auto" }}
                   endpoint="partImage"
-                  input={{ partNo: currentPartNo }}
-                  onBeforeUploadBegin={() => {
-                    setUploading(true);
-                  }}
                   onClientUploadComplete={(res) => {
                     if (res) {
                       handleImageUpload(res);
