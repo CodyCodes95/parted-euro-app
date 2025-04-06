@@ -215,13 +215,9 @@ export const inventoryRouter = createTRPCRouter({
             quantity: updateData.quantity,
             images: images
               ? {
-                  createMany: {
-                    data: images.map((image) => ({
-                      id: image.id,
-                      url: image.url,
-                      order: image.order,
-                    })),
-                  },
+                  // Instead of createMany with existing IDs,
+                  // connect existing images that already have partNo but no partId
+                  connect: images.map((image) => ({ id: image.id })),
                 }
               : undefined,
           },
@@ -236,6 +232,16 @@ export const inventoryRouter = createTRPCRouter({
             },
           },
         });
+
+        // Update the order of images after connecting them
+        if (images?.length) {
+          for (const [index, image] of images.entries()) {
+            await ctx.db.image.update({
+              where: { id: image.id },
+              data: { order: index },
+            });
+          }
+        }
 
         return updatedInventory;
       } catch (error) {

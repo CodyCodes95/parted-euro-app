@@ -740,7 +740,7 @@ export function InventoryForm({
     setSelectedPartTypes([]);
     setPartSearchOpen(false);
   };
-  console.log(images);
+  
   return (
     <>
       <Dialog open={open} onOpenChange={onOpenChange}>
