@@ -22,49 +22,29 @@ import {
   TableHeader,
   TableRow,
 } from "~/components/ui/table";
+import { Input } from "~/components/ui/input";
 import { DataTablePagination } from "./data-table-pagination";
-import { DataTableToolbar } from "./data-table-toolbar";
-import { DataTableFilter } from "../data-table-filter";
 
 interface DataTableProps<TData, TValue> {
   columns: ColumnDef<TData, TValue>[];
   data: TData[];
-  searchKey?: string;
-  filterableColumns?: {
-    id: string;
-    title: string;
-    options: { label: string; value: string }[];
-  }[];
-  sorting?: SortingState;
-  onSortingChange?: React.Dispatch<React.SetStateAction<SortingState>>;
 }
 
 export function DataTable<TData, TValue>({
   columns,
   data,
-  searchKey,
-  filterableColumns = [],
-  sorting,
-  onSortingChange,
 }: DataTableProps<TData, TValue>) {
-  const [internalSorting, setInternalSorting] = React.useState<SortingState>(
-    [],
-  );
-  const [columnFilters, setColumnFilters] = React.useState<ColumnFiltersState>(
-    [],
-  );
+  const [sorting, setSorting] = React.useState<SortingState>([]);
+  const [globalFilter, setGlobalFilter] = React.useState<string>("");
   const [columnVisibility, setColumnVisibility] =
     React.useState<VisibilityState>({});
   const [rowSelection, setRowSelection] = React.useState({});
 
-  const sortingState = sorting ?? internalSorting;
-  const sortingChangeHandler = onSortingChange ?? setInternalSorting;
-
   const table = useReactTable({
     data,
     columns,
-    onSortingChange: sortingChangeHandler,
-    onColumnFiltersChange: setColumnFilters,
+    onSortingChange: setSorting,
+    onGlobalFilterChange: setGlobalFilter,
     getCoreRowModel: getCoreRowModel(),
     getPaginationRowModel: getPaginationRowModel(),
     getFilteredRowModel: getFilteredRowModel(),
@@ -72,8 +52,8 @@ export function DataTable<TData, TValue>({
     onColumnVisibilityChange: setColumnVisibility,
     onRowSelectionChange: setRowSelection,
     state: {
-      sorting: sortingState,
-      columnFilters,
+      sorting,
+      globalFilter,
       columnVisibility,
       rowSelection,
     },
@@ -81,14 +61,14 @@ export function DataTable<TData, TValue>({
 
   return (
     <div className="flex w-full flex-col gap-4">
-      {columns.some((c) => c.filterFn) && <DataTableFilter table={table} />}
-      {filterableColumns.length > 0 && (
-        <DataTableToolbar
-          table={table}
-          searchKey={searchKey}
-          filterableColumns={filterableColumns}
+      <div className="flex items-center py-4">
+        <Input
+          placeholder="Search..."
+          value={globalFilter ?? ""}
+          onChange={(event) => setGlobalFilter(event.target.value)}
+          className="max-w-sm"
         />
-      )}
+      </div>
       <div className="overflow-x-auto rounded-md border">
         <Table>
           <TableHeader>

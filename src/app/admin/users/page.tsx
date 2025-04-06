@@ -9,8 +9,7 @@ import { Input } from "~/components/ui/input";
 import { type SortingState } from "@tanstack/react-table";
 
 export default function UsersAdminPage() {
-  const [searchTerm, setSearchTerm] = useState("");
-  const [sorting, setSorting] = useState<SortingState>([]);
+  // Removed searchTerm and sorting state
 
   // Fetch all users
   const { data: usersData, isLoading } = api.user.getAll.useQuery(undefined, {
@@ -27,18 +26,7 @@ export default function UsersAdminPage() {
         <h1 className="text-3xl font-bold">Users Management</h1>
       </div>
 
-      <div className="mb-4">
-        <Input
-          type="text"
-          placeholder="Search users by name or email..."
-          className="w-full"
-          value={searchTerm}
-          onChange={(e) => setSearchTerm(e.target.value)}
-        />
-        <p className="mt-1 text-xs text-muted-foreground">
-          Search by name or email
-        </p>
-      </div>
+      {/* Removed search input div */}
 
       {isLoading && (
         <div className="flex h-20 items-center justify-center">
@@ -50,9 +38,7 @@ export default function UsersAdminPage() {
         <DataTable
           columns={columns}
           data={users}
-          sorting={sorting}
-          onSortingChange={setSorting}
-          searchKey="email"
+          // Removed sorting, onSortingChange, searchKey props
         />
       )}
     </div>

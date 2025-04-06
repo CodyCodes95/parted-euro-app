@@ -8,7 +8,6 @@ import { CategoryForm } from "./_components/category-form";
 import { DeleteCategoryDialog } from "./_components/delete-category-dialog";
 import { keepPreviousData } from "@tanstack/react-query";
 import { Input } from "~/components/ui/input";
-import { type SortingState } from "@tanstack/react-table";
 import { Button } from "~/components/ui/button";
 import { Plus } from "lucide-react";
 
@@ -19,8 +18,6 @@ export default function CategoriesAdminPage() {
   const [selectedCategory, setSelectedCategory] = useState<Category | null>(
     null,
   );
-  const [searchTerm, setSearchTerm] = useState("");
-  const [sorting, setSorting] = useState<SortingState>([]);
 
   // Fetch all categories
   const { data: categoriesData, isLoading } = api.category.getAll.useQuery(
@@ -61,34 +58,13 @@ export default function CategoriesAdminPage() {
         </Button>
       </div>
 
-      <div className="mb-4">
-        <Input
-          type="text"
-          placeholder="Search categories..."
-          className="w-full"
-          value={searchTerm}
-          onChange={(e) => setSearchTerm(e.target.value)}
-        />
-        <p className="mt-1 text-xs text-muted-foreground">
-          Search by category name or parent category
-        </p>
-      </div>
-
       {isLoading && (
         <div className="flex h-20 items-center justify-center">
           <div className="text-sm text-muted-foreground">Loading...</div>
         </div>
       )}
 
-      {!isLoading && (
-        <DataTable
-          columns={columns}
-          data={categories}
-          sorting={sorting}
-          onSortingChange={setSorting}
-          searchKey="name"
-        />
-      )}
+      {!isLoading && <DataTable columns={columns} data={categories} />}
 
       <CategoryForm
         open={isAddCategoryOpen}

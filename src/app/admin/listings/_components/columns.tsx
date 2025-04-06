@@ -20,7 +20,8 @@ import {
   DropdownMenuTrigger,
 } from "~/components/ui/dropdown-menu";
 import { Badge } from "~/components/ui/badge";
-import { type ListingItem } from "../page";
+import { type AdminListingsItem } from "~/trpc/shared";
+import { Link } from "~/components/link";
 
 const formatter = new Intl.NumberFormat("en-AU", {
   style: "currency",
@@ -31,10 +32,10 @@ const formatter = new Intl.NumberFormat("en-AU", {
 const formatPrice = (price: number) => formatter.format(price).split("A")[1];
 
 interface ListingColumnsProps {
-  onEdit: (listing: ListingItem) => void;
-  onDelete: (listing: ListingItem) => void;
-  onCreateOrder: (listing: ListingItem) => void;
-  onListOnEbay: (listing: ListingItem) => void;
+  onEdit: (listing: AdminListingsItem) => void;
+  onDelete: (listing: AdminListingsItem) => void;
+  onCreateOrder: (listing: AdminListingsItem) => void;
+  onListOnEbay: (listing: AdminListingsItem) => void;
 }
 
 export function getListingColumns({
@@ -42,7 +43,7 @@ export function getListingColumns({
   onDelete,
   onCreateOrder,
   onListOnEbay,
-}: ListingColumnsProps): ColumnDef<ListingItem>[] {
+}: ListingColumnsProps): ColumnDef<AdminListingsItem>[] {
   return [
     {
       accessorKey: "title",
@@ -67,13 +68,13 @@ export function getListingColumns({
           </Button>
         );
       },
-    },
-    {
-      accessorKey: "id",
-      header: "ID",
-      cell: ({ row }) => (
-        <span className="font-mono text-xs">{row.original.id}</span>
-      ),
+      cell: ({ row }) => {
+        return (
+          <Link href={`/admin/listings/${row.original.id}`}>
+            {row.original.title}
+          </Link>
+        );
+      },
     },
     {
       accessorKey: "parts",

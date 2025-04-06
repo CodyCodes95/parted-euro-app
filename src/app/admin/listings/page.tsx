@@ -7,8 +7,6 @@ import { getListingColumns } from "./_components/columns";
 import { ListingForm } from "./_components/listing-form";
 import { DeleteListingDialog } from "./_components/delete-listing-dialog";
 import { keepPreviousData } from "@tanstack/react-query";
-import { Input } from "~/components/ui/input";
-import { type SortingState } from "@tanstack/react-table";
 import { Button } from "~/components/ui/button";
 import { Plus } from "lucide-react";
 import { CreateOrderDialog } from "./_components/create-order-dialog";
@@ -23,16 +21,11 @@ export default function ListingsAdminPage() {
   const [isListOnEbayOpen, setIsListOnEbayOpen] = useState(false);
   const [selectedListing, setSelectedListing] =
     useState<AdminListingsItem | null>(null);
-  const [searchTerm, setSearchTerm] = useState("");
-  const [sorting, setSorting] = useState<SortingState>([]);
 
   // Fetch all listings
-  const listingsQuery = api.listings.getAllAdmin.useQuery(
-    undefined,
-    {
-      placeholderData: keepPreviousData,
-    },
-  );
+  const listingsQuery = api.listings.getAllAdmin.useQuery(undefined, {
+    placeholderData: keepPreviousData,
+  });
 
   const listings = listingsQuery.data?.items ?? [];
   const isLoading = listingsQuery.isLoading;
@@ -78,34 +71,13 @@ export default function ListingsAdminPage() {
         </Button>
       </div>
 
-      <div className="mb-4">
-        <Input
-          type="text"
-          placeholder="Search by title, ID, or part numbers..."
-          className="w-full"
-          value={searchTerm}
-          onChange={(e) => setSearchTerm(e.target.value)}
-        />
-        <p className="mt-1 text-xs text-muted-foreground">
-          Search by title, ID, or part numbers
-        </p>
-      </div>
-
       {isLoading && (
         <div className="flex h-20 items-center justify-center">
           <div className="text-sm text-muted-foreground">Loading...</div>
         </div>
       )}
 
-      {!isLoading && (
-        <DataTable
-          columns={columns}
-          data={listings}
-          sorting={sorting}
-          onSortingChange={setSorting}
-          searchKey="title" 
-        />
-      )}
+      {!isLoading && <DataTable columns={columns} data={listings} />}
 
       <ListingForm open={isAddListingOpen} onOpenChange={setIsAddListingOpen} />
 

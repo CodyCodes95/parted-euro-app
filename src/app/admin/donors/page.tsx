@@ -17,8 +17,6 @@ export default function DonorsAdminPage() {
   const [isEditDonorOpen, setIsEditDonorOpen] = useState(false);
   const [isDeleteDonorOpen, setIsDeleteDonorOpen] = useState(false);
   const [selectedDonor, setSelectedDonor] = useState<DonorWithCar | null>(null);
-  const [searchTerm, setSearchTerm] = useState("");
-  const [sorting, setSorting] = useState<SortingState>([]);
 
   // Fetch all donors
   const donorsQuery = api.donor.getAll.useQuery(undefined, {
@@ -58,19 +56,6 @@ export default function DonorsAdminPage() {
         </Button>
       </div>
 
-      <div className="mb-4">
-        <Input
-          type="text"
-          placeholder="Search donors by VIN..."
-          className="w-full"
-          value={searchTerm}
-          onChange={(e) => setSearchTerm(e.target.value)}
-        />
-        <p className="mt-1 text-xs text-muted-foreground">
-          Search by VIN number
-        </p>
-      </div>
-
       {isLoading && (
         <div className="flex h-20 items-center justify-center">
           <div className="text-sm text-muted-foreground">Loading...</div>
@@ -78,13 +63,7 @@ export default function DonorsAdminPage() {
       )}
 
       {!isLoading && (
-        <DataTable<DonorWithCar, unknown>
-          columns={columns}
-          data={donors}
-          sorting={sorting}
-          onSortingChange={setSorting}
-          searchKey="vin"
-        />
+        <DataTable<DonorWithCar, unknown> columns={columns} data={donors} />
       )}
 
       <DonorForm open={isAddDonorOpen} onOpenChange={setIsAddDonorOpen} />

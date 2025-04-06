@@ -19,8 +19,6 @@ export default function InventoryAdminPage() {
   const [isDeleteInventoryOpen, setIsDeleteInventoryOpen] = useState(false);
   const [selectedInventory, setSelectedInventory] =
     useState<AdminInventoryItem | null>(null);
-  const [searchTerm, setSearchTerm] = useState("");
-  const [sorting, setSorting] = useState<SortingState>([]);
 
   // Fetch all inventory data
   const inventoryQuery = api.inventory.getAll.useQuery(undefined, {
@@ -59,34 +57,13 @@ export default function InventoryAdminPage() {
         </Button>
       </div>
 
-      <div className="mb-4">
-        <Input
-          type="text"
-          placeholder="Search by part name, number, or donor VIN..."
-          className="w-full"
-          value={searchTerm}
-          onChange={(e) => setSearchTerm(e.target.value)}
-        />
-        <p className="mt-1 text-xs text-muted-foreground">
-          Search by VIN, part name, part number, or alternate part numbers
-        </p>
-      </div>
-
       {isLoading && (
         <div className="flex h-20 items-center justify-center">
           <div className="text-sm text-muted-foreground">Loading...</div>
         </div>
       )}
 
-      {!isLoading && (
-        <DataTable
-          columns={columns}
-          data={inventory}
-          sorting={sorting}
-          onSortingChange={setSorting}
-          searchKey="partDetails.name"
-        />
-      )}
+      {!isLoading && <DataTable columns={columns} data={inventory} />}
 
       <InventoryForm
         open={isAddInventoryOpen}

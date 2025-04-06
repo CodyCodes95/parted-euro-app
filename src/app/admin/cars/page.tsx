@@ -18,8 +18,6 @@ export default function CarsAdminPage() {
   const [isEditCarOpen, setIsEditCarOpen] = useState(false);
   const [isDeleteCarOpen, setIsDeleteCarOpen] = useState(false);
   const [selectedCar, setSelectedCar] = useState<AdminCarItem | null>(null);
-  const [searchTerm, setSearchTerm] = useState("");
-  const [sorting, setSorting] = useState<SortingState>([]);
 
   // Fetch all cars
   const { data, isLoading, isError } = api.car.getAll.useQuery(undefined, {
@@ -57,19 +55,6 @@ export default function CarsAdminPage() {
         </Button>
       </div>
 
-      <div className="mb-4">
-        <Input
-          type="text"
-          placeholder="Search cars..."
-          className="w-full"
-          value={searchTerm}
-          onChange={(e) => setSearchTerm(e.target.value)}
-        />
-        <p className="mt-1 text-xs text-muted-foreground">
-          Search by make, model, series, or generation
-        </p>
-      </div>
-
       {isLoading && (
         <div className="flex h-20 items-center justify-center">
           <div className="text-sm text-muted-foreground">Loading...</div>
@@ -80,9 +65,6 @@ export default function CarsAdminPage() {
         <DataTable
           columns={columns}
           data={cars}
-          sorting={sorting}
-          onSortingChange={setSorting}
-          searchKey="make"
         />
       )}
 

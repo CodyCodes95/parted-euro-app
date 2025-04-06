@@ -24,8 +24,6 @@ export default function LocationsAdminPage() {
   const [selectedLocation, setSelectedLocation] = useState<Location | null>(
     null,
   );
-  const [searchTerm, setSearchTerm] = useState("");
-  const [sorting, setSorting] = useState<SortingState>([]);
 
   // Fetch all locations
   const locationsQuery = api.location.getAll.useQuery(undefined, {
@@ -64,34 +62,13 @@ export default function LocationsAdminPage() {
         </Button>
       </div>
 
-      <div className="mb-4">
-        <Input
-          type="text"
-          placeholder="Search locations..."
-          className="w-full"
-          value={searchTerm}
-          onChange={(e) => setSearchTerm(e.target.value)}
-        />
-        <p className="mt-1 text-xs text-muted-foreground">
-          Search by location name
-        </p>
-      </div>
-
       {isLoading && (
         <div className="flex h-20 items-center justify-center">
           <div className="text-sm text-muted-foreground">Loading...</div>
         </div>
       )}
 
-      {!isLoading && (
-        <DataTable
-          columns={columns}
-          data={locations}
-          sorting={sorting}
-          onSortingChange={setSorting}
-          searchKey="name"
-        />
-      )}
+      {!isLoading && <DataTable columns={columns} data={locations} />}
 
       <LocationForm
         open={isAddLocationOpen}

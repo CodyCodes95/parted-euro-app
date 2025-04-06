@@ -17,8 +17,6 @@ export default function PartsAdminPage() {
   const [isEditPartOpen, setIsEditPartOpen] = useState(false);
   const [isDeletePartOpen, setIsDeletePartOpen] = useState(false);
   const [selectedPart, setSelectedPart] = useState<Part | null>(null);
-  const [searchTerm, setSearchTerm] = useState("");
-  const [sorting, setSorting] = useState<SortingState>([]);
 
   // Fetch all parts
   const { data, isLoading } = api.part.getAll.useQuery(undefined, {
@@ -50,24 +48,11 @@ export default function PartsAdminPage() {
   return (
     <div className="max-w-full p-6">
       <div className="mb-6 flex items-center justify-between">
-        <h1 className="text-3xl font-bold">Part Management</h1>
-        <Button size="sm" onClick={handleAddPart}>
+        <h1 className="text-3xl font-bold">Parts Management</h1>
+        <Button size="sm" onMouseDown={handleAddPart}>
           <Plus className="mr-2 h-4 w-4" />
           Add Part
         </Button>
-      </div>
-
-      <div className="mb-4">
-        <Input
-          type="text"
-          placeholder="Search parts..."
-          className="w-full"
-          value={searchTerm}
-          onChange={(e) => setSearchTerm(e.target.value)}
-        />
-        <p className="mt-1 text-xs text-muted-foreground">
-          Search by part number, name, or alternate part numbers
-        </p>
       </div>
 
       {isLoading && (
@@ -76,15 +61,7 @@ export default function PartsAdminPage() {
         </div>
       )}
 
-      {!isLoading && (
-        <DataTable
-          columns={columns}
-          data={parts}
-          sorting={sorting}
-          onSortingChange={setSorting}
-          searchKey="name"
-        />
-      )}
+      {!isLoading && <DataTable columns={columns} data={parts} />}
 
       <PartForm open={isAddPartOpen} onOpenChange={setIsAddPartOpen} />
 
