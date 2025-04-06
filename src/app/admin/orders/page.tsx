@@ -74,6 +74,8 @@ export default function OrdersAdminPage() {
     },
   );
 
+  const updateStatusMutation = api.orders?.updateStatus.useMutation();
+
   const orders = (ordersQuery?.data?.items ?? []) as OrderItem[];
   const isLoading = ordersQuery?.isLoading ?? true;
 
@@ -93,8 +95,8 @@ export default function OrdersAdminPage() {
 
   const handleReadyForPickup = (order: OrderItem) => {
     // Call the tRPC procedure to update the order status
-    if (order.id && api.orders?.updateStatus) {
-      api.orders.updateStatus.mutate(
+    if (order.id) {
+      updateStatusMutation.mutate(
         {
           orderId: order.id,
           status: "Ready for pickup",
