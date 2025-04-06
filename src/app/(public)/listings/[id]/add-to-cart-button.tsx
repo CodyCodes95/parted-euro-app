@@ -40,17 +40,9 @@ export function AddToCartButton({ listing, inStock }: AddToCartButtonProps) {
   const handleAddToCart = () => {
     if (!inStock) return;
 
-    const cartItem: CartItem = {
+    const cartItem = {
       listingId: listing.id,
-      listingTitle: listing.title,
-      listingPrice: listing.price ?? 0,
-      listingImage: listing.images[0]?.url,
       quantity,
-      length: listing.parts[0]?.partDetails?.length ?? 0,
-      width: listing.parts[0]?.partDetails?.width ?? 0,
-      height: listing.parts[0]?.partDetails?.height ?? 0,
-      weight: listing.parts[0]?.partDetails?.weight ?? 0,
-      itemVin: listing.parts[0]?.donor?.vin ?? "",
     };
 
     addItem(cartItem);
