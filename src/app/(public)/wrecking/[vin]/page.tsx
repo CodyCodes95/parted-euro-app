@@ -32,7 +32,7 @@ export async function generateMetadata({ params }: Props): Promise<Metadata> {
 }
 
 export default async function DonorPartsPage({ params }: Props) {
-  const { vin } = params;
+  const { vin } = await params;
   const donor = await api.donor.getDonorByVin({ vin });
 
   if (!donor) {
