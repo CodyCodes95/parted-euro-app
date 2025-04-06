@@ -5,54 +5,17 @@ import { TRPCError } from "@trpc/server";
 import { signOut } from "~/server/auth";
 
 export const userRouter = createTRPCRouter({
-  // Get all users with optional filtering and sorting
-  getAll: adminProcedure
-    .input(
-      z.object({
-        limit: z.number().min(1).max(1000).optional().default(100),
-        cursor: z.string().optional(),
-        search: z.string().optional(),
-        sortBy: z.string().optional(),
-        isAdmin: z.boolean().optional(),
-        sortOrder: z.enum(["asc", "desc"]).optional(),
-      }),
-    )
-    .query(async ({ ctx, input }) => {
-      const { limit, cursor, search, sortBy, sortOrder, isAdmin } = input;
+  // Get all users
+  getAll: adminProcedure.query(async ({ ctx }) => {
+    // Get all users
+    const users = await ctx.db.user.findMany({
+      orderBy: { email: "asc" },
+    });
 
-      // Create the base query
-      const query = {
-        take: limit + 1,
-        ...(cursor ? { cursor: { id: cursor } } : {}),
-        orderBy: sortBy ? { [sortBy]: sortOrder ?? "asc" } : { email: "asc" },
-        where: {
-          isAdmin: isAdmin ?? undefined,
-          ...(search
-            ? {
-                OR: [
-                  { name: { contains: search, mode: "insensitive" } },
-                  { email: { contains: search, mode: "insensitive" } },
-                ],
-              }
-            : {}),
-        },
-      } as Prisma.UserFindManyArgs;
-
-      // Execute the query
-      const users = await ctx.db.user.findMany(query);
-
-      // Check if we have more items
-      let nextCursor: typeof cursor | undefined = undefined;
-      if (users.length > limit) {
-        const nextItem = users.pop();
-        nextCursor = nextItem?.id;
-      }
-
-      return {
-        items: users,
-        nextCursor,
-      };
-    }),
+    return {
+      items: users,
+    };
+  }),
 
   // Toggle admin status
   toggleAdmin: adminProcedure

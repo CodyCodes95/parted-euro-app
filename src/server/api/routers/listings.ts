@@ -11,94 +11,40 @@ const prepareSearchTerms = (search: string | undefined): string[] => {
 };
 
 export const listingsRouter = createTRPCRouter({
-  getAllAdmin: publicProcedure
-    .input(
-      z.object({
-        limit: z.number().default(100),
-        search: z.string().optional(),
-        sortBy: z.string().optional(),
-        sortOrder: z.enum(["asc", "desc"]).optional(),
-      }),
-    )
-    .query(async ({ ctx, input }) => {
-      const searchTerms = prepareSearchTerms(input.search);
-
-      const searchConditions = searchTerms.map((term) => ({
-        OR: [
-          { title: { contains: term, mode: "insensitive" as const } },
-          { id: { contains: term, mode: "insensitive" as const } },
-          {
-            parts: {
-              some: {
-                partDetails: {
-                  partNo: { contains: term, mode: "insensitive" as const },
-                },
-              },
-            },
-          },
-          {
-            parts: {
-              some: {
-                partDetails: {
-                  alternatePartNumbers: {
-                    contains: term,
-                    mode: "insensitive" as const,
-                  },
-                },
-              },
-            },
-          },
-        ],
-      }));
-
-      const where: Prisma.ListingWhereInput = {
-        ...(searchTerms.length > 0 ? { AND: searchConditions } : {}),
-      };
-
-      const orderBy: Record<string, "asc" | "desc"> = {};
-      if (input.sortBy) {
-        orderBy[input.sortBy] = input.sortOrder ?? "asc";
-      } else {
-        orderBy.createdAt = "desc";
-      }
-
-      const [items, count] = await Promise.all([
-        ctx.db.listing.findMany({
-          take: input.limit,
-          where,
-          orderBy,
-          include: {
-            parts: {
+  getAllAdmin: publicProcedure.query(async ({ ctx }) => {
+    const items = await ctx.db.listing.findMany({
+      orderBy: {
+        createdAt: "desc",
+      },
+      include: {
+        parts: {
+          select: {
+            id: true,
+            partDetails: {
               select: {
-                id: true,
-                partDetails: {
-                  select: {
-                    partNo: true,
-                    name: true,
-                  },
-                },
-              },
-            },
-            images: {
-              orderBy: {
-                order: "asc",
-              },
-              select: {
-                id: true,
-                url: true,
-                order: true,
+                partNo: true,
+                name: true,
               },
             },
           },
-        }),
-        ctx.db.listing.count({ where }),
-      ]);
+        },
+        images: {
+          orderBy: {
+            order: "asc",
+          },
+          select: {
+            id: true,
+            url: true,
+            order: true,
+          },
+        },
+      },
+    });
 
-      return {
-        items,
-        count,
-      };
-    }),
+    return {
+      items,
+    };
+  }),
 
   create: publicProcedure
     .input(

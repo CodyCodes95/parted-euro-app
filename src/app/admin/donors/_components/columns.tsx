@@ -131,7 +131,7 @@ export function getDonorColumns({
             <DropdownMenuContent align="end">
               <DropdownMenuLabel>Actions</DropdownMenuLabel>
               <DropdownMenuSeparator />
-              <DropdownMenuItem onClick={() => onEdit(donor)}>
+              <DropdownMenuItem onmo onClick={() => onEdit(donor)}>
                 <Pencil className="mr-2 h-4 w-4" />
                 Edit
               </DropdownMenuItem>

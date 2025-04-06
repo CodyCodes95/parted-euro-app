@@ -51,7 +51,7 @@ export function NavMain({
                   className={cn(
                     "transition-colors duration-100",
                     "hover:bg-gray-300/40 dark:hover:bg-gray-700/60",
-                    "data-[active=true]:bg-gray-300/70 dark:data-[active=true]:bg-gray-700/80",
+                    "data-[active=true]:bg-primary data-[active=true]:text-primary-foreground dark:data-[active=true]:bg-gray-700/80",
                   )}
                 >
                   <Link prefetch={true} href={item.url}>

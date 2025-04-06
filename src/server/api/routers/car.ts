@@ -113,56 +113,16 @@ export const carRouter = createTRPCRouter({
     }),
 
   // Get all cars
-  getAll: adminProcedure
-    .input(
-      z.object({
-        limit: z.number().min(1).max(1000).optional().default(100),
-        cursor: z.string().optional(),
-        search: z.string().optional(),
-        sortBy: z.string().optional(),
-        sortOrder: z.enum(["asc", "desc"]).optional(),
-        series: z.string().optional(),
-      }),
-    )
-    .query(async ({ ctx, input }) => {
-      const { limit, cursor, search, sortBy, sortOrder, series } = input;
+  getAll: adminProcedure.query(async ({ ctx }) => {
+    // Execute the query to get all cars
+    const cars = await ctx.db.car.findMany({
+      orderBy: { make: "asc" },
+    });
 
-      // Create the base query
-      const query = {
-        take: limit + 1,
-        ...(cursor ? { cursor: { id: cursor } } : {}),
-        orderBy: sortBy ? { [sortBy]: sortOrder ?? "asc" } : { make: "asc" },
-        where: {
-          ...(search
-            ? {
-                OR: [
-                  { make: { contains: search, mode: "insensitive" } },
-                  { model: { contains: search, mode: "insensitive" } },
-                  { series: { contains: search, mode: "insensitive" } },
-                  { generation: { contains: search, mode: "insensitive" } },
-                  { body: { contains: search, mode: "insensitive" } },
-                ],
-              }
-            : {}),
-          ...(series ? { series } : {}),
-        },
-      } as Prisma.CarFindManyArgs;
-
-      // Execute the query
-      const cars = await ctx.db.car.findMany(query);
-
-      // Check if we have more items
-      let nextCursor: typeof cursor | undefined = undefined;
-      if (cars.length > limit) {
-        const nextItem = cars.pop();
-        nextCursor = nextItem?.id;
-      }
-
-      return {
-        items: cars,
-        nextCursor,
-      };
-    }),
+    return {
+      items: cars,
+    };
+  }),
 
   // Get all unique series
   getAllSeries: adminProcedure.query(async ({ ctx }) => {

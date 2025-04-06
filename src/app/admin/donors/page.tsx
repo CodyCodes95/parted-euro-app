@@ -20,29 +20,13 @@ export default function DonorsAdminPage() {
   const [searchTerm, setSearchTerm] = useState("");
   const [sorting, setSorting] = useState<SortingState>([]);
 
-  // Get the current sort parameters from the sorting state
-  const sortConfig =
-    sorting.length > 0
-      ? {
-          sortBy: sorting[0]?.id,
-          sortOrder: sorting[0]?.desc ? ("desc" as const) : ("asc" as const),
-        }
-      : null;
-
-  // Fetch donors with pagination, search, and sorting
-  const donorsQuery = api.donor.getAll.useQuery(
-    {
-      limit: 100,
-      search: searchTerm,
-      ...(sortConfig ?? {}),
-    },
-    {
-      placeholderData: keepPreviousData,
-    },
-  );
+  // Fetch all donors
+  const donorsQuery = api.donor.getAll.useQuery(undefined, {
+    placeholderData: keepPreviousData,
+  });
 
   // The donor router should already include the car relationship with 'include: { car: true }'
-  const donors = (donorsQuery.data?.items ?? []) as DonorWithCar[];
+  const donors = donorsQuery.data?.items ?? [];
   const isLoading = donorsQuery.isLoading;
 
   const handleAddDonor = () => {
@@ -57,10 +41,6 @@ export default function DonorsAdminPage() {
   const handleDeleteDonor = (donor: DonorWithCar) => {
     setSelectedDonor(donor);
     setIsDeleteDonorOpen(true);
-  };
-
-  const handleSearch = (term: string) => {
-    setSearchTerm(term);
   };
 
   const columns = getDonorColumns({
@@ -84,7 +64,7 @@ export default function DonorsAdminPage() {
           placeholder="Search donors by VIN..."
           className="w-full"
           value={searchTerm}
-          onChange={(e) => handleSearch(e.target.value)}
+          onChange={(e) => setSearchTerm(e.target.value)}
         />
         <p className="mt-1 text-xs text-muted-foreground">
           Search by VIN number
@@ -103,6 +83,7 @@ export default function DonorsAdminPage() {
           data={donors}
           sorting={sorting}
           onSortingChange={setSorting}
+          searchKey="vin"
         />
       )}
 

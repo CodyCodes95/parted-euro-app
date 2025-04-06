@@ -41,95 +41,43 @@ export const ordersRouter = createTRPCRouter({
     }),
 
   // Admin procedures for the orders management panel
-  getAllAdmin: adminProcedure
-    .input(
-      z.object({
-        limit: z.number().min(1).max(100).default(10),
-        cursor: z.string().nullish(),
-        search: z.string().optional(),
-        sortBy: z.string().optional(),
-        sortOrder: z.enum(["asc", "desc"]).optional(),
-      }),
-    )
-    .query(async ({ ctx, input }) => {
-      const limit = input.limit ?? 10;
-      const { search, sortBy, sortOrder } = input;
-
-      // Build the where clause for search
-      let whereClause: Prisma.OrderWhereInput = {
+  getAllAdmin: adminProcedure.query(async ({ ctx }) => {
+    // Get all orders except PENDING
+    const orders = await ctx.db.order.findMany({
+      where: {
         status: {
           not: "PENDING",
         },
-      };
-      if (search) {
-        const searchTerm = `%${search}%`;
-        whereClause = {
-          AND: [
-            {
-              status: {
-                not: "PENDING",
-              },
-            },
-            {
-              OR: [
-                { id: { contains: searchTerm, mode: "insensitive" } },
-                { name: { contains: searchTerm, mode: "insensitive" } },
-                { email: { contains: searchTerm, mode: "insensitive" } },
-                { status: { contains: searchTerm, mode: "insensitive" } },
-              ],
-            },
-          ],
-        };
-      }
-
-      // Build the order by clause
-      let orderBy: Prisma.OrderOrderByWithRelationInput[] = [
-        { createdAt: "desc" },
-      ]; // Default sort
-      if (sortBy) {
-        orderBy = [{ [sortBy]: sortOrder ?? "desc" }];
-      }
-
-      // Execute the query
-      const orders = await ctx.db.order.findMany({
-        take: limit + 1, // get an extra item to determine if there are more results
-        where: whereClause,
-        orderBy: orderBy,
-        include: {
-          orderItems: {
-            include: {
-              listing: {
-                include: {
-                  images: {
-                    orderBy: {
-                      order: "asc",
-                    },
-                    take: 1,
+      },
+      orderBy: [{ createdAt: "desc" }],
+      include: {
+        orderItems: {
+          include: {
+            listing: {
+              include: {
+                images: {
+                  orderBy: {
+                    order: "asc",
                   },
+                  take: 1,
                 },
               },
             },
           },
         },
-      });
+      },
+    });
 
-      let nextCursor: typeof input.cursor = null;
-      if (orders.length > limit) {
-        const nextItem = orders.pop();
-        nextCursor = nextItem?.id;
-      }
-
-      return {
-        items: orders.map((order) => {
-          return {
-            ...order,
-            subtotal: (order.subtotal ?? 0) / 100,
-            shipping: (order.shipping ?? 0) / 100,
-          };
-        }),
-        nextCursor,
-      };
-    }),
+    return {
+      items: orders.map((order) => {
+        return {
+          ...order,
+          subtotal: (order.subtotal ?? 0) / 100,
+          shipping: (order.shipping ?? 0) / 100,
+        };
+      }),
+    };
+  }),
 
   updateTracking: adminProcedure
     .input(

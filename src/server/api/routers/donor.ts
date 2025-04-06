@@ -16,51 +16,19 @@ const donorSchema = z.object({
 
 export const donorRouter = createTRPCRouter({
   // Get all donors
-  getAll: adminProcedure
-    .input(
-      z.object({
-        limit: z.number().min(1).max(1000).optional().default(100),
-        cursor: z.string().optional(),
-        search: z.string().optional(),
-        sortBy: z.string().optional(),
-        sortOrder: z.enum(["asc", "desc"]).optional(),
-      }),
-    )
-    .query(async ({ ctx, input }) => {
-      const { limit, cursor, search, sortBy, sortOrder } = input;
+  getAll: adminProcedure.query(async ({ ctx }) => {
+    // Execute the query
+    const donors = await ctx.db.donor.findMany({
+      include: {
+        car: true,
+      },
+      orderBy: { vin: "asc" },
+    });
 
-      // Create the base query
-      const query = {
-        take: limit + 1,
-        ...(cursor ? { cursor: { vin: cursor } } : {}),
-        orderBy: sortBy ? { [sortBy]: sortOrder ?? "asc" } : { vin: "asc" },
-        where: {
-          ...(search
-            ? {
-                OR: [{ vin: { contains: search, mode: "insensitive" } }],
-              }
-            : {}),
-        },
-        include: {
-          car: true,
-        },
-      } as Prisma.DonorFindManyArgs;
-
-      // Execute the query
-      const donors = await ctx.db.donor.findMany(query);
-
-      // Check if we have more items
-      let nextCursor: typeof cursor | undefined = undefined;
-      if (donors.length > limit) {
-        const nextItem = donors.pop();
-        nextCursor = nextItem?.vin;
-      }
-
-      return {
-        items: donors,
-        nextCursor,
-      };
-    }),
+    return {
+      items: donors,
+    };
+  }),
 
   // Get all donors with cars for inventory form select
   getAllDonorsWithCars: adminProcedure.query(async ({ ctx }) => {

@@ -22,7 +22,7 @@ export default function InventoryAdminPage() {
   const [searchTerm, setSearchTerm] = useState("");
   const [sorting, setSorting] = useState<SortingState>([]);
 
-  // Fetch inventory with pagination, search, and sorting
+  // Fetch all inventory data
   const inventoryQuery = api.inventory.getAll.useQuery(undefined, {
     placeholderData: keepPreviousData,
   });
@@ -42,10 +42,6 @@ export default function InventoryAdminPage() {
   const handleDeleteInventory = (item: AdminInventoryItem) => {
     setSelectedInventory(item);
     setIsDeleteInventoryOpen(true);
-  };
-
-  const handleSearch = (term: string) => {
-    setSearchTerm(term);
   };
 
   const columns = getInventoryColumns({
@@ -69,7 +65,7 @@ export default function InventoryAdminPage() {
           placeholder="Search by part name, number, or donor VIN..."
           className="w-full"
           value={searchTerm}
-          onChange={(e) => handleSearch(e.target.value)}
+          onChange={(e) => setSearchTerm(e.target.value)}
         />
         <p className="mt-1 text-xs text-muted-foreground">
           Search by VIN, part name, part number, or alternate part numbers
@@ -88,6 +84,7 @@ export default function InventoryAdminPage() {
           data={inventory}
           sorting={sorting}
           onSortingChange={setSorting}
+          searchKey="partDetails.name"
         />
       )}
 

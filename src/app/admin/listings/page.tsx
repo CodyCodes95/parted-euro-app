@@ -26,24 +26,9 @@ export default function ListingsAdminPage() {
   const [searchTerm, setSearchTerm] = useState("");
   const [sorting, setSorting] = useState<SortingState>([]);
 
-  // Get the current sort parameters from the sorting state
-  const sortConfig =
-    sorting.length > 0
-      ? {
-          sortBy: sorting[0]?.id.includes(".")
-            ? sorting[0]?.id.replace(".", "_")
-            : sorting[0]?.id,
-          sortOrder: sorting[0]?.desc ? ("desc" as const) : ("asc" as const),
-        }
-      : null;
-
-  // Fetch listings with pagination, search, and sorting
+  // Fetch all listings
   const listingsQuery = api.listings.getAllAdmin.useQuery(
-    {
-      limit: 100,
-      search: searchTerm,
-      ...(sortConfig ?? {}),
-    },
+    undefined,
     {
       placeholderData: keepPreviousData,
     },
@@ -76,10 +61,6 @@ export default function ListingsAdminPage() {
     setIsListOnEbayOpen(true);
   };
 
-  const handleSearch = (term: string) => {
-    setSearchTerm(term);
-  };
-
   const columns = getListingColumns({
     onEdit: handleEditListing,
     onDelete: handleDeleteListing,
@@ -103,7 +84,7 @@ export default function ListingsAdminPage() {
           placeholder="Search by title, ID, or part numbers..."
           className="w-full"
           value={searchTerm}
-          onChange={(e) => handleSearch(e.target.value)}
+          onChange={(e) => setSearchTerm(e.target.value)}
         />
         <p className="mt-1 text-xs text-muted-foreground">
           Search by title, ID, or part numbers
@@ -122,6 +103,7 @@ export default function ListingsAdminPage() {
           data={listings}
           sorting={sorting}
           onSortingChange={setSorting}
+          searchKey="title" 
         />
       )}
 

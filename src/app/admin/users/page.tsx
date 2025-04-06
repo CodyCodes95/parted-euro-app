@@ -12,32 +12,12 @@ export default function UsersAdminPage() {
   const [searchTerm, setSearchTerm] = useState("");
   const [sorting, setSorting] = useState<SortingState>([]);
 
-  // Get the current sort parameters from the sorting state
-  const sortConfig =
-    sorting.length > 0
-      ? {
-          sortBy: sorting[0]?.id,
-          sortOrder: sorting[0]?.desc ? ("desc" as const) : ("asc" as const),
-        }
-      : null;
-
-  // Fetch users with search and sorting
-  const { data: usersData, isLoading } = api.user.getAll.useQuery(
-    {
-      limit: 100,
-      search: searchTerm,
-      ...(sortConfig ?? {}),
-    },
-    {
-      placeholderData: keepPreviousData,
-    },
-  );
+  // Fetch all users
+  const { data: usersData, isLoading } = api.user.getAll.useQuery(undefined, {
+    placeholderData: keepPreviousData,
+  });
 
   const users = usersData?.items ?? [];
-
-  const handleSearch = (term: string) => {
-    setSearchTerm(term);
-  };
 
   const columns = getUserColumns();
 
@@ -53,7 +33,7 @@ export default function UsersAdminPage() {
           placeholder="Search users by name or email..."
           className="w-full"
           value={searchTerm}
-          onChange={(e) => handleSearch(e.target.value)}
+          onChange={(e) => setSearchTerm(e.target.value)}
         />
         <p className="mt-1 text-xs text-muted-foreground">
           Search by name or email
@@ -72,6 +52,7 @@ export default function UsersAdminPage() {
           data={users}
           sorting={sorting}
           onSortingChange={setSorting}
+          searchKey="email"
         />
       )}
     </div>

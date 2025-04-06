@@ -24,37 +24,15 @@ export default function OrdersAdminPage() {
   const [isAddTrackingOpen, setIsAddTrackingOpen] = useState(false);
   const [isUpdateStatusOpen, setIsUpdateStatusOpen] = useState(false);
 
-  // Get the current sort parameters from the sorting state
-  const sortConfig =
-    sorting.length > 0
-      ? {
-          sortBy: sorting[0]?.id.includes(".")
-            ? sorting[0]?.id.replace(".", "_")
-            : sorting[0]?.id,
-          sortOrder: sorting[0]?.desc ? ("desc" as const) : ("asc" as const),
-        }
-      : null;
-
-  // Fetch orders with pagination, search, and sorting
-  const ordersQuery = api.orders?.getAllAdmin.useQuery(
-    {
-      limit: 100,
-      search: searchTerm,
-      ...(sortConfig ?? {}),
-    },
-    {
-      placeholderData: keepPreviousData,
-    },
-  );
+  // Fetch all orders
+  const ordersQuery = api.orders?.getAllAdmin.useQuery(undefined, {
+    placeholderData: keepPreviousData,
+  });
 
   const updateStatusMutation = api.orders?.updateStatus.useMutation();
 
   const orders = ordersQuery?.data?.items ?? [];
   const isLoading = ordersQuery?.isLoading ?? true;
-
-  const handleSearch = (term: string) => {
-    setSearchTerm(term);
-  };
 
   const handleViewOrderDetails = (order: AdminOrdersItem) => {
     setSelectedOrder(order);
@@ -106,7 +84,7 @@ export default function OrdersAdminPage() {
           placeholder="Search by order ID, name, email or status..."
           className="w-full"
           value={searchTerm}
-          onChange={(e) => handleSearch(e.target.value)}
+          onChange={(e) => setSearchTerm(e.target.value)}
         />
         <p className="mt-1 text-xs text-muted-foreground">
           Search by order ID, name, email or status
@@ -125,6 +103,7 @@ export default function OrdersAdminPage() {
           data={orders}
           sorting={sorting}
           onSortingChange={setSorting}
+          searchKey="id"
         />
       )}
 

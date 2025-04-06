@@ -21,84 +21,33 @@ const partDetailSchema = z.object({
 
 export const partRouter = createTRPCRouter({
   // Get all parts
-  getAll: adminProcedure
-    .input(
-      z.object({
-        limit: z.number().min(1).max(1000).optional().default(100),
-        cursor: z.string().optional(),
-        search: z.string().optional(),
-        sortBy: z.string().optional(),
-        sortOrder: z.enum(["asc", "desc"]).optional(),
-        partType: z.string().optional(),
-      }),
-    )
-    .query(async ({ ctx, input }) => {
-      const { limit, cursor, search, sortBy, sortOrder, partType } = input;
-
-      // Create the base query
-      const query = {
-        take: limit + 1,
-        ...(cursor ? { cursor: { partNo: cursor } } : {}),
-        orderBy: sortBy ? { [sortBy]: sortOrder ?? "asc" } : { partNo: "asc" },
-        where: {
-          ...(search
-            ? {
-                OR: [
-                  { partNo: { contains: search, mode: "insensitive" } },
-                  {
-                    alternatePartNumbers: {
-                      contains: search,
-                      mode: "insensitive",
-                    },
-                  },
-                  { name: { contains: search, mode: "insensitive" } },
-                ],
-              }
-            : {}),
-          ...(partType
-            ? {
-                partTypes: {
-                  some: {
-                    id: partType,
-                  },
-                },
-              }
-            : {}),
-        },
-        include: {
-          cars: {
-            select: {
-              id: true,
-              make: true,
-              model: true,
-              series: true,
-              generation: true,
-            },
-          },
-          partTypes: {
-            select: {
-              id: true,
-              name: true,
-            },
+  getAll: adminProcedure.query(async ({ ctx }) => {
+    // Execute the query
+    const parts = await ctx.db.partDetail.findMany({
+      include: {
+        cars: {
+          select: {
+            id: true,
+            make: true,
+            model: true,
+            series: true,
+            generation: true,
           },
         },
-      } as Prisma.PartDetailFindManyArgs;
+        partTypes: {
+          select: {
+            id: true,
+            name: true,
+          },
+        },
+      },
+      orderBy: { partNo: "asc" },
+    });
 
-      // Execute the query
-      const parts = await ctx.db.partDetail.findMany(query);
-
-      // Check if we have more items
-      let nextCursor: typeof cursor | undefined = undefined;
-      if (parts.length > limit) {
-        const nextItem = parts.pop();
-        nextCursor = nextItem?.partNo;
-      }
-
-      return {
-        items: parts,
-        nextCursor,
-      };
-    }),
+    return {
+      items: parts,
+    };
+  }),
 
   // Get all compatible cars for multiselect
   getAllCars: adminProcedure.query(async ({ ctx }) => {
