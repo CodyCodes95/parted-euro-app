@@ -151,6 +151,7 @@ model Image {
     Donor     Donor?   @relation(fields: [donorVin], references: [vin])
     donorVin  String?
     order     Int
+    partNo    String?
 }
 
 model XeroCreds {
