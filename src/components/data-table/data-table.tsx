@@ -13,6 +13,7 @@ import {
   getSortedRowModel,
   useReactTable,
 } from "@tanstack/react-table";
+import { Search } from "lucide-react";
 
 import {
   Table,
@@ -62,12 +63,15 @@ export function DataTable<TData, TValue>({
   return (
     <div className="flex w-full flex-col gap-4">
       <div className="flex w-full items-center justify-end">
-        <Input
-          placeholder="Search..."
-          value={globalFilter ?? ""}
-          onChange={(event) => setGlobalFilter(event.target.value)}
-          className="max-w-sm"
-        />
+        <div className="relative max-w-sm">
+          <Search className="absolute left-3 top-1/2 h-4 w-4 -translate-y-1/2 text-muted-foreground" />
+          <Input
+            placeholder="Search..."
+            value={globalFilter}
+            onChange={(event) => setGlobalFilter(event.target.value)}
+            className="max-w-sm pl-9"
+          />
+        </div>
       </div>
       <div className="overflow-x-auto rounded-md border">
         <Table>
