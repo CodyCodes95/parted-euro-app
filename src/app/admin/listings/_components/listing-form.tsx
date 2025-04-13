@@ -76,6 +76,7 @@ import {
   PopoverTrigger,
 } from "~/components/ui/popover";
 import { AdminListingsItem } from "~/trpc/shared";
+import Compressor from "compressorjs";
 
 // Define image item type for DnD
 type ImageItem = {
@@ -513,6 +514,43 @@ export function ListingForm({
                 <div className="mb-4">
                   <UploadDropzone
                     endpoint="homepageImage"
+                    onBeforeUploadBegin={(files) => {
+                      // Create a promise for each file to be compressed
+                      const compressPromises = files.map(
+                        (file) =>
+                          new Promise<File>((resolve, reject) => {
+                            // Skip compression for non-image files
+                            if (!file.type.startsWith("image/")) {
+                              resolve(file);
+                              return;
+                            }
+
+                            new Compressor(file, {
+                              quality: 0.8, // 80% quality
+                              maxWidth: 1920,
+                              maxHeight: 1080,
+                              convertSize: 1000000, // Convert to JPEG if > 1MB
+                              success: (compressedFile) => {
+                                // Create a new file with the original name but compressed content
+                                const newFile = new File(
+                                  [compressedFile],
+                                  file.name,
+                                  { type: compressedFile.type },
+                                );
+                                resolve(newFile);
+                              },
+                              error: (err) => {
+                                console.error("Compression error:", err);
+                                // If compression fails, use the original file
+                                resolve(file);
+                              },
+                            });
+                          }),
+                      );
+
+                      // Return a promise that resolves when all files are compressed
+                      return Promise.all(compressPromises);
+                    }}
                     onClientUploadComplete={(res) => {
                       if (res) {
                         handleImageUpload(res);
