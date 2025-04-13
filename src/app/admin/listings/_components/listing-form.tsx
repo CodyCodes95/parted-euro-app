@@ -75,7 +75,7 @@ import {
   PopoverContent,
   PopoverTrigger,
 } from "~/components/ui/popover";
-import { AdminListingsItem } from "~/trpc/shared";
+import { type AdminListingsItem } from "~/trpc/shared";
 import Compressor from "compressorjs";
 
 // Define image item type for DnD
@@ -201,6 +201,17 @@ export function ListingForm({
   // Initialize images and parts from default values
   useEffect(() => {
     if (defaultValues) {
+      // Reset form with new values when defaultValues change
+      form.reset({
+        id: defaultValues.id,
+        title: defaultValues.title,
+        description: defaultValues.description,
+        condition: defaultValues.condition,
+        price: defaultValues.price,
+        parts: defaultValues.parts.map((part) => part.id),
+        images: defaultValues.images,
+      });
+
       if (defaultValues.images) {
         setImages(
           defaultValues.images.map((img) => ({
@@ -214,10 +225,19 @@ export function ListingForm({
         setSelectedParts(defaultValues.parts.map((part) => part.id));
       }
     } else {
+      form.reset({
+        id: undefined,
+        title: "",
+        description: "",
+        condition: "",
+        price: 0,
+        parts: [],
+        images: [],
+      });
       setSelectedParts([]);
       setImages([]);
     }
-  }, [defaultValues]);
+  }, [defaultValues, form]);
 
   // Mutations for create and update
   const createMutation = api.listings.create.useMutation({
