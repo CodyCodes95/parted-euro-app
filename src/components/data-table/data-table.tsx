@@ -14,6 +14,7 @@ import {
   useReactTable,
 } from "@tanstack/react-table";
 import { Search } from "lucide-react";
+import { useQueryState } from "nuqs";
 
 import {
   Table,
@@ -36,7 +37,9 @@ export function DataTable<TData, TValue>({
   data,
 }: DataTableProps<TData, TValue>) {
   const [sorting, setSorting] = React.useState<SortingState>([]);
-  const [globalFilter, setGlobalFilter] = React.useState<string>("");
+  const [globalFilter, setGlobalFilter] = useQueryState("search", {
+    defaultValue: "",
+  });
   const [columnVisibility, setColumnVisibility] =
     React.useState<VisibilityState>({});
   const [rowSelection, setRowSelection] = React.useState({});
@@ -45,7 +48,7 @@ export function DataTable<TData, TValue>({
     data,
     columns,
     onSortingChange: setSorting,
-    onGlobalFilterChange: setGlobalFilter,
+    onGlobalFilterChange: (value) => void setGlobalFilter(value),
     getCoreRowModel: getCoreRowModel(),
     getPaginationRowModel: getPaginationRowModel(),
     getFilteredRowModel: getFilteredRowModel(),
@@ -54,7 +57,7 @@ export function DataTable<TData, TValue>({
     onRowSelectionChange: setRowSelection,
     state: {
       sorting,
-      globalFilter,
+      globalFilter: globalFilter || "",
       columnVisibility,
       rowSelection,
     },
@@ -67,8 +70,8 @@ export function DataTable<TData, TValue>({
           <Search className="absolute left-3 top-1/2 h-4 w-4 -translate-y-1/2 text-muted-foreground" />
           <Input
             placeholder="Search..."
-            value={globalFilter}
-            onChange={(event) => setGlobalFilter(event.target.value)}
+            value={globalFilter || ""}
+            onChange={(event) => void setGlobalFilter(event.target.value)}
             className="max-w-sm pl-9"
           />
         </div>
