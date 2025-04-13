@@ -796,15 +796,12 @@ export function InventoryForm({
                   </PopoverTrigger>
                   <PopoverContent className="w-[400px] p-0">
                     <Command>
-                      <div className="flex items-center border-b px-3">
-                        <Search className="mr-2 h-4 w-4 shrink-0 opacity-50" />
-                        <CommandInput
-                          placeholder="Search parts by number or name..."
-                          value={searchTerm}
-                          onValueChange={setSearchTerm}
-                          className="border-0 focus:ring-0"
-                        />
-                      </div>
+                      <CommandInput
+                        placeholder="Search parts by number or name..."
+                        value={searchTerm}
+                        onValueChange={setSearchTerm}
+                        className="w-full"
+                      />
                       {isSearching && (
                         <div className="py-6 text-center">
                           <Loader2 className="mx-auto h-6 w-6 animate-spin text-muted-foreground" />
