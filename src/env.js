@@ -34,6 +34,7 @@ export const env = createEnv({
     EBAY_PAYMENT_ID: z.string(),
     EBAY_RETURN_ID: z.string(),
     RESEND_API_KEY: z.string(),
+    SENTRY_AUTH_TOKEN: z.string(),
     NODE_ENV: z
       .enum(["development", "test", "production"])
       .default("development"),
@@ -80,6 +81,7 @@ export const env = createEnv({
     EBAY_PAYMENT_ID: process.env.EBAY_PAYMENT_ID,
     EBAY_RETURN_ID: process.env.EBAY_RETURN_ID,
     RESEND_API_KEY: process.env.RESEND_API_KEY,
+    SENTRY_AUTH_TOKEN: process.env.SENTRY_AUTH_TOKEN,
   },
   /**
    * Run `build` or `dev` with `SKIP_ENV_VALIDATION` to skip env validation. This is especially
