@@ -65,6 +65,10 @@ export const partRouter = createTRPCRouter({
     return cars.map((car) => ({
       value: car.id,
       label: `${car.make} ${car.model} (${car.series} ${car.generation})`,
+      make: car.make,
+      series: car.series,
+      generation: car.generation,
+      model: car.model,
     }));
   }),
 

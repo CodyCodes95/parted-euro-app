@@ -87,6 +87,7 @@ import {
 import { CSS } from "@dnd-kit/utilities";
 import { restrictToVerticalAxis } from "@dnd-kit/modifiers";
 import Compressor from "compressorjs";
+import { FilterableCarSelect } from "~/components/ui/filterable-car-select";
 
 // Define image item type for DnD
 type ImageItem = {
@@ -1088,7 +1089,7 @@ export function InventoryForm({
                         <FormItem className="flex flex-col">
                           <FormLabel>Compatible Cars</FormLabel>
                           <FormControl>
-                            <VirtualizedMultiSelect
+                            <FilterableCarSelect
                               options={carOptions}
                               value={selectedCars}
                               onChange={(values) => {
