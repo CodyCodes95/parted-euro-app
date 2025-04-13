@@ -7,12 +7,10 @@ import { getPartColumns, type Part } from "./_components/columns";
 import { PartForm } from "./_components/part-form";
 import { DeletePartDialog } from "./_components/delete-part-dialog";
 import { keepPreviousData } from "@tanstack/react-query";
-import { Input } from "~/components/ui/input";
-import { type SortingState } from "@tanstack/react-table";
 import { Button } from "~/components/ui/button";
 import { Plus } from "lucide-react";
 
-export default function PartsAdminPage() {
+export default function PartsPage() {
   const [isAddPartOpen, setIsAddPartOpen] = useState(false);
   const [isEditPartOpen, setIsEditPartOpen] = useState(false);
   const [isDeletePartOpen, setIsDeletePartOpen] = useState(false);
@@ -46,9 +44,8 @@ export default function PartsAdminPage() {
   });
 
   return (
-    <div className="max-w-full p-6">
+    <div>
       <div className="mb-6 flex items-center justify-between">
-        <h1 className="text-3xl font-bold">Parts Management</h1>
         <Button size="sm" onMouseDown={handleAddPart}>
           <Plus className="mr-2 h-4 w-4" />
           Add Part
