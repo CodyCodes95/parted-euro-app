@@ -194,55 +194,91 @@ export const inventoryRouter = createTRPCRouter({
       const { images, ...updateData } = data;
 
       try {
-        // First delete all existing images for this part
-        if (images) {
-          await ctx.db.image.deleteMany({
-            where: { partId: id },
-          });
-        }
-
-        const updatedInventory = await ctx.db.part.update({
-          where: { id },
-          data: {
-            partDetailsId: updateData.partDetailsId,
-            donorVin:
-              updateData.donorVin === "none" ? null : updateData.donorVin,
-            inventoryLocationId:
-              updateData.inventoryLocationId === "none"
-                ? null
-                : updateData.inventoryLocationId,
-            variant: updateData.variant ?? null,
-            quantity: updateData.quantity,
-            images: images
-              ? {
-                  // Connect to existing images that were created during upload
-                  connect: images.map((image) => ({ id: image.id })),
-                }
-              : undefined,
-          },
-          include: {
-            partDetails: true,
-            donor: true,
-            inventoryLocation: true,
-            images: {
-              orderBy: {
-                order: "asc",
-              },
-            },
-          },
+        // First, get current images for the part to compare
+        const currentImages = await ctx.db.image.findMany({
+          where: { partId: id },
+          select: { id: true },
         });
 
-        // Update the order of images after connecting them
-        if (images?.length) {
-          for (const [index, image] of images.entries()) {
-            await ctx.db.image.update({
-              where: { id: image.id },
-              data: { order: index },
-            });
-          }
-        }
+        // Transaction to ensure data consistency
+        return await ctx.db.$transaction(async (tx) => {
+          // If images are provided, handle image updates intelligently
+          if (images) {
+            const currentImageIds = new Set(currentImages.map((img) => img.id));
+            const newImageIds = new Set(images.map((img) => img.id));
 
-        return updatedInventory;
+            // Find images to remove (in current but not in new)
+            const imagesToRemove = [...currentImageIds].filter(
+              (imgId) => !newImageIds.has(imgId),
+            );
+
+            // Find images to add (in new but not in current)
+            const imagesToAdd = [...newImageIds].filter(
+              (imgId) => !currentImageIds.has(imgId),
+            );
+
+            // Only delete images that are not in the new list
+            if (imagesToRemove.length > 0) {
+              await tx.image.deleteMany({
+                where: {
+                  id: { in: imagesToRemove },
+                  partId: id,
+                },
+              });
+            }
+
+            // Connect new images that weren't already connected
+            if (imagesToAdd.length > 0) {
+              await tx.part.update({
+                where: { id },
+                data: {
+                  images: {
+                    connect: imagesToAdd.map((imgId) => ({ id: imgId })),
+                  },
+                },
+              });
+            }
+
+            // Update the order of all images
+            for (const image of images) {
+              await tx.image.update({
+                where: { id: image.id },
+                data: {
+                  order: image.order,
+                  partId: id, // Ensure it's connected to this part
+                },
+              });
+            }
+          }
+
+          // Update the part with other data
+          const updatedInventory = await tx.part.update({
+            where: { id },
+            data: {
+              partDetailsId: updateData.partDetailsId,
+              donorVin:
+                updateData.donorVin === "none" ? null : updateData.donorVin,
+              inventoryLocationId:
+                updateData.inventoryLocationId === "none"
+                  ? null
+                  : updateData.inventoryLocationId,
+              variant: updateData.variant ?? null,
+              quantity: updateData.quantity,
+            },
+            include: {
+              partDetails: true,
+              donor: true,
+              inventoryLocation: true,
+              images: {
+                orderBy: {
+                  order: "asc",
+                },
+              },
+            },
+          });
+
+          return updatedInventory;
+        });
       } catch (error) {
         throw new TRPCError({
           code: "INTERNAL_SERVER_ERROR",
