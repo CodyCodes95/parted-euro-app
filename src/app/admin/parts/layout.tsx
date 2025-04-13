@@ -20,18 +20,12 @@ export default function PartsLayout({
           <TabsList className="mb-4">
             <Link prefetch={true} href="/admin/parts/inventory">
               <TabsTrigger value="inventory" asChild>
-                <a
-                  className={value === "inventory" ? "data-[state=active]" : ""}
-                >
-                  Inventory
-                </a>
+                <span>Inventory</span>
               </TabsTrigger>
             </Link>
             <Link prefetch={true} href="/admin/parts/data">
               <TabsTrigger value="data" asChild>
-                <a className={value === "data" ? "data-[state=active]" : ""}>
-                  Parts
-                </a>
+                <span>Parts</span>
               </TabsTrigger>
             </Link>
           </TabsList>
