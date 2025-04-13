@@ -409,12 +409,21 @@ export function ListingForm({
                         </SelectTrigger>
                       </FormControl>
                       <SelectContent>
-                        <SelectItem value="New">New</SelectItem>
-                        <SelectItem value="Used - Like New">
-                          Used - Like New
-                        </SelectItem>
-                        <SelectItem value="Used - Good">Used - Good</SelectItem>
-                        <SelectItem value="Used - Fair">Used - Fair</SelectItem>
+                        {[
+                          { label: "New", value: "NEW" },
+                          { label: "Used", value: "USED_EXCELLENT" },
+                          {
+                            label: "For Parts Or Not Working",
+                            value: "FOR_PARTS_OR_NOT_WORKING",
+                          },
+                        ].map((condition) => (
+                          <SelectItem
+                            key={condition.value}
+                            value={condition.value}
+                          >
+                            {condition.label}
+                          </SelectItem>
+                        ))}
                       </SelectContent>
                     </Select>
                     <FormMessage />
@@ -448,7 +457,7 @@ export function ListingForm({
               render={({ field }) => (
                 <FormItem className="flex flex-col">
                   <FormLabel>Parts*</FormLabel>
-                  <Popover open={partsOpen} onOpenChange={setPartsOpen}>
+                  <Popover modal={true} open={partsOpen} onOpenChange={setPartsOpen}>
                     <PopoverTrigger asChild>
                       <FormControl>
                         <Button
