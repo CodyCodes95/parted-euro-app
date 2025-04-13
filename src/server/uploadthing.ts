@@ -8,7 +8,7 @@ const f = createUploadthing();
 // FileRouter for your app, can contain multiple FileRoutes
 export const uploadRouter = {
   // Define as many FileRoutes as you like, each with a unique routeSlug
-  homepageImage: f({ image: { maxFileCount: 10 , maxFileSize: "32MB"} })
+  homepageImage: f({ image: { maxFileCount: 10, maxFileSize: "32MB" } })
     // Set permissions and file types for this FileRoute
     .middleware(async () => {
       // This code runs on your server before upload
@@ -47,7 +47,7 @@ export const uploadRouter = {
     }),
 
   // Add inventory image upload endpoint
-  inventoryImage: f({ image: { maxFileCount: 10 , maxFileSize: "32MB"} })
+  inventoryImage: f({ image: { maxFileCount: 10, maxFileSize: "32MB" } })
     .middleware(async ({ files }) => {
       // This code runs on your server before upload
       const session = await auth();
@@ -61,12 +61,20 @@ export const uploadRouter = {
       return { userId: session.user.id };
     })
     .onUploadComplete(async ({ metadata, file }) => {
-      // Just return the URL and let the client handle image tracking
-      return { url: file.url };
+      // Create the image in the database with an order of 0 (will be updated when connected to part)
+      const image = await db.image.create({
+        data: {
+          url: file.url,
+          order: 0,
+        },
+      });
+
+      // Return both the URL and the generated ID
+      return { url: file.url, id: image.id };
     }),
 
   // Add part image upload endpoint
-  partImage: f({ image: { maxFileCount: 10 , maxFileSize: "32MB"} })
+  partImage: f({ image: { maxFileCount: 10, maxFileSize: "32MB" } })
     .middleware(async ({ req }) => {
       // This code runs on your server before upload
       const session = await auth();

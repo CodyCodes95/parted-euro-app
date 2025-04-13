@@ -503,9 +503,14 @@ export function InventoryForm({
   }, [defaultValues, isDuplicating]);
 
   // Handle image upload completion
-  const handleImageUpload = (results: { url: string }[]) => {
+  const handleImageUpload = (
+    results: {
+      url: string;
+      id: string;
+    }[],
+  ) => {
     const newImages = results.map((result, index) => ({
-      id: crypto.randomUUID(),
+      id: result.id,
       url: result.url,
       order: images.length + index,
     }));
@@ -1243,7 +1248,9 @@ export function InventoryForm({
                             endpoint="inventoryImage"
                             onClientUploadComplete={(res) => {
                               if (res) {
-                                handleImageUpload(res);
+                                handleImageUpload(
+                                  res.map((img) => img.serverData),
+                                );
                                 toast.success("Images uploaded successfully");
                               }
                             }}

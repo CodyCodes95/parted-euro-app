@@ -215,8 +215,7 @@ export const inventoryRouter = createTRPCRouter({
             quantity: updateData.quantity,
             images: images
               ? {
-                  // Instead of createMany with existing IDs,
-                  // connect existing images that already have partNo but no partId
+                  // Connect to existing images that were created during upload
                   connect: images.map((image) => ({ id: image.id })),
                 }
               : undefined,
