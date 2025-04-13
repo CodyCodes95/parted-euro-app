@@ -47,7 +47,7 @@ export default function InventoryPage() {
 
   return (
     <div>
-      <div className="mb-6 flex items-center justify-between">
+      <div className="mb-6 flex items-center justify-end">
         <Button size="sm" onMouseDown={handleAddInventory}>
           <Plus className="mr-2 h-4 w-4" />
           Add Inventory

@@ -45,7 +45,7 @@ export default function PartsPage() {
 
   return (
     <div>
-      <div className="mb-6 flex items-center justify-between">
+      <div className="mb-6 flex items-center justify-end">
         <Button size="sm" onMouseDown={handleAddPart}>
           <Plus className="mr-2 h-4 w-4" />
           Add Part
