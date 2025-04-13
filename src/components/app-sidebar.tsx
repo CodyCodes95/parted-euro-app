@@ -141,7 +141,7 @@ export function AppSidebar({
           className="rounded-md focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-sidebar-ring"
         >
           <div className="flex items-center gap-2">
-            <div className="flex aspect-square size-8 items-center justify-center rounded-md bg-sidebar-primary text-sidebar-primary-foreground">
+            <div className="flex aspect-square size-8 items-center justify-center rounded-md text-sidebar-primary-foreground">
               <img src="/stripes.png" alt="Logo" />
             </div>
             <span className="truncate text-left text-sm font-semibold leading-tight text-sidebar-foreground">
