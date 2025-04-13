@@ -4,12 +4,13 @@ import { useState, useEffect } from "react";
 import { z } from "zod";
 import { useForm } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
-import { Minus, Plus, Trash2 } from "lucide-react";
+import { Minus, Plus, Trash2, AlertCircle, X } from "lucide-react";
 import Image from "next/image";
 import { useMemo } from "react";
 import { api } from "~/trpc/react";
 import { useCartStore } from "~/stores/useCartStore";
 import { formatCurrency } from "~/lib/utils";
+import { useSearchParams, useRouter } from "next/navigation";
 
 import {
   Form,
@@ -39,6 +40,7 @@ import {
   AddressAutoComplete,
 } from "./_components/AddressAutocomplete";
 import { toast } from "sonner";
+import { Alert, AlertTitle, AlertDescription } from "~/components/ui/alert";
 
 // Define the form schema using zod
 const checkoutFormSchema = z
@@ -90,6 +92,7 @@ type PopulatedCartItem = {
 };
 
 export default function Checkout() {
+  const searchParams = useSearchParams();
   const [address, setAddress] = useState<CheckoutAddress>(
     localStorage.getItem("checkout-address")
       ? (JSON.parse(
@@ -353,6 +356,18 @@ export default function Checkout() {
         <div className="order-1 md:order-2">
           <div className="rounded-lg border bg-card p-6 shadow-sm">
             <h2 className="mb-6 text-xl font-semibold">Shipping Information</h2>
+
+            {searchParams.get("stripeError") === "true" && (
+              <div className="mb-6">
+                <Alert variant="destructive" className="relative">
+                  <AlertCircle className="h-4 w-4" />
+                  <AlertTitle>Payment Error</AlertTitle>
+                  <AlertDescription>
+                    There was a problem with your payment. Please try again.
+                  </AlertDescription>
+                </Alert>
+              </div>
+            )}
 
             <Form {...form}>
               <form

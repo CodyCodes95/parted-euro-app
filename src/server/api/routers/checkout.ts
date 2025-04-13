@@ -506,8 +506,8 @@ export const createStripeSession = async (input: StripeSessionRequest) => {
       line_items:
         stripeLineItems as Stripe.Checkout.SessionCreateParams.LineItem[],
       mode: "payment",
-      success_url: `${redirectURL}/orders/confirmation?orderId=${order?.id}`,
-      cancel_url: `${redirectURL}/checkout`,
+      success_url: `${redirectURL}/checkout/confirmation/${order?.id}`,
+      cancel_url: `${redirectURL}/checkout?stripeError=true`,
       metadata: {
         orderId: order?.id ?? "",
       },
