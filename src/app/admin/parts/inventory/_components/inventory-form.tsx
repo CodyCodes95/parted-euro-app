@@ -621,6 +621,9 @@ export function InventoryForm({
             void utils.inventory.getAll.invalidate();
             void utils.part.getAllPartDetails.invalidate();
             void utils.part.getById.invalidate({ partNo: newPart.partNo });
+            void utils.part.getImagesByPartNo.invalidate({
+              partNo: newPart.partNo,
+            });
           } else {
             setFormErrors("Failed to create part. Please try again.");
           }
@@ -712,6 +715,9 @@ export function InventoryForm({
           void utils.inventory.getAll.invalidate();
           if (values.partDetailsId) {
             void utils.part.getById.invalidate({
+              partNo: values.partDetailsId,
+            });
+            void utils.part.getImagesByPartNo.invalidate({
               partNo: values.partDetailsId,
             });
           }
