@@ -15,6 +15,8 @@ export default function InventoryPage() {
   const [isAddInventoryOpen, setIsAddInventoryOpen] = useState(false);
   const [isEditInventoryOpen, setIsEditInventoryOpen] = useState(false);
   const [isDeleteInventoryOpen, setIsDeleteInventoryOpen] = useState(false);
+  const [isDuplicateInventoryOpen, setIsDuplicateInventoryOpen] =
+    useState(false);
   const [selectedInventory, setSelectedInventory] =
     useState<AdminInventoryItem | null>(null);
 
@@ -40,9 +42,15 @@ export default function InventoryPage() {
     setIsDeleteInventoryOpen(true);
   };
 
+  const handleDuplicateInventory = (item: AdminInventoryItem) => {
+    setSelectedInventory(item);
+    setIsDuplicateInventoryOpen(true);
+  };
+
   const columns = getInventoryColumns({
     onEdit: handleEditInventory,
     onDelete: handleDeleteInventory,
+    onDuplicate: handleDuplicateInventory,
   });
 
   return (
@@ -76,6 +84,12 @@ export default function InventoryPage() {
             onOpenChange={setIsEditInventoryOpen}
             defaultValues={selectedInventory}
             isEditing
+          />
+          <InventoryForm
+            open={isDuplicateInventoryOpen}
+            onOpenChange={setIsDuplicateInventoryOpen}
+            defaultValues={selectedInventory}
+            isDuplicating
           />
           <DeleteInventoryDialog
             open={isDeleteInventoryOpen}

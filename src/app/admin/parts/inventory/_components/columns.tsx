@@ -1,7 +1,7 @@
 "use client";
 
 import { type ColumnDef } from "@tanstack/react-table";
-import { MoreHorizontal, Pencil, Trash } from "lucide-react";
+import { MoreHorizontal, Pencil, Trash, Copy } from "lucide-react";
 import { Button } from "~/components/ui/button";
 import {
   DropdownMenu,
@@ -16,11 +16,13 @@ import { DataTableColumnHeader } from "~/components/data-table/data-table-column
 interface InventoryColumnsProps {
   onEdit: (inventory: AdminInventoryItem) => void;
   onDelete: (inventory: AdminInventoryItem) => void;
+  onDuplicate: (inventory: AdminInventoryItem) => void;
 }
 
 export function getInventoryColumns({
   onEdit,
   onDelete,
+  onDuplicate,
 }: InventoryColumnsProps): ColumnDef<AdminInventoryItem>[] {
   return [
     {
@@ -101,6 +103,10 @@ export function getInventoryColumns({
               <DropdownMenuItem onClick={() => onEdit(inventory)}>
                 <Pencil className="mr-2 h-4 w-4" />
                 Edit
+              </DropdownMenuItem>
+              <DropdownMenuItem onClick={() => onDuplicate(inventory)}>
+                <Copy className="mr-2 h-4 w-4" />
+                Duplicate
               </DropdownMenuItem>
               <DropdownMenuItem
                 onClick={() => onDelete(inventory)}

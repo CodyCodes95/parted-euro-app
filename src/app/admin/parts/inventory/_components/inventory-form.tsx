@@ -173,6 +173,7 @@ interface InventoryFormProps {
   onOpenChange: (open: boolean) => void;
   defaultValues?: AdminInventoryItem;
   isEditing?: boolean;
+  isDuplicating?: boolean;
 }
 
 // Split the validation for better type safety
@@ -237,6 +238,7 @@ export function InventoryForm({
   onOpenChange,
   defaultValues,
   isEditing = false,
+  isDuplicating = false,
 }: InventoryFormProps) {
   const [isLocationModalOpen, setIsLocationModalOpen] = useState(false);
   const [newLocationName, setNewLocationName] = useState("");
@@ -291,7 +293,7 @@ export function InventoryForm({
   const form = useForm<FormValues>({
     resolver: zodResolver(formSchema),
     defaultValues: {
-      id: defaultValues?.id ?? undefined,
+      id: isEditing && !isDuplicating ? defaultValues?.id : undefined,
       partDetailsId: defaultValues?.partDetailsId ?? "",
       donorVin: defaultValues?.donorVin ?? null,
       inventoryLocationId: defaultValues?.inventoryLocationId ?? null,
@@ -473,20 +475,32 @@ export function InventoryForm({
     }
   }, [isNewPart]);
 
-  // Initialize images from default values
+  // Initialize images from default values (for duplicating, need to create new IDs)
   useEffect(() => {
     if (defaultValues?.images) {
-      setImages(
-        defaultValues.images.map((img) => ({
-          id: img.id,
-          url: img.url,
-          order: img.order,
-        })),
-      );
+      if (isDuplicating) {
+        // For duplicating, create new IDs while keeping other properties
+        setImages(
+          defaultValues.images.map((img) => ({
+            id: crypto.randomUUID(), // Generate new ID
+            url: img.url,
+            order: img.order,
+          })),
+        );
+      } else {
+        // For editing, keep existing IDs
+        setImages(
+          defaultValues.images.map((img) => ({
+            id: img.id,
+            url: img.url,
+            order: img.order,
+          })),
+        );
+      }
     } else {
       setImages([]);
     }
-  }, [defaultValues]);
+  }, [defaultValues, isDuplicating]);
 
   // Handle image upload completion
   const handleImageUpload = (results: { url: string }[]) => {
@@ -540,8 +554,26 @@ export function InventoryForm({
         order: index, // Update order based on current array position
       }));
 
-      // If it's a new part, create it first and get the partDetailsId
-      if (isNewPart) {
+      // For duplication, we need special handling - if any part details changed, create a new part
+      const needsNewPart =
+        isDuplicating &&
+        (values.partNo !== partDetails?.partNo ||
+          values.name !== partDetails?.name ||
+          values.alternatePartNumbers !== partDetails?.alternatePartNumbers ||
+          values.weight !== partDetails?.weight ||
+          values.length !== partDetails?.length ||
+          values.width !== partDetails?.width ||
+          values.height !== partDetails?.height ||
+          values.costPrice !== partDetails?.costPrice ||
+          JSON.stringify(selectedCars) !==
+            JSON.stringify(partDetails?.cars?.map((car) => car.id) ?? []) ||
+          JSON.stringify(selectedPartTypes) !==
+            JSON.stringify(
+              partDetails?.partTypes?.map((type) => type.id) ?? [],
+            ));
+
+      // If it's a new part or duplicating with changes, create a new part
+      if (isNewPart || needsNewPart) {
         const partData = {
           partNo: values.partNo ?? "",
           alternatePartNumbers: values.alternatePartNumbers ?? "",
@@ -570,7 +602,7 @@ export function InventoryForm({
               images: imagesWithOrder,
             };
 
-            if (isEditing && defaultValues) {
+            if (isEditing && !isDuplicating && defaultValues) {
               await updateInventoryMutation.mutateAsync({
                 id: defaultValues.id,
                 data: inventoryData,
@@ -615,7 +647,7 @@ export function InventoryForm({
               JSON.stringify(initialPartValues.partTypes));
 
         // If part details have changed, update the part
-        if (hasPartChanges && values.partDetailsId) {
+        if (hasPartChanges && values.partDetailsId && !isDuplicating) {
           try {
             await updatePartMutation.mutateAsync({
               partNo: values.partDetailsId,
@@ -645,7 +677,7 @@ export function InventoryForm({
 
         // Update or create inventory item
         try {
-          if (isEditing && defaultValues) {
+          if (isEditing && !isDuplicating && defaultValues) {
             const updateData: UpdateInventoryInput = {
               id: defaultValues.id,
               data: {
@@ -747,7 +779,11 @@ export function InventoryForm({
         <DialogContent className="max-h-[90vh] overflow-y-auto sm:max-w-[600px]">
           <DialogHeader>
             <DialogTitle>
-              {isEditing ? "Edit Inventory Item" : "Add New Inventory Item"}
+              {isEditing
+                ? "Edit Inventory Item"
+                : isDuplicating
+                  ? "Duplicate Inventory Item"
+                  : "Add New Inventory Item"}
             </DialogTitle>
           </DialogHeader>
           <Form {...form}>
@@ -1374,7 +1410,11 @@ export function InventoryForm({
                   {isSubmitting && (
                     <Loader2 className="mr-2 h-4 w-4 animate-spin" />
                   )}
-                  {isEditing ? "Update" : "Create"}
+                  {isEditing
+                    ? "Update"
+                    : isDuplicating
+                      ? "Create Duplicate"
+                      : "Create"}
                 </Button>
               </DialogFooter>
 
