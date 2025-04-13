@@ -10,7 +10,7 @@ export default function PartsLayout({
   children: React.ReactNode;
 }) {
   const pathname = usePathname();
-  const value = pathname.includes("/inventory") ? "inventory" : "parts";
+  const value = pathname.includes("/inventory") ? "inventory" : "data";
 
   return (
     <div className="space-y-6 p-6">
@@ -18,19 +18,19 @@ export default function PartsLayout({
         <h1 className="text-3xl font-bold">Parts Management</h1>
         <Tabs value={value} className="w-full">
           <TabsList className="mb-4">
-            <Link href="/admin/parts" passHref legacyBehavior>
-              <TabsTrigger value="parts" asChild>
-                <a className={value === "parts" ? "data-[state=active]" : ""}>
-                  Parts
-                </a>
-              </TabsTrigger>
-            </Link>
-            <Link href="/admin/parts/inventory" passHref legacyBehavior>
+            <Link prefetch={true} href="/admin/parts/inventory">
               <TabsTrigger value="inventory" asChild>
                 <a
                   className={value === "inventory" ? "data-[state=active]" : ""}
                 >
                   Inventory
+                </a>
+              </TabsTrigger>
+            </Link>
+            <Link prefetch={true} href="/admin/parts/data">
+              <TabsTrigger value="data" asChild>
+                <a className={value === "data" ? "data-[state=active]" : ""}>
+                  Parts
                 </a>
               </TabsTrigger>
             </Link>

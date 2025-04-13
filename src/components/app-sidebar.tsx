@@ -56,15 +56,9 @@ export function AppSidebar({
     },
     {
       title: "Parts",
-      url: "/admin/parts",
+      url: "/admin/parts/inventory",
       icon: Package,
       isActive: pathname.startsWith("/admin/parts"),
-    },
-    {
-      title: "Inventory",
-      url: "/admin/inventory",
-      icon: Boxes,
-      isActive: pathname.startsWith("/admin/inventory"),
     },
     {
       title: "Donors",
