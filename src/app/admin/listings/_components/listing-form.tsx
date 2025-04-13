@@ -40,7 +40,6 @@ import {
   Check,
   ChevronsUpDown,
 } from "lucide-react";
-import { type ListingItem } from "../page";
 import { AspectRatio } from "~/components/ui/aspect-ratio";
 import { cn } from "~/lib/utils";
 import {
@@ -76,6 +75,7 @@ import {
   PopoverContent,
   PopoverTrigger,
 } from "~/components/ui/popover";
+import { AdminListingsItem } from "~/trpc/shared";
 
 // Define image item type for DnD
 type ImageItem = {
@@ -138,7 +138,7 @@ const SortableImage = ({
 interface ListingFormProps {
   open: boolean;
   onOpenChange: (open: boolean) => void;
-  defaultValues?: ListingItem;
+  defaultValues?: AdminListingsItem;
   isEditing?: boolean;
 }
 
