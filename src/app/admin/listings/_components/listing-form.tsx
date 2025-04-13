@@ -38,7 +38,6 @@ import {
   Upload,
   Image as ImageIcon,
   Check,
-  ChevronsUpDown,
 } from "lucide-react";
 import { AspectRatio } from "~/components/ui/aspect-ratio";
 import { cn } from "~/lib/utils";
@@ -62,21 +61,12 @@ import { CSS } from "@dnd-kit/utilities";
 import { restrictToVerticalAxis } from "@dnd-kit/modifiers";
 import { UploadButton, UploadDropzone } from "~/components/UploadThing";
 import { Badge } from "~/components/ui/badge";
-import {
-  Command,
-  CommandEmpty,
-  CommandGroup,
-  CommandInput,
-  CommandItem,
-  CommandList,
-} from "~/components/ui/command";
-import {
-  Popover,
-  PopoverContent,
-  PopoverTrigger,
-} from "~/components/ui/popover";
 import { type AdminListingsItem } from "~/trpc/shared";
 import Compressor from "compressorjs";
+import {
+  VirtualizedMultiSelect,
+  type VirtualizedOption,
+} from "~/components/ui/virtualized-multi-select";
 
 // Define image item type for DnD
 type ImageItem = {
@@ -171,7 +161,6 @@ export function ListingForm({
 }: ListingFormProps) {
   const [images, setImages] = useState<ImageItem[]>([]);
   const [selectedParts, setSelectedParts] = useState<string[]>([]);
-  const [partsOpen, setPartsOpen] = useState(false);
   const utils = api.useUtils();
 
   // DnD sensors for image reordering
@@ -333,23 +322,6 @@ export function ListingForm({
     });
   };
 
-  // Handle part selection
-  const handlePartSelect = (value: string) => {
-    setSelectedParts((current) => {
-      if (current.includes(value)) {
-        return current.filter((id) => id !== value);
-      } else {
-        return [...current, value];
-      }
-    });
-    form.setValue(
-      "parts",
-      selectedParts.includes(value)
-        ? selectedParts.filter((id) => id !== value)
-        : [...selectedParts, value],
-    );
-  };
-
   return (
     <Dialog open={open} onOpenChange={onOpenChange}>
       <DialogContent className="max-h-[90vh] overflow-y-auto sm:max-w-[600px]">
@@ -457,81 +429,18 @@ export function ListingForm({
               render={({ field }) => (
                 <FormItem className="flex flex-col">
                   <FormLabel>Parts*</FormLabel>
-                  <Popover modal={true} open={partsOpen} onOpenChange={setPartsOpen}>
-                    <PopoverTrigger asChild>
-                      <FormControl>
-                        <Button
-                          variant="outline"
-                          role="combobox"
-                          aria-expanded={partsOpen}
-                          className={cn(
-                            "justify-between",
-                            !selectedParts.length && "text-muted-foreground",
-                          )}
-                        >
-                          {selectedParts.length > 0
-                            ? `${selectedParts.length} part${selectedParts.length > 1 ? "s" : ""} selected`
-                            : "Select parts"}
-                          <ChevronsUpDown className="ml-2 h-4 w-4 shrink-0 opacity-50" />
-                        </Button>
-                      </FormControl>
-                    </PopoverTrigger>
-                    <PopoverContent className="w-[400px] p-0">
-                      <Command>
-                        <CommandInput placeholder="Search parts..." />
-                        <CommandEmpty>No part found.</CommandEmpty>
-                        <CommandGroup className="max-h-64 overflow-y-auto">
-                          <CommandList>
-                            {partOptions.map((part) => (
-                              <CommandItem
-                                keywords={[part.label]}
-                                key={part.value}
-                                value={part.value}
-                                onSelect={() => handlePartSelect(part.value)}
-                              >
-                                <Check
-                                  className={cn(
-                                    "mr-2 h-4 w-4",
-                                    selectedParts.includes(part.value)
-                                      ? "opacity-100"
-                                      : "opacity-0",
-                                  )}
-                                />
-                                {part.label}
-                              </CommandItem>
-                            ))}
-                          </CommandList>
-                        </CommandGroup>
-                      </Command>
-                    </PopoverContent>
-                  </Popover>
-                  {selectedParts.length > 0 && (
-                    <div className="relative mt-1 flex max-h-40 flex-wrap gap-1 overflow-y-auto border p-2">
-                      {selectedParts.map((id) => {
-                        const part = partOptions.find((p) => p.value === id);
-                        return (
-                          part && (
-                            <Badge
-                              key={id}
-                              variant="secondary"
-                              className="flex items-center gap-1"
-                            >
-                              {part.label}
-                              <Button
-                                type="button"
-                                variant="ghost"
-                                className="h-4 w-4 p-0 hover:bg-transparent"
-                                onClick={() => handlePartSelect(id)}
-                              >
-                                <span className="sr-only">Remove</span>
-                                <span className="text-xs">×</span>
-                              </Button>
-                            </Badge>
-                          )
-                        );
-                      })}
-                    </div>
-                  )}
+                  <VirtualizedMultiSelect
+                    options={partOptions}
+                    value={selectedParts}
+                    onChange={(value) => {
+                      setSelectedParts(value);
+                      form.setValue("parts", value);
+                    }}
+                    placeholder="Select parts"
+                    searchPlaceholder="Search parts..."
+                    height="300px"
+                    disabled={isSubmitting}
+                  />
                   <FormMessage />
                 </FormItem>
               )}
