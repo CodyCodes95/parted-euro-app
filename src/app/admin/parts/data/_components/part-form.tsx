@@ -40,6 +40,7 @@ import { Check, ChevronsUpDown, Loader2 } from "lucide-react";
 import { Badge } from "~/components/ui/badge";
 import { cn } from "~/lib/utils";
 import { type Part } from "./columns";
+import { FilterableCarSelect } from "~/components/ui/filterable-car-select";
 
 // Schema for form validation
 const formSchema = z.object({
@@ -378,85 +379,19 @@ export function PartForm({
               render={({ field }) => (
                 <FormItem className="flex flex-col">
                   <FormLabel>Compatible Cars</FormLabel>
-                  <Popover
-                    modal={true}
-                    open={carsOpen}
-                    onOpenChange={setCarsOpen}
-                  >
-                    <PopoverTrigger asChild>
-                      <FormControl>
-                        <Button
-                          variant="outline"
-                          role="combobox"
-                          aria-expanded={carsOpen}
-                          className={cn(
-                            "justify-between",
-                            !selectedCars.length && "text-muted-foreground",
-                          )}
-                        >
-                          {selectedCars.length > 0
-                            ? `${selectedCars.length} car${selectedCars.length > 1 ? "s" : ""} selected`
-                            : "Select cars"}
-                          <ChevronsUpDown className="ml-2 h-4 w-4 shrink-0 opacity-50" />
-                        </Button>
-                      </FormControl>
-                    </PopoverTrigger>
-                    <PopoverContent className="w-[400px] p-0">
-                      <Command>
-                        <CommandInput placeholder="Search cars..." />
-                        <CommandEmpty>No car found.</CommandEmpty>
-                        <CommandGroup className="relative max-h-64 overflow-y-auto">
-                          <CommandList>
-                            {carOptions.map((car) => (
-                              <CommandItem
-                                keywords={[car.label]}
-                                key={car.value}
-                                value={car.value}
-                                onSelect={() => handleCarSelect(car.value)}
-                              >
-                                <Check
-                                  className={cn(
-                                    "mr-2 h-4 w-4",
-                                    selectedCars.includes(car.value)
-                                      ? "opacity-100"
-                                      : "opacity-0",
-                                  )}
-                                />
-                                {car.label}
-                              </CommandItem>
-                            ))}
-                          </CommandList>
-                        </CommandGroup>
-                      </Command>
-                    </PopoverContent>
-                  </Popover>
-                  {selectedCars.length > 0 && (
-                    <div className="mt-1 relative flex max-h-40 flex-wrap gap-1 overflow-y-auto border p-2">
-                      {selectedCars.map((id) => {
-                        const car = carOptions.find((c) => c.value === id);
-                        return (
-                          car && (
-                            <Badge
-                              key={id}
-                              variant="secondary"
-                              className="flex items-center gap-1"
-                            >
-                              {car.label}
-                              <Button
-                                type="button"
-                                variant="ghost"
-                                className="h-4 w-4 p-0 hover:bg-transparent"
-                                onClick={() => handleCarSelect(id)}
-                              >
-                                <span className="sr-only">Remove</span>
-                                <span className="text-xs">×</span>
-                              </Button>
-                            </Badge>
-                          )
-                        );
-                      })}
-                    </div>
-                  )}
+                  <FormControl>
+                    <FilterableCarSelect
+                      options={carOptions}
+                      value={selectedCars}
+                      onChange={(values) => {
+                        setSelectedCars(values);
+                        form.setValue("cars", values);
+                      }}
+                      placeholder="Select cars"
+                      searchPlaceholder="Search cars..."
+                      height="300px"
+                    />
+                  </FormControl>
                   <FormMessage />
                 </FormItem>
               )}

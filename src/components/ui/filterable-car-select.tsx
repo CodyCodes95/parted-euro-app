@@ -1,5 +1,4 @@
 "use client";
-
 import * as React from "react";
 import { Button } from "~/components/ui/button";
 import {
@@ -68,8 +67,8 @@ export function FilterableCarSelect({
 
   // Filters
   const [seriesFilter, setSeriesFilter] = React.useState<string>("all");
-  const [generationFilter, setGenerationFilter] = React.useState<string>("");
-  const [modelFilter, setModelFilter] = React.useState<string>("");
+  const [generationFilter, setGenerationFilter] = React.useState<string>("all");
+  const [modelFilter, setModelFilter] = React.useState<string>("all");
 
   // Extract unique filter values
   const uniqueSeries = React.useMemo(() => {
