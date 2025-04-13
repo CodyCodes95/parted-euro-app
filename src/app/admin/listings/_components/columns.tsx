@@ -101,15 +101,15 @@ export function getListingColumns({
         </span>
       ),
     },
-    {
-      accessorKey: "quantity",
-      header: "Quantity",
-      cell: ({ row }) => {
-        const parts = row.original.parts;
-        const totalQuantity = parts.reduce((sum, part) => sum + 1, 0);
-        return totalQuantity;
-      },
-    },
+    // {
+    //   accessorKey: "quantity",
+    //   header: "Quantity",
+    //   cell: ({ row }) => {
+    //     const parts = row.original.parts;
+    //     const totalQuantity = parts.reduce((sum, part) => sum + 1, 0);
+    //     return totalQuantity;
+    //   },
+    // },
     {
       accessorKey: "createdAt",
       header: ({ column }) => (
@@ -122,7 +122,9 @@ export function getListingColumns({
     },
     {
       accessorKey: "listedOnEbay",
-      header: "eBay",
+      header: ({ column }) => (
+        <DataTableColumnHeader column={column} title="eBay" />
+      ),
       cell: ({ row }) => {
         const isListed = row.original.listedOnEbay;
         return (
