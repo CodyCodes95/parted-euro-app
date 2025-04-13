@@ -382,14 +382,12 @@ export function InventoryForm({
   }, [selectedPartId, searchResults]);
 
   // Try to fetch part images if the API endpoint exists
-  const partImagesQuery = api.part.getImagesByPartNo
-    ? api.part.getImagesByPartNo.useQuery(
-        { partNo: selectedPartId ?? "" },
-        {
-          enabled: !!selectedPartId && !isNewPart,
-        },
-      )
-    : { data: undefined };
+  const partImagesQuery = api.part.getImagesByPartNo.useQuery(
+    { partNo: selectedPartId ?? "" },
+    {
+      enabled: !!selectedPartId && !isNewPart,
+    },
+  );
 
   const partImages = partImagesQuery.data ?? [];
 
