@@ -75,6 +75,14 @@ type ImageItem = {
   order: number;
 };
 
+// Add an interface for part images
+interface PartImage {
+  id: string;
+  url: string;
+  order: number;
+  partNo: string | null;
+}
+
 // Sortable image component
 const SortableImage = ({
   image,
@@ -161,6 +169,7 @@ export function ListingForm({
 }: ListingFormProps) {
   const [images, setImages] = useState<ImageItem[]>([]);
   const [selectedParts, setSelectedParts] = useState<string[]>([]);
+  const [partImages, setPartImages] = useState<PartImage[]>([]);
   const utils = api.useUtils();
 
   // DnD sensors for image reordering
@@ -174,6 +183,53 @@ export function ListingForm({
   // Fetch options for part selection
   const { data: partOptions = [] } = api.inventory.getAllForSelect.useQuery();
 
+  // Fetch images for selected inventory parts
+  useEffect(() => {
+    if (selectedParts.length === 0) {
+      setPartImages([]);
+      return;
+    }
+
+    const fetchInventoryImages = async () => {
+      try {
+        let allImages: PartImage[] = [];
+
+        // Fetch each inventory item's images
+        for (const partId of selectedParts) {
+          try {
+            // Get inventory item details including images
+            const inventoryItem = await utils.inventory.getById.fetch({
+              id: partId,
+            });
+
+            if (inventoryItem?.images && inventoryItem.images.length > 0) {
+              // Convert to the format we need
+              const images = inventoryItem.images.map((img) => ({
+                id: img.id,
+                url: img.url,
+                order: img.order,
+                partNo: inventoryItem.partDetailsId,
+              }));
+
+              allImages = [...allImages, ...images];
+            }
+          } catch (error) {
+            console.error(
+              `Error fetching images for inventory item ${partId}:`,
+              error,
+            );
+          }
+        }
+
+        setPartImages(allImages);
+      } catch (error) {
+        console.error("Error fetching inventory images:", error);
+      }
+    };
+
+    void fetchInventoryImages();
+  }, [selectedParts, utils.inventory.getById]);
+
   const form = useForm<FormValues>({
     resolver: zodResolver(formSchema),
     defaultValues: {
@@ -186,6 +242,19 @@ export function ListingForm({
       images: defaultValues?.images ?? [],
     },
   });
+
+  // Watch for changes to the parts field
+  useEffect(() => {
+    const subscription = form.watch((value, { name }) => {
+      if (name === "parts" && value.parts) {
+        const parts = value.parts.filter(
+          (part): part is string => part !== undefined,
+        );
+        setSelectedParts(parts);
+      }
+    });
+    return () => subscription.unsubscribe();
+  }, [form]);
 
   // Initialize images and parts from default values
   useEffect(() => {
@@ -501,6 +570,85 @@ export function ListingForm({
                     className="ut-label:text-lg ut-allowed-content:text-muted-foreground ut-upload-icon:text-muted-foreground rounded-lg border-2 border-dashed border-muted-foreground/25 p-4 transition-all hover:border-muted-foreground/50"
                   />
                 </div>
+
+                {partImages.length > 0 && (
+                  <div className="mb-4 space-y-2">
+                    <div className="flex items-center justify-between">
+                      <div className="text-sm font-medium">
+                        {partImages.length} image
+                        {partImages.length !== 1 ? "s" : ""} available from
+                        selected parts
+                      </div>
+                      <Button
+                        type="button"
+                        size="sm"
+                        variant="outline"
+                        onClick={() => {
+                          // Add all part images that aren't already in selection
+                          const newImages = partImages
+                            .filter(
+                              (img) =>
+                                !images.some(
+                                  (existing) => existing.id === img.id,
+                                ),
+                            )
+                            .map((img, index) => ({
+                              id: img.id,
+                              url: img.url,
+                              order: images.length + index,
+                            }));
+
+                          setImages((prev) => [...prev, ...newImages]);
+                        }}
+                      >
+                        Use all images
+                      </Button>
+                    </div>
+                    <div className="grid grid-cols-4 gap-2">
+                      {partImages.map((image) => (
+                        <div
+                          key={image.id}
+                          className="group relative cursor-pointer overflow-hidden rounded-md border"
+                          onClick={() => {
+                            // Check if this image is already in the selection
+                            const isAlreadyAdded = images.some(
+                              (img) => img.id === image.id,
+                            );
+
+                            if (!isAlreadyAdded) {
+                              setImages((prev) => [
+                                ...prev,
+                                {
+                                  id: image.id,
+                                  url: image.url,
+                                  order: images.length,
+                                },
+                              ]);
+                              toast.success("Image added to selection");
+                            } else {
+                              toast.info("Image already in selection");
+                            }
+                          }}
+                        >
+                          <AspectRatio ratio={1}>
+                            <img
+                              src={image.url}
+                              alt="Part"
+                              className="h-full w-full object-cover transition-opacity group-hover:opacity-80"
+                            />
+                            <div className="absolute inset-0 flex items-center justify-center bg-black/40 opacity-0 transition-opacity group-hover:opacity-100">
+                              <Button variant="secondary" size="sm">
+                                {images.some((img) => img.id === image.id)
+                                  ? "Already added"
+                                  : "Add to selection"}
+                              </Button>
+                            </div>
+                          </AspectRatio>
+                        </div>
+                      ))}
+                    </div>
+                  </div>
+                )}
 
                 <div className="my-4 border-t pt-4">
                   <div className="mb-2 flex items-center">

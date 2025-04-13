@@ -93,7 +93,12 @@ export default function ListingsAdminPage() {
 
       {!isLoading && <DataTable columns={columns} data={listings} />}
 
-      <ListingForm open={isAddListingOpen} onOpenChange={setIsAddListingOpen} />
+      {isAddListingOpen && (
+        <ListingForm
+          open={isAddListingOpen}
+          onOpenChange={setIsAddListingOpen}
+        />
+      )}
 
       {selectedListing && (
         <>
