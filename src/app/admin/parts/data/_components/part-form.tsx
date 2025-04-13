@@ -459,7 +459,7 @@ export function PartForm({
                     </PopoverContent>
                   </Popover>
                   {selectedPartTypes.length > 0 && (
-                    <div className="mt-1 relative flex flex-wrap gap-1">
+                    <div className="relative mt-1 flex flex-wrap gap-1">
                       {selectedPartTypes.map((id) => {
                         const type = partTypeOptions.find(
                           (t) => t.value === id,
