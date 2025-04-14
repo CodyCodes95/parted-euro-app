@@ -35,9 +35,7 @@ import {
   Loader2,
   X,
   GripVertical,
-  Upload,
   Image as ImageIcon,
-  Check,
 } from "lucide-react";
 import { AspectRatio } from "~/components/ui/aspect-ratio";
 import { cn } from "~/lib/utils";
