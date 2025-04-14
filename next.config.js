@@ -2,6 +2,7 @@
  * Run `build` or `dev` with `SKIP_ENV_VALIDATION` to skip env validation. This is especially useful
  * for Docker builds.
  */
+import { withSentryConfig } from "@sentry/nextjs";
 import "./src/env.js";
 
 /** @type {import("next").NextConfig} */
@@ -20,13 +21,7 @@ const config = {
   },
 };
 
-export default config;
-
-// Injected content via Sentry wizard below
-
-const { withSentryConfig } = require("@sentry/nextjs");
-
-module.exports = withSentryConfig(module.exports, {
+export default withSentryConfig(config, {
   // For all available options, see:
   // https://www.npmjs.com/package/@sentry/webpack-plugin#options
 
