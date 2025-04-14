@@ -59,6 +59,9 @@ export function getListingColumns({
     {
       accessorKey: "parts",
       header: "Part Numbers",
+      accessorFn: (row) => {
+        return row.parts.map((part) => part.partDetails.partNo).join(", ");
+      },
       cell: ({ row }) => {
         const parts = row.original.parts;
         if (parts.length === 0)
