@@ -475,32 +475,65 @@ export function InventoryForm({
     }
   }, [isNewPart]);
 
-  // Initialize images from default values (for duplicating, need to create new IDs)
+  // Reset form and state when dialog opens or defaultValues change
   useEffect(() => {
-    if (defaultValues?.images) {
-      if (isDuplicating) {
-        // For duplicating, create new IDs while keeping other properties
-        setImages(
-          defaultValues.images.map((img) => ({
-            id: crypto.randomUUID(), // Generate new ID
-            url: img.url,
-            order: img.order,
-          })),
-        );
-      } else {
-        // For editing, keep existing IDs
-        setImages(
-          defaultValues.images.map((img) => ({
-            id: img.id,
-            url: img.url,
-            order: img.order,
-          })),
-        );
-      }
-    } else {
+    if (open) {
+      // Reset state variables
+      setIsNewPart(false);
+      setSelectedCars([]);
+      setSelectedPartTypes([]);
+      setSearchTerm("");
       setImages([]);
+      setInitialPartValues(null);
+      setFormErrors(null);
+      setAccordionValue(["inventory-info"]);
+
+      // Reset form with new default values
+      form.reset({
+        id: isEditing && !isDuplicating ? defaultValues?.id : undefined,
+        partDetailsId: defaultValues?.partDetailsId ?? "",
+        donorVin: defaultValues?.donorVin ?? null,
+        inventoryLocationId: defaultValues?.inventoryLocationId ?? null,
+        variant: defaultValues?.variant ?? null,
+        quantity: defaultValues?.quantity ?? 1,
+        isNewPart: false,
+        partNo: "",
+        alternatePartNumbers: "",
+        name: "",
+        weight: 0,
+        length: 0,
+        width: 0,
+        height: 0,
+        costPrice: 0,
+        cars: [],
+        partTypes: [],
+        images: [],
+      });
+
+      // Initialize images from default values
+      if (defaultValues?.images) {
+        if (isDuplicating) {
+          // For duplicating, create new IDs while keeping other properties
+          setImages(
+            defaultValues.images.map((img) => ({
+              id: crypto.randomUUID(), // Generate new ID
+              url: img.url,
+              order: img.order,
+            })),
+          );
+        } else {
+          // For editing, keep existing IDs
+          setImages(
+            defaultValues.images.map((img) => ({
+              id: img.id,
+              url: img.url,
+              order: img.order,
+            })),
+          );
+        }
+      }
     }
-  }, [defaultValues, isDuplicating]);
+  }, [open, defaultValues, isEditing, isDuplicating, form]);
 
   // Handle image upload completion
   const handleImageUpload = (
