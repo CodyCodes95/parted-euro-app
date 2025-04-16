@@ -875,7 +875,7 @@ export function InventoryForm({
                     </Button>
                   </PopoverTrigger>
                   <PopoverContent className="w-[400px] p-0">
-                    <Command>
+                    <Command shouldFilter={false}>
                       <CommandInput
                         placeholder="Search parts by number or name..."
                         value={searchTerm}
