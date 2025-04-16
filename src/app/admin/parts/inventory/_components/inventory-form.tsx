@@ -88,6 +88,7 @@ import { CSS } from "@dnd-kit/utilities";
 import { restrictToVerticalAxis } from "@dnd-kit/modifiers";
 import Compressor from "compressorjs";
 import { FilterableCarSelect } from "~/components/ui/filterable-car-select";
+import { VirtualizedCombobox } from "~/components/ui/virtualized-combobox";
 
 // Define image item type for DnD
 type ImageItem = {
@@ -1176,27 +1177,19 @@ export function InventoryForm({
                       render={({ field }) => (
                         <FormItem>
                           <FormLabel>Donor Car</FormLabel>
-                          <Select
-                            onValueChange={field.onChange}
-                            defaultValue={field.value ?? "none"}
-                          >
-                            <FormControl>
-                              <SelectTrigger>
-                                <SelectValue placeholder="Select a donor car (optional)" />
-                              </SelectTrigger>
-                            </FormControl>
-                            <SelectContent>
-                              <SelectItem value="none">None</SelectItem>
-                              {donorOptions.map((donor) => (
-                                <SelectItem
-                                  key={donor.value}
-                                  value={donor.value}
-                                >
-                                  {donor.label}
-                                </SelectItem>
-                              ))}
-                            </SelectContent>
-                          </Select>
+                          <VirtualizedCombobox
+                            options={[
+                              { value: "none", label: "None" },
+                              ...donorOptions,
+                            ]}
+                            value={field.value ?? "none"}
+                            onChange={(value) =>
+                              field.onChange(value === "none" ? null : value)
+                            }
+                            placeholder="Select a donor car (optional)"
+                            searchPlaceholder="Search donor cars..."
+                            disabled={isSubmitting}
+                          />
                           <FormMessage />
                         </FormItem>
                       )}
@@ -1209,34 +1202,26 @@ export function InventoryForm({
                         <FormItem>
                           <FormLabel>Location</FormLabel>
                           <div className="flex gap-2">
-                            <Select
-                              onValueChange={field.onChange}
-                              defaultValue={field.value ?? "none"}
-                            >
-                              <FormControl>
-                                <SelectTrigger className="w-full">
-                                  <SelectValue placeholder="Select a location (optional)" />
-                                </SelectTrigger>
-                              </FormControl>
-                              <SelectContent>
-                                <SelectItem value="none">
-                                  Not assigned
-                                </SelectItem>
-                                {locationOptions.map((location) => (
-                                  <SelectItem
-                                    key={location.value}
-                                    value={location.value}
-                                  >
-                                    {location.label}
-                                  </SelectItem>
-                                ))}
-                              </SelectContent>
-                            </Select>
+                            <VirtualizedCombobox
+                              options={[
+                                { value: "none", label: "Not assigned" },
+                                ...locationOptions,
+                              ]}
+                              value={field.value ?? "none"}
+                              onChange={(value) =>
+                                field.onChange(value === "none" ? null : value)
+                              }
+                              placeholder="Select a location (optional)"
+                              searchPlaceholder="Search locations..."
+                              disabled={isSubmitting}
+                              triggerClassName="w-full"
+                            />
                             <Button
                               type="button"
                               variant="outline"
                               size="icon"
                               onClick={handleAddNewLocation}
+                              disabled={isSubmitting}
                             >
                               <Plus className="h-4 w-4" />
                             </Button>
