@@ -31,12 +31,7 @@ import {
 import { Input } from "~/components/ui/input";
 import { Button } from "~/components/ui/button";
 import { toast } from "sonner";
-import {
-  Loader2,
-  X,
-  GripVertical,
-  Image as ImageIcon,
-} from "lucide-react";
+import { Loader2, X, GripVertical, Image as ImageIcon } from "lucide-react";
 import { AspectRatio } from "~/components/ui/aspect-ratio";
 import { cn } from "~/lib/utils";
 import {
@@ -137,6 +132,11 @@ interface ListingFormProps {
   onOpenChange: (open: boolean) => void;
   defaultValues?: AdminListingsItem;
   isEditing?: boolean;
+  initialPart?: {
+    id: string;
+    name?: string;
+    partNo?: string;
+  };
 }
 
 const formSchema = z.object({
@@ -164,6 +164,7 @@ export function ListingForm({
   onOpenChange,
   defaultValues,
   isEditing = false,
+  initialPart,
 }: ListingFormProps) {
   const [images, setImages] = useState<ImageItem[]>([]);
   const [selectedParts, setSelectedParts] = useState<string[]>([]);
@@ -180,6 +181,36 @@ export function ListingForm({
 
   // Fetch options for part selection
   const { data: partOptions = [] } = api.inventory.getAllForSelect.useQuery();
+
+  // When initialPart is provided, fetch its images immediately
+  useEffect(() => {
+    if (initialPart?.id && !defaultValues) {
+      const fetchInitialPartImages = async () => {
+        try {
+          const inventoryItem = await utils.inventory.getById.fetch({
+            id: initialPart.id,
+          });
+
+          if (inventoryItem?.images && inventoryItem.images.length > 0) {
+            // Add these images to our images state
+            const initialImages = inventoryItem.images.map((img) => ({
+              id: img.id,
+              url: img.url,
+              order: img.order,
+            }));
+            setImages(initialImages);
+          }
+        } catch (error) {
+          console.error(
+            `Error fetching images for initial part ${initialPart.id}:`,
+            error,
+          );
+        }
+      };
+
+      void fetchInitialPartImages();
+    }
+  }, [initialPart, defaultValues, utils.inventory.getById]);
 
   // Fetch images for selected inventory parts
   useEffect(() => {
@@ -280,6 +311,18 @@ export function ListingForm({
       if (defaultValues.parts) {
         setSelectedParts(defaultValues.parts.map((part) => part.id));
       }
+    } else if (initialPart) {
+      // If an initial part is provided but no default values, pre-populate with the part
+      form.reset({
+        id: undefined,
+        title: initialPart.name ?? "",
+        description: "",
+        condition: "",
+        price: 0,
+        parts: [initialPart.id],
+        images: [],
+      });
+      setSelectedParts([initialPart.id]);
     } else {
       form.reset({
         id: undefined,
@@ -293,7 +336,7 @@ export function ListingForm({
       setSelectedParts([]);
       setImages([]);
     }
-  }, [defaultValues, form]);
+  }, [defaultValues, initialPart, form]);
 
   // Mutations for create and update
   const createMutation = api.listings.create.useMutation({

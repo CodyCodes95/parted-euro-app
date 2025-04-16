@@ -10,6 +10,7 @@ import { keepPreviousData } from "@tanstack/react-query";
 import { Button } from "~/components/ui/button";
 import { Plus } from "lucide-react";
 import { type AdminInventoryItem } from "~/trpc/shared";
+import { ListingForm } from "~/app/admin/listings/_components/listing-form";
 
 export default function InventoryPage() {
   const [isAddInventoryOpen, setIsAddInventoryOpen] = useState(false);
@@ -17,6 +18,7 @@ export default function InventoryPage() {
   const [isDeleteInventoryOpen, setIsDeleteInventoryOpen] = useState(false);
   const [isDuplicateInventoryOpen, setIsDuplicateInventoryOpen] =
     useState(false);
+  const [isCreateListingOpen, setIsCreateListingOpen] = useState(false);
   const [selectedInventory, setSelectedInventory] =
     useState<AdminInventoryItem | null>(null);
 
@@ -47,10 +49,16 @@ export default function InventoryPage() {
     setIsDuplicateInventoryOpen(true);
   };
 
+  const handleCreateListing = (item: AdminInventoryItem) => {
+    setSelectedInventory(item);
+    setIsCreateListingOpen(true);
+  };
+
   const columns = getInventoryColumns({
     onEdit: handleEditInventory,
     onDelete: handleDeleteInventory,
     onDuplicate: handleDuplicateInventory,
+    onCreateListing: handleCreateListing,
   });
 
   return (
@@ -96,6 +104,17 @@ export default function InventoryPage() {
             onOpenChange={setIsDeleteInventoryOpen}
             inventory={selectedInventory}
           />
+          {isCreateListingOpen && (
+            <ListingForm
+              open={isCreateListingOpen}
+              onOpenChange={setIsCreateListingOpen}
+              initialPart={{
+                id: selectedInventory.id,
+                name: selectedInventory.partDetails?.name,
+                partNo: selectedInventory.partDetails?.partNo,
+              }}
+            />
+          )}
         </>
       )}
     </div>
