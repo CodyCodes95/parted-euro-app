@@ -135,8 +135,8 @@ export function PartForm({
   }, [defaultValues, form, open]);
 
   const createMutation = api.part.create.useMutation({
-    onSuccess: () => {
-      toast.success("Part created successfully");
+    onSuccess: (part) => {
+      toast.success(`Part ${part.partNo} created successfully`);
       form.reset();
       setSelectedCars([]);
       setSelectedPartTypes([]);
@@ -149,8 +149,8 @@ export function PartForm({
   });
 
   const updateMutation = api.part.update.useMutation({
-    onSuccess: () => {
-      toast.success("Part updated successfully");
+    onSuccess: (part) => {
+      toast.success(`Part ${part.partNo} updated successfully`);
       onOpenChange(false);
       void utils.part.getAll.invalidate();
     },

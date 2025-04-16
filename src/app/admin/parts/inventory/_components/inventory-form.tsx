@@ -627,7 +627,7 @@ export function InventoryForm({
 
         try {
           const newPart = await createPartMutation.mutateAsync(partData);
-          toast.success("Part created successfully");
+          toast.success(`Part ${values.partNo} created successfully`);
 
           // After creating the part, proceed with inventory creation using the new partDetailsId
           if (newPart && newPart.partNo) {
@@ -705,7 +705,7 @@ export function InventoryForm({
                 partTypes: selectedPartTypes,
               },
             });
-            toast.success("Part updated successfully");
+            toast.success(`Part ${values.partNo} updated successfully`);
           } catch (error) {
             console.error("Error updating part:", error);
             setFormErrors(
