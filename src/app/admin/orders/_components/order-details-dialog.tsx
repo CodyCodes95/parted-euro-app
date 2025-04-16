@@ -17,8 +17,6 @@ import {
   TableRow,
 } from "~/components/ui/table";
 import { Badge } from "~/components/ui/badge";
-import { formatCurrency } from "~/lib/formatters";
-import { formatPhoneNumber } from "~/lib/formatters";
 import { type AdminOrdersItem } from "~/trpc/shared";
 
 // Format currency
@@ -40,11 +38,11 @@ const getStatusBadge = (status: string) => {
     case "processing":
       return "default";
     case "shipped":
-      return "success";
+      return "secondary";
     case "ready for pickup":
-      return "success";
+      return "secondary";
     case "completed":
-      return "success";
+      return "secondary";
     case "cancelled":
       return "destructive";
     default:
@@ -145,7 +143,7 @@ export function OrderDetailsDialog({
                   <TableRow key={item.id}>
                     <TableCell className="font-medium">
                       <div className="flex items-center gap-3">
-                        {item.listing.images && item.listing.images[0] && (
+                        {item.listing.images?.[0] && (
                           <img
                             src={item.listing.images[0].url}
                             alt={item.listing.title}
@@ -155,7 +153,10 @@ export function OrderDetailsDialog({
                         <div>
                           {item.listing.title}
                           <div className="max-w-[300px] truncate text-xs text-muted-foreground">
-                            ID: {item.listing.id}
+                            Part #:{" "}
+                            {item.listing.parts
+                              .map((p) => p.partDetails.partNo)
+                              .join(",")}
                           </div>
                         </div>
                       </div>

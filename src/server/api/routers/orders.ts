@@ -55,7 +55,19 @@ export const ordersRouter = createTRPCRouter({
           include: {
             listing: {
               include: {
+                parts: {
+                  select: {
+                    partDetails: {
+                      select: {
+                        partNo: true
+                      }
+                    }
+                  }
+                },
                 images: {
+                  select: {
+                    url: true
+                  },
                   orderBy: {
                     order: "asc",
                   },
