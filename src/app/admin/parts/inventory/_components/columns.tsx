@@ -63,6 +63,12 @@ export function getInventoryColumns({
       cell: ({ row }) => row.original.donorVin ?? "",
     },
     {
+      accessorKey: "createdAt",
+      header: ({ column }) => (
+        <DataTableColumnHeader column={column} title="Date added" />
+      ),
+    },
+    {
       accessorKey: "status",
       header: ({ column }) => (
         <DataTableColumnHeader column={column} title="Status" />
