@@ -75,16 +75,26 @@ export const partRouter = createTRPCRouter({
   // Get all part types for multiselect
   getAllPartTypes: adminProcedure.query(async ({ ctx }) => {
     const partTypes = await ctx.db.partTypes.findMany({
+      where: {
+        NOT: {
+          parent: null,
+        },
+      },
       select: {
         id: true,
         name: true,
+        parent: {
+          select: {
+            name: true,
+          },
+        },
       },
       orderBy: { name: "asc" },
     });
 
     return partTypes.map((type) => ({
       value: type.id,
-      label: type.name,
+      label: `${type.parent?.name} - ${type.name}`,
     }));
   }),
 
