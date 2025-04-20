@@ -67,6 +67,10 @@ export function getInventoryColumns({
       header: ({ column }) => (
         <DataTableColumnHeader column={column} title="Date added" />
       ),
+      cell: ({ row }) => {
+        const date = new Date(row.original.createdAt);
+        return date.toLocaleDateString();
+      },
     },
     {
       accessorKey: "status",
