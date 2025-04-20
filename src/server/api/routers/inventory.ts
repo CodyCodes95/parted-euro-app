@@ -48,7 +48,7 @@ export const inventoryRouter = createTRPCRouter({
 
     return inventory.map((item) => ({
       value: item.id,
-      label: `${item.partDetails.name} (${item.partDetails.partNo})${
+      label: `${item.partDetails.name} - (${item.partDetails.partNo})${
         item.variant ? ` - ${item.variant}` : ""
       }`,
     }));

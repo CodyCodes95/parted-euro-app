@@ -545,6 +545,13 @@ export function ListingForm({
                     onChange={(value) => {
                       setSelectedParts(value);
                       form.setValue("parts", value);
+                      // set the name of the listing if its the first part
+                      if (value.length === 1) {
+                        form.setValue(
+                          "title",
+                          partOptions.find((x) => x.value === value[0]!)!.label.split("-")[0]!,
+                        )
+                      }
                     }}
                     placeholder="Select parts"
                     searchPlaceholder="Search parts..."
