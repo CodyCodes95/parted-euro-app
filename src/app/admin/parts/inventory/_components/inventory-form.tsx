@@ -22,13 +22,6 @@ import {
   FormMessage,
 } from "~/components/ui/form";
 import {
-  Select,
-  SelectContent,
-  SelectItem,
-  SelectTrigger,
-  SelectValue,
-} from "~/components/ui/select";
-import {
   Accordion,
   AccordionContent,
   AccordionItem,
@@ -803,7 +796,7 @@ export function InventoryForm({
     setIsNewPart(true);
     // Reset part fields
     form.setValue("partDetailsId", "");
-    form.setValue("partNo", "");
+    form.setValue("partNo", searchTerm);
     form.setValue("name", "");
     form.setValue("alternatePartNumbers", "");
     form.setValue("weight", 0);
