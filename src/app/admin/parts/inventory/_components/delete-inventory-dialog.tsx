@@ -36,11 +36,15 @@ export function DeleteInventoryDialog({
   const deleteMutation = api.inventory.delete.useMutation({
     onSuccess: () => {
       toast.success("Inventory item deleted successfully");
+      setIsDeleting(false);
       onOpenChange(false);
       void utils.inventory.getAll.invalidate();
     },
     onError: (error) => {
       toast.error(`Error deleting inventory item: ${error.message}`);
+      setIsDeleting(false);
+    },
+    onSettled: () => {
       setIsDeleting(false);
     },
   });
@@ -51,7 +55,14 @@ export function DeleteInventoryDialog({
   };
 
   return (
-    <AlertDialog open={open} onOpenChange={onOpenChange}>
+    <AlertDialog
+      open={open}
+      onOpenChange={(isOpen) => {
+        if (!isDeleting) {
+          onOpenChange(isOpen);
+        }
+      }}
+    >
       <AlertDialogContent>
         <AlertDialogHeader>
           <AlertDialogTitle>Are you absolutely sure?</AlertDialogTitle>

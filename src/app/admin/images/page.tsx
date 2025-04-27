@@ -39,7 +39,7 @@ type FormValues = z.infer<typeof formSchema>;
 export default function MobileUploadPage() {
   const [currentPartNo, setCurrentPartNo] = useState<string>("");
   const [uploadedImages, setUploadedImages] = useState<
-    { url: string; id: string }[]
+    { url: string; id: string; order: number }[]
   >([]);
   const [uploading, setUploading] = useState(false);
   const [uploadComplete, setUploadComplete] = useState(false);
@@ -71,9 +71,10 @@ export default function MobileUploadPage() {
 
   // Handle image upload completion
   const handleImageUpload = (results: { url: string }[]) => {
-    const newImages = results.map((result) => ({
+    const newImages = results.map((result, index) => ({
       url: result.url,
       id: crypto.randomUUID(),
+      order: index,
     }));
 
     setUploadedImages((prev) => [...prev, ...newImages]);

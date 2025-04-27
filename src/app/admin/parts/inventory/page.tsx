@@ -54,6 +54,13 @@ export default function InventoryPage() {
     setIsCreateListingOpen(true);
   };
 
+  const handleDeleteDialogClose = (open: boolean) => {
+    setIsDeleteInventoryOpen(open);
+    if (!open) {
+      setSelectedInventory(null);
+    }
+  };
+
   const columns = getInventoryColumns({
     onEdit: handleEditInventory,
     onDelete: handleDeleteInventory,
@@ -89,25 +96,34 @@ export default function InventoryPage() {
         <>
           <InventoryForm
             open={isEditInventoryOpen}
-            onOpenChange={setIsEditInventoryOpen}
+            onOpenChange={(open) => {
+              setIsEditInventoryOpen(open);
+              if (!open) setSelectedInventory(null);
+            }}
             defaultValues={selectedInventory}
             isEditing
           />
           <InventoryForm
             open={isDuplicateInventoryOpen}
-            onOpenChange={setIsDuplicateInventoryOpen}
+            onOpenChange={(open) => {
+              setIsDuplicateInventoryOpen(open);
+              if (!open) setSelectedInventory(null);
+            }}
             defaultValues={selectedInventory}
             isDuplicating
           />
           <DeleteInventoryDialog
             open={isDeleteInventoryOpen}
-            onOpenChange={setIsDeleteInventoryOpen}
+            onOpenChange={handleDeleteDialogClose}
             inventory={selectedInventory}
           />
           {isCreateListingOpen && (
             <ListingForm
               open={isCreateListingOpen}
-              onOpenChange={setIsCreateListingOpen}
+              onOpenChange={(open) => {
+                setIsCreateListingOpen(open);
+                if (!open) setSelectedInventory(null);
+              }}
               initialPart={{
                 id: selectedInventory.id,
                 name: selectedInventory.partDetails?.name,
