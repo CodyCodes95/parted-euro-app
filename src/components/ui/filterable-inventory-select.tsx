@@ -95,6 +95,17 @@ export function FilterableInventorySelect({
 
   const virtualOptions = virtualizer.getVirtualItems();
 
+  // Reset virtualizer when opening the popover or when filtered options change
+  React.useEffect(() => {
+    if (open) {
+      // Use a small timeout to ensure the DOM is ready
+      const timer = setTimeout(() => {
+        virtualizer.measure();
+      }, 0);
+      return () => clearTimeout(timer);
+    }
+  }, [open, virtualizer, filteredOptions.length]);
+
   const handleRemoveOption = (optionValue: string, e?: React.MouseEvent) => {
     e?.stopPropagation();
     onChange(value.filter((v) => v !== optionValue));
@@ -107,9 +118,20 @@ export function FilterableInventorySelect({
       .filter((option): option is InventoryOption => !!option);
   }, [value, options]);
 
+  const handleOpenChange = (newOpen: boolean) => {
+    setOpen(newOpen);
+    // Reset search and scrolling when opening
+    if (newOpen) {
+      setSearchQuery("");
+      if (parentRef.current) {
+        parentRef.current.scrollTop = 0;
+      }
+    }
+  };
+
   return (
     <div className="w-full">
-      <Popover open={open} onOpenChange={setOpen} modal={true}>
+      <Popover open={open} onOpenChange={handleOpenChange} modal={true}>
         <PopoverTrigger asChild>
           <Button
             variant="outline"
@@ -147,6 +169,8 @@ export function FilterableInventorySelect({
               style={{ height }}
               ref={parentRef}
               className="scrollbar-thin"
+              // Add a key to force re-render when the popover opens
+              key={open ? "open" : "closed"}
             >
               {filteredOptions.length === 0 && (
                 <CommandEmpty>No items match your search</CommandEmpty>
