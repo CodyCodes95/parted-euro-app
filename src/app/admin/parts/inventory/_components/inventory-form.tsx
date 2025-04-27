@@ -389,12 +389,13 @@ export function InventoryForm({
 
   // We need to fetch full part details when selecting a part
   // Let's use getById query instead
-  const { data: partDetails } = api.part.getById.useQuery(
-    { partNo: selectedPartId ?? "" },
-    {
-      enabled: !!selectedPartId && !isNewPart,
-    },
-  );
+  const { data: partDetails, refetch: refetchPartDetails } =
+    api.part.getById.useQuery(
+      { partNo: selectedPartId ?? "" },
+      {
+        enabled: !!selectedPartId && !isNewPart,
+      },
+    );
 
   // Modify the effect that populates part details to also save initial values
   useEffect(() => {
@@ -504,6 +505,11 @@ export function InventoryForm({
         images: [],
       });
 
+      // If this is an edit operation, trigger refetch of part details
+      if (isEditing && defaultValues?.partDetailsId) {
+        void refetchPartDetails();
+      }
+
       // Initialize images from default values
       if (defaultValues?.images) {
         if (isDuplicating) {
@@ -527,7 +533,7 @@ export function InventoryForm({
         }
       }
     }
-  }, [open, defaultValues, isEditing, isDuplicating, form]);
+  }, [open, defaultValues, isEditing, isDuplicating, form, refetchPartDetails]);
 
   // Handle image upload completion
   const handleImageUpload = (
