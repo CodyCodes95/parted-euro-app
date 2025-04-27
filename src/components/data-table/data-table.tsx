@@ -37,6 +37,9 @@ export function DataTable<TData, TValue>({
   data,
 }: DataTableProps<TData, TValue>) {
   const [sorting, setSorting] = React.useState<SortingState>([]);
+  const [columnFilters, setColumnFilters] = React.useState<ColumnFiltersState>(
+    [],
+  );
   const [globalFilter, setGlobalFilter] = useQueryState("search", {
     defaultValue: "",
   });
@@ -48,6 +51,7 @@ export function DataTable<TData, TValue>({
     data,
     columns,
     onSortingChange: setSorting,
+    onColumnFiltersChange: setColumnFilters,
     onGlobalFilterChange: (value) => void setGlobalFilter(value),
     getCoreRowModel: getCoreRowModel(),
     getPaginationRowModel: getPaginationRowModel(),
@@ -57,6 +61,7 @@ export function DataTable<TData, TValue>({
     onRowSelectionChange: setRowSelection,
     state: {
       sorting,
+      columnFilters,
       globalFilter: globalFilter || "",
       columnVisibility,
       rowSelection,
