@@ -60,6 +60,10 @@ import {
   VirtualizedMultiSelect,
   type VirtualizedOption,
 } from "~/components/ui/virtualized-multi-select";
+import {
+  FilterableInventorySelect,
+  type InventoryOption,
+} from "~/components/ui/filterable-inventory-select";
 
 // Define image item type for DnD
 type ImageItem = {
@@ -181,6 +185,9 @@ export function ListingForm({
 
   // Fetch options for part selection
   const { data: partOptions = [] } = api.inventory.getAllForSelect.useQuery();
+
+  // Type assertion to ensure partOptions matches the expected InventoryOption type
+  const inventoryOptions = partOptions as InventoryOption[];
 
   // When initialPart is provided, fetch its images immediately
   useEffect(() => {
@@ -539,18 +546,23 @@ export function ListingForm({
               render={({ field }) => (
                 <FormItem className="flex flex-col">
                   <FormLabel>Parts*</FormLabel>
-                  <VirtualizedMultiSelect
-                    options={partOptions}
+                  <FilterableInventorySelect
+                    options={inventoryOptions}
                     value={selectedParts}
                     onChange={(value) => {
                       setSelectedParts(value);
                       form.setValue("parts", value);
                       // set the name of the listing if its the first part
                       if (value.length === 1) {
-                        form.setValue(
-                          "title",
-                          partOptions.find((x) => x.value === value[0]!)!.label.split("-")[0]!,
-                        )
+                        const selectedPart = inventoryOptions.find(
+                          (x) => x.value === value[0],
+                        );
+                        if (selectedPart) {
+                          form.setValue(
+                            "title",
+                            selectedPart.label.split("-")[0]!.trim(),
+                          );
+                        }
                       }
                     }}
                     placeholder="Select parts"
