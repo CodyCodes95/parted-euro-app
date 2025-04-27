@@ -56,7 +56,7 @@ export const inventoryRouter = createTRPCRouter({
       label: `${item.partDetails.name} - (${item.partDetails.partNo})${
         item.variant ? ` - ${item.variant}` : ""
       }`,
-      isAssigned: !!item.listing.length
+      isAssigned: !!item.listing.length,
     }));
   }),
 

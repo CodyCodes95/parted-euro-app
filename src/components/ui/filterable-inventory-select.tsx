@@ -44,7 +44,7 @@ export function FilterableInventorySelect({
   onChange,
   placeholder = "Select inventory...",
   searchPlaceholder = "Search inventory...",
-  height = "250px",
+  height = "300px",
   disabled = false,
   triggerClassName,
 }: FilterableInventorySelectProps) {
@@ -90,7 +90,7 @@ export function FilterableInventorySelect({
   const virtualizer = useVirtualizer({
     count: filteredOptions.length,
     getScrollElement: () => parentRef.current,
-    estimateSize: () => 35,
+    estimateSize: () => 45, // Increased from 35 to 45 for more space
   });
 
   const virtualOptions = virtualizer.getVirtualItems();
@@ -127,16 +127,13 @@ export function FilterableInventorySelect({
           align="start"
         >
           <Command shouldFilter={false}>
-            <div className="flex items-center border-b px-3">
-              <Search className="mr-2 h-4 w-4 shrink-0 opacity-50" />
-              <CommandInput
-                placeholder={searchPlaceholder}
-                value={searchQuery}
-                onValueChange={setSearchQuery}
-                className="h-9 border-0 focus-visible:ring-0"
-              />
-            </div>
-            <div className="border-b px-3 py-2">
+            <CommandInput
+              placeholder={searchPlaceholder}
+              value={searchQuery}
+              onValueChange={setSearchQuery}
+              className="h-10"
+            />
+            <div className="border-b bg-muted/30 px-3 py-2">
               <div className="flex items-center space-x-2">
                 <Switch
                   id="show-unassigned"
@@ -146,7 +143,11 @@ export function FilterableInventorySelect({
                 <Label htmlFor="show-unassigned">Show only unassigned</Label>
               </div>
             </div>
-            <CommandList style={{ height }} ref={parentRef}>
+            <CommandList
+              style={{ height }}
+              ref={parentRef}
+              className="scrollbar-thin"
+            >
               {filteredOptions.length === 0 && (
                 <CommandEmpty>No items match your search</CommandEmpty>
               )}
@@ -169,26 +170,26 @@ export function FilterableInventorySelect({
                         key={option.value}
                         value={option.value}
                         onSelect={() => toggleItem(option.value)}
-                        className="absolute left-0 top-0 w-full"
+                        className="absolute left-0 top-0 w-full p-2"
                         style={{
                           height: `${virtualOption.size}px`,
                           transform: `translateY(${virtualOption.start}px)`,
                         }}
                       >
                         <div className="flex w-full items-center justify-between">
-                          <div className="flex items-center">
+                          <div className="flex max-w-[75%] items-center">
                             <Check
                               className={cn(
-                                "mr-2 h-4 w-4",
+                                "mr-2 h-4 w-4 flex-shrink-0",
                                 isSelected ? "opacity-100" : "opacity-0",
                               )}
                             />
-                            <span>{option.label}</span>
+                            <span className="truncate">{option.label}</span>
                           </div>
                           {option.isAssigned && (
                             <Badge
                               variant="outline"
-                              className="ml-2 border-amber-200 bg-amber-50 px-1.5 py-0.5 text-xs text-amber-700"
+                              className="ml-2 flex-shrink-0 border-amber-200 bg-amber-50 px-1.5 py-0.5 text-xs text-amber-700"
                             >
                               <Tag className="mr-1 h-3 w-3" />
                               Listed
@@ -207,12 +208,12 @@ export function FilterableInventorySelect({
 
       {/* Display selected options as badges */}
       {value.length > 0 && (
-        <div className="relative mt-1 flex max-h-40 flex-wrap gap-1 overflow-y-auto rounded border p-2">
+        <div className="relative mt-1 flex max-h-40 flex-wrap gap-1.5 overflow-y-auto rounded border p-2">
           {selectedLabels.map((option) => (
             <Badge
               key={option.value}
               variant="secondary"
-              className="flex items-center gap-1 pr-1"
+              className="flex items-center gap-1 py-1.5 pr-1"
             >
               {option.label}
               <Button
