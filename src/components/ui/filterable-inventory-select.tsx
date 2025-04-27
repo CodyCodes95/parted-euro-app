@@ -50,7 +50,7 @@ export function FilterableInventorySelect({
 }: FilterableInventorySelectProps) {
   const [open, setOpen] = React.useState(false);
   const [searchQuery, setSearchQuery] = React.useState("");
-  const [showOnlyUnassigned, setShowOnlyUnassigned] = React.useState(false);
+  const [showOnlyUnassigned, setShowOnlyUnassigned] = React.useState(true);
   const [focusedIndex, setFocusedIndex] = React.useState(-1);
 
   // Filter options based on search query and assignment filter
