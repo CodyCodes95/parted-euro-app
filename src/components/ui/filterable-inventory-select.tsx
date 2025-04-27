@@ -50,7 +50,7 @@ export function FilterableInventorySelect({
 }: FilterableInventorySelectProps) {
   const [open, setOpen] = React.useState(false);
   const [searchQuery, setSearchQuery] = React.useState("");
-  const [showOnlyUnassigned, setShowOnlyUnassigned] = React.useState(true);
+  const [showOnlyUnassigned, setShowOnlyUnassigned] = React.useState(false);
   const [focusedIndex, setFocusedIndex] = React.useState(-1);
 
   // Filter options based on search query and assignment filter
@@ -71,7 +71,7 @@ export function FilterableInventorySelect({
     if (value.length === 0) return "";
     if (value.length === 1) {
       const selectedOption = options.find((o) => o.value === value[0]);
-      return selectedOption?.label || "";
+      return selectedOption?.label ?? "";
     }
     return `${value.length} items selected`;
   }, [value, options]);
