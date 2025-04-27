@@ -401,6 +401,7 @@ export const listingsRouter = createTRPCRouter({
       }),
     )
     .query(async ({ ctx, input }) => {
+      console.log(input);
       const searchTerms = prepareSearchTerms(input.search);
       const searchConditions = searchTerms.map((term) => ({
         OR: [
@@ -443,7 +444,8 @@ export const listingsRouter = createTRPCRouter({
         !input.model &&
         !input.series &&
         !input.make &&
-        !input.category
+        !input.category &&
+        !input.subcat
       ) {
         const queryWhere = {
           active: true,
@@ -471,42 +473,91 @@ export const listingsRouter = createTRPCRouter({
         const totalPages = Math.ceil(count / 20);
         return { listings, count, hasNextPage, totalPages };
       } else {
-        const queryWhere = {
-          active: true,
-          AND: [
-            ...searchConditions,
-            {
-              parts: {
-                some: {
-                  partDetails: {
-                    partTypes: {
-                      some: {
-                        parent: {
-                          name: {
-                            contains: input.category ?? "",
-                          },
-                        },
-                        name: {
-                          contains: input.subcat ?? "",
-                        },
-                      },
-                    },
-                    cars: {
-                      some: {
-                        make: input.make,
-                        generation: {
-                          contains: input.generation ?? "",
-                        },
-                        model: input.model,
-                        series: input.series,
-                      },
+        // Build the filter conditions based on what's provided
+        const filterConditions = [];
+
+        // Add search conditions if any
+        if (searchConditions.length > 0) {
+          filterConditions.push(...searchConditions);
+        }
+
+        // Add category/subcategory conditions if provided
+        if (input.category || input.subcat) {
+          filterConditions.push({
+            parts: {
+              some: {
+                partDetails: {
+                  partTypes: {
+                    some: {
+                      parent: input.category
+                        ? {
+                            name: {
+                              contains: input.category,
+                              mode: "insensitive",
+                            },
+                          }
+                        : undefined,
+                      name: input.subcat
+                        ? { contains: input.subcat, mode: "insensitive" }
+                        : undefined,
                     },
                   },
                 },
               },
             },
-          ],
+          });
+        }
+
+        // Add car-specific conditions if any provided
+        if (input.generation || input.model || input.series || input.make) {
+          filterConditions.push({
+            parts: {
+              some: {
+                partDetails: {
+                  cars: {
+                    some: {
+                      ...(input.generation
+                        ? {
+                            generation: {
+                              contains: input.generation,
+                              mode: "insensitive",
+                            },
+                          }
+                        : {}),
+                      ...(input.model
+                        ? {
+                            model: {
+                              contains: input.model,
+                              mode: "insensitive",
+                            },
+                          }
+                        : {}),
+                      ...(input.series
+                        ? {
+                            series: {
+                              contains: input.series,
+                              mode: "insensitive",
+                            },
+                          }
+                        : {}),
+                      ...(input.make
+                        ? {
+                            make: { contains: input.make, mode: "insensitive" },
+                          }
+                        : {}),
+                    },
+                  },
+                },
+              },
+            },
+          });
+        }
+
+        const queryWhere = {
+          active: true,
+          AND: filterConditions,
         } as Prisma.ListingWhereInput;
+
         const listingsRequest = ctx.db.listing.findMany({
           take: 20,
           skip: input.page * 20,
