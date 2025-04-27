@@ -53,9 +53,26 @@ export default async function ListingPage({ params }: Props) {
   }
 
   const { title, description, price, images, parts } = listing;
-  const firstPart = parts?.[0];
-  const quantity = firstPart?.quantity ?? 0;
+
+  // Calculate total quantity by summing all parts
+  const quantity =
+    parts?.reduce((acc, part) => acc + (part.quantity ?? 0), 0) ?? 0;
   const inStock = quantity > 0;
+
+  // Deduplicate parts by partNo for the first part reference
+  const uniqueParts = parts?.reduce(
+    (acc, part) => {
+      if (
+        !acc.some((p) => p.partDetails?.partNo === part.partDetails?.partNo)
+      ) {
+        acc.push(part);
+      }
+      return acc;
+    },
+    [] as typeof parts,
+  );
+
+  const firstPart = uniqueParts?.[0];
 
   // Extract all compatible cars from the parts
   const compatibleCars =
@@ -193,7 +210,7 @@ export default async function ListingPage({ params }: Props) {
                 </tr>
               </thead>
               <tbody className="divide-y divide-border bg-background">
-                {parts.map((part, index) => (
+                {uniqueParts?.map((part, index) => (
                   <tr key={index} className="hover:bg-muted/50">
                     <td className="whitespace-nowrap px-4 py-3 text-sm">
                       {part.partDetails?.name ?? "—"}
