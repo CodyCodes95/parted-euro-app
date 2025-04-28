@@ -11,7 +11,7 @@ import {
 } from "~/components/ui/dialog";
 import { Button } from "~/components/ui/button";
 import { toast } from "sonner";
-import { Loader2, ChevronLeft } from "lucide-react";
+import { Loader2, ChevronLeft, Search } from "lucide-react";
 import { type AdminListingsItem } from "~/trpc/shared";
 import { Input } from "~/components/ui/input";
 import { Textarea } from "~/components/ui/textarea";
@@ -25,6 +25,10 @@ import {
 } from "~/components/ui/select";
 import { api } from "~/trpc/react";
 import { useQueryClient } from "@tanstack/react-query";
+import {
+  VirtualizedCombobox,
+  type VirtualizedOption,
+} from "~/components/ui/virtualized-combobox";
 
 interface ListOnEbayDialogProps {
   open: boolean;
@@ -72,6 +76,7 @@ export function ListOnEbayDialog({
   );
   const [ebayCondition, setEbayCondition] = useState("");
   const [categoryId, setCategoryId] = useState<string>("");
+  const [categorySearchTerm, setCategorySearchTerm] = useState<string>(title);
   const [domesticShipping, setDomesticShipping] = useState<number>(0);
   const [internationalShipping, setInternationalShipping] = useState<number>(0);
   const [createNewFulfillmentPolicy, setCreateNewFulfillmentPolicy] =
@@ -86,9 +91,21 @@ export function ListOnEbayDialog({
   // API calls
   const createEbayListing = api.ebay.createListing.useMutation();
   const fulfillmentPolicies = api.ebay.getFulfillmentPolicies.useQuery();
-  const categoryIds = api.ebay.getCategoryIds.useQuery({
-    title: title,
-  });
+  const categoryIds = api.ebay.getCategoryIds.useQuery(
+    {
+      title: categorySearchTerm,
+    },
+    {
+      enabled: categorySearchTerm.length > 0,
+    },
+  );
+
+  // Convert categories to combobox options format
+  const categoryOptions: VirtualizedOption[] =
+    categoryIds.data?.map((category: any) => ({
+      value: category.value,
+      label: category.label,
+    })) || [];
 
   // Calculate quantity based on parts
   useEffect(() => {
@@ -214,6 +231,15 @@ export function ListOnEbayDialog({
     }
   };
 
+  // Handle category search change
+  const handleCategorySearchChange = (value: string) => {
+    setCategoryId(value);
+  };
+
+  const handleCategorySearchTermChange = (term: string) => {
+    setCategorySearchTerm(term);
+  };
+
   return (
     <Dialog open={open} onOpenChange={onOpenChange}>
       <DialogContent className="max-w-md sm:max-w-xl">
@@ -273,18 +299,36 @@ export function ListOnEbayDialog({
 
           <div>
             <Label htmlFor="categoryId">eBay Category</Label>
-            <Select value={categoryId} onValueChange={setCategoryId}>
-              <SelectTrigger className="mt-1">
-                <SelectValue placeholder="Select eBay category" />
-              </SelectTrigger>
-              <SelectContent>
-                {categoryIds.data?.map((category: any) => (
-                  <SelectItem key={category.value} value={category.value}>
-                    {category.label}
-                  </SelectItem>
-                ))}
-              </SelectContent>
-            </Select>
+            <div className="mt-1">
+              <VirtualizedCombobox
+                options={categoryOptions}
+                value={categoryId}
+                onChange={handleCategorySearchChange}
+                placeholder="Select or search for a category"
+                searchPlaceholder="Type to search categories..."
+                height="250px"
+              />
+              {!categoryIds.data?.length && (
+                <div className="mt-2 flex items-center">
+                  <Input
+                    placeholder="Enter a custom search term for categories"
+                    value={categorySearchTerm}
+                    onChange={(e) => setCategorySearchTerm(e.target.value)}
+                    className="flex-1"
+                  />
+                  <Button
+                    type="button"
+                    variant="outline"
+                    size="icon"
+                    className="ml-2"
+                    onClick={() => setCategorySearchTerm(categorySearchTerm)}
+                    disabled={!categorySearchTerm.trim()}
+                  >
+                    <Search className="h-4 w-4" />
+                  </Button>
+                </div>
+              )}
+            </div>
           </div>
 
           <div>
