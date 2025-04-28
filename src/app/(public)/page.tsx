@@ -8,17 +8,19 @@ export default async function Home() {
 
   return (
     <div className="flex min-h-[90vh] flex-col bg-background">
-      <div className="flex h-full w-full items-center justify-center">
-        <HomepageCarousel images={homepageImages} />
-      </div>
-      <div className="absolute left-1/2 top-1/2 -translate-x-1/2 -translate-y-1/2 transform">
-        <div className="flex flex-col items-center justify-center">
-          <h1 className="mb-6 text-center text-4xl font-bold text-white md:text-5xl lg:text-6xl">
-            Your BMW Spare Parts Specialists
-          </h1>
-          <Link prefetch={true} href="/listings">
-            <Button variant="outline">Shop Now</Button>
-          </Link>
+      <div className="grid h-full w-full">
+        <div className="col-start-1 col-end-2 row-start-1 row-end-2 h-full w-full">
+          <HomepageCarousel images={homepageImages} />
+        </div>
+        <div className="col-start-1 col-end-2 row-start-1 row-end-2 flex items-center justify-center">
+          <div className="z-10 flex flex-col items-center justify-center">
+            <h1 className="mb-6 text-center text-4xl font-bold text-white md:text-5xl lg:text-6xl">
+              Your BMW Spare Parts Specialists
+            </h1>
+            <Link prefetch={true} href="/listings">
+              <Button variant="outline">Shop Now</Button>
+            </Link>
+          </div>
         </div>
       </div>
     </div>
