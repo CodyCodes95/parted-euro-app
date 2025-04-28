@@ -154,9 +154,13 @@ export function OrderDetailsDialog({
                           {item.listing.title}
                           <div className="max-w-[300px] truncate text-xs text-muted-foreground">
                             Part #:{" "}
-                            {item.listing.parts
-                              .map((p) => p.partDetails.partNo)
-                              .join(",")}
+                            {[
+                              ...new Set(
+                                item.listing.parts.map(
+                                  (p) => p.partDetails.partNo,
+                                ),
+                              ),
+                            ].join(",")}
                           </div>
                         </div>
                       </div>
