@@ -12,6 +12,15 @@ const donorSchema = z.object({
   imageUrl: z.string().optional().nullable(),
   hideFromSearch: z.boolean().default(false),
   dateInStock: z.date().optional().nullable(),
+  images: z
+    .array(
+      z.object({
+        id: z.string(),
+        url: z.string(),
+        order: z.number(),
+      }),
+    )
+    .optional(),
 });
 
 export const donorRouter = createTRPCRouter({
@@ -21,6 +30,11 @@ export const donorRouter = createTRPCRouter({
     const donors = await ctx.db.donor.findMany({
       include: {
         car: true,
+        images: {
+          orderBy: {
+            order: "asc",
+          },
+        },
       },
       orderBy: { vin: "asc" },
     });
@@ -254,6 +268,11 @@ export const donorRouter = createTRPCRouter({
         where: { vin },
         include: {
           car: true,
+          images: {
+            orderBy: {
+              order: "asc",
+            },
+          },
         },
       });
       return donor;
@@ -268,9 +287,22 @@ export const donorRouter = createTRPCRouter({
         carId: input.carId,
         year: input.year,
         mileage: input.mileage,
-        
+
         hideFromSearch: input.hideFromSearch,
         dateInStock: input.dateInStock,
+        ...(input.images && input.images.length > 0
+          ? {
+              images: {
+                createMany: {
+                  data: input.images.map((image) => ({
+                    id: image.id,
+                    url: image.url,
+                    order: image.order,
+                  })),
+                },
+              },
+            }
+          : {}),
       },
     });
     return donor;
@@ -281,6 +313,14 @@ export const donorRouter = createTRPCRouter({
     .input(z.object({ vin: z.string(), data: donorSchema }))
     .mutation(async ({ ctx, input }) => {
       const { vin, data } = input;
+
+      // First, delete existing images to avoid duplicates
+      if (data.images) {
+        await ctx.db.image.deleteMany({
+          where: { donorVin: vin },
+        });
+      }
+
       const donor = await ctx.db.donor.update({
         where: { vin },
         data: {
@@ -288,9 +328,22 @@ export const donorRouter = createTRPCRouter({
           carId: data.carId,
           year: data.year,
           mileage: data.mileage,
-          
+
           hideFromSearch: data.hideFromSearch,
           dateInStock: data.dateInStock,
+          ...(data.images && data.images.length > 0
+            ? {
+                images: {
+                  createMany: {
+                    data: data.images.map((image) => ({
+                      id: image.id,
+                      url: image.url,
+                      order: image.order,
+                    })),
+                  },
+                },
+              }
+            : {}),
         },
       });
       return donor;

@@ -1,6 +1,6 @@
 "use client";
 
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import { api } from "~/trpc/react";
 import { z } from "zod";
 import { zodResolver } from "@hookform/resolvers/zod";
@@ -26,7 +26,15 @@ import { Input } from "~/components/ui/input";
 import { Button } from "~/components/ui/button";
 import { Checkbox } from "~/components/ui/checkbox";
 import { type DonorWithCar } from "./columns";
-import { CalendarIcon, Check, ChevronsUpDown } from "lucide-react";
+import {
+  CalendarIcon,
+  Check,
+  ChevronsUpDown,
+  GripVertical,
+  Image as ImageIcon,
+  Loader2,
+  X,
+} from "lucide-react";
 import { Calendar } from "~/components/ui/calendar";
 import {
   Popover,
@@ -41,6 +49,85 @@ import {
   CommandInput,
   CommandItem,
 } from "~/components/ui/command";
+import { AspectRatio } from "~/components/ui/aspect-ratio";
+import { UploadDropzone } from "~/components/UploadThing";
+import Compressor from "compressorjs";
+import {
+  DndContext,
+  closestCenter,
+  KeyboardSensor,
+  PointerSensor,
+  useSensor,
+  useSensors,
+  type DragEndEvent,
+} from "@dnd-kit/core";
+import {
+  SortableContext,
+  sortableKeyboardCoordinates,
+  useSortable,
+  verticalListSortingStrategy,
+  arrayMove,
+} from "@dnd-kit/sortable";
+import { restrictToVerticalAxis } from "@dnd-kit/modifiers";
+import { CSS } from "@dnd-kit/utilities";
+
+// Define image item type for DnD
+type ImageItem = {
+  id: string;
+  url: string;
+  order: number;
+};
+
+// Sortable image component
+const SortableImage = ({
+  image,
+  onRemove,
+}: {
+  image: ImageItem;
+  onRemove: (id: string) => void;
+}) => {
+  const { attributes, listeners, setNodeRef, transform, transition } =
+    useSortable({
+      id: image.id,
+    });
+
+  const style = {
+    transform: transform ? CSS.Transform.toString(transform) : undefined,
+    transition,
+  };
+
+  return (
+    <div
+      ref={setNodeRef}
+      style={style}
+      className="group relative flex items-center gap-2 rounded-md bg-muted/40 p-2"
+    >
+      <div className="cursor-grab touch-none" {...attributes} {...listeners}>
+        <GripVertical className="h-5 w-5 text-muted-foreground" />
+      </div>
+
+      <div className="relative h-16 w-16 overflow-hidden rounded-md">
+        <AspectRatio ratio={1}>
+          <img
+            src={image.url}
+            alt="Donor"
+            className="h-full w-full object-cover"
+          />
+        </AspectRatio>
+      </div>
+
+      <Button
+        type="button"
+        variant="ghost"
+        size="icon"
+        className="absolute right-1 top-1 h-6 w-6 bg-muted/50 text-foreground opacity-0 transition-opacity hover:bg-muted group-hover:opacity-100"
+        onClick={() => onRemove(image.id)}
+      >
+        <X className="h-3 w-3" />
+      </Button>
+    </div>
+  );
+};
 
 // Define the form schema
 const donorFormSchema = z.object({
@@ -52,6 +139,15 @@ const donorFormSchema = z.object({
   imageUrl: z.string().optional(),
   hideFromSearch: z.boolean().default(false),
   dateInStock: z.date().optional().nullable(),
+  images: z
+    .array(
+      z.object({
+        id: z.string(),
+        url: z.string(),
+        order: z.number(),
+      }),
+    )
+    .optional(),
 });
 
 type DonorFormValues = z.infer<typeof donorFormSchema>;
@@ -71,6 +167,15 @@ export function DonorForm({
 }: DonorFormProps) {
   const [isSaving, setIsSaving] = useState(false);
   const [carOpen, setCarOpen] = useState(false);
+  const [images, setImages] = useState<ImageItem[]>([]);
+
+  // DnD sensors for image reordering
+  const sensors = useSensors(
+    useSensor(PointerSensor),
+    useSensor(KeyboardSensor, {
+      coordinateGetter: sortableKeyboardCoordinates,
+    }),
+  );
 
   // Set up the form with default values
   const form = useForm<DonorFormValues>({
@@ -82,9 +187,9 @@ export function DonorForm({
           carId: defaultValues.carId,
           year: defaultValues.year,
           mileage: defaultValues.mileage,
-          imageUrl: defaultValues.imageUrl ?? "",
           hideFromSearch: defaultValues.hideFromSearch,
           dateInStock: defaultValues.dateInStock,
+          images: defaultValues.images,
         }
       : {
           vin: "",
@@ -95,8 +200,22 @@ export function DonorForm({
           imageUrl: "",
           hideFromSearch: false,
           dateInStock: null,
+          images: [],
         },
   });
+
+  // Initialize images from default values when available
+  useEffect(() => {
+    if (defaultValues?.images && defaultValues.images.length > 0) {
+      setImages(
+        defaultValues.images.map((img) => ({
+          id: img.id,
+          url: img.url,
+          order: img.order,
+        })),
+      );
+    }
+  }, [defaultValues]);
 
   // Fetch car options for the select input
   const carOptionsQuery = api.donor.getAllCars.useQuery();
@@ -137,32 +256,86 @@ export function DonorForm({
     return car?.label ?? "";
   };
 
+  // Handle image upload
+  const handleImageUpload = (results: { url: string }[]) => {
+    const newImages = results.map((result, index) => ({
+      id: crypto.randomUUID(),
+      url: result.url,
+      order: images.length + index,
+    }));
+
+    setImages((prev) => [...prev, ...newImages]);
+  };
+
+  // Handle image removal
+  const handleImageRemove = (id: string) => {
+    setImages((prev) => prev.filter((img) => img.id !== id));
+  };
+
+  // Handle image reordering
+  const handleDragEnd = (event: DragEndEvent) => {
+    const { active, over } = event;
+
+    // If there's no target, return
+    if (!over) return;
+
+    const activeId = active.id.toString();
+    const overId = over.id.toString();
+
+    // If the item was dropped on itself, return
+    if (activeId === overId) return;
+
+    setImages((items) => {
+      // Find the indexes in a type-safe way
+      const oldIndex = items.findIndex((item) => item.id === activeId);
+      const newIndex = items.findIndex((item) => item.id === overId);
+
+      // If either item is not found, return the original array
+      if (oldIndex === -1 || newIndex === -1) return items;
+
+      // Create a new ordered array
+      return arrayMove(items, oldIndex, newIndex);
+    });
+  };
+
   // Form submission handler
   function onSubmit(data: DonorFormValues) {
     setIsSaving(true);
+
+    // Update the images array with the current order before submission
+    const updatedImages = images.map((img, index) => ({
+      id: img.id,
+      url: img.url,
+      order: index,
+    }));
+
+    const formData = {
+      ...data,
+      images: updatedImages,
+    };
 
     if (isEditing && defaultValues) {
       // Update existing donor
       updateDonor.mutate({
         vin: defaultValues.vin,
-        data: data,
+        data: formData,
       });
     } else {
       // Create new donor
-      createDonor.mutate(data);
+      createDonor.mutate(formData);
     }
   }
 
   return (
     <Dialog open={open} onOpenChange={onOpenChange}>
-      <DialogContent className="sm:max-w-[600px]">
+      <DialogContent className="max-h-[90vh] overflow-y-auto sm:max-w-[600px]">
         <DialogHeader>
           <DialogTitle>
             {isEditing ? "Edit Donor" : "Add New Donor"}
           </DialogTitle>
           <DialogDescription>
             {isEditing
-              ? "Update this donor&apos;s information"
+              ? "Update this donors information"
               : "Add a new donor to your inventory"}
           </DialogDescription>
         </DialogHeader>
@@ -355,20 +528,100 @@ export function DonorForm({
               )}
             />
 
-            {/* Image URL Field */}
-            <FormField
-              control={form.control}
-              name="imageUrl"
-              render={({ field }) => (
-                <FormItem>
-                  <FormLabel>Image URL</FormLabel>
-                  <FormControl>
-                    <Input placeholder="https://..." {...field} />
-                  </FormControl>
-                  <FormMessage />
-                </FormItem>
-              )}
-            />
+            {/* Images Field */}
+            <div className="space-y-2">
+              <FormLabel>Images</FormLabel>
+              <div className="rounded-md border p-4">
+                {/* Image Upload Dropzone */}
+                <div className="mb-4">
+                  <UploadDropzone
+                    endpoint="homepageImage"
+                    onBeforeUploadBegin={(files) => {
+                      // Create a promise for each file to be compressed
+                      const compressPromises = files.map(
+                        (file) =>
+                          new Promise<File>((resolve, reject) => {
+                            // Skip compression for non-image files
+                            if (!file.type.startsWith("image/")) {
+                              resolve(file);
+                              return;
+                            }
+
+                            new Compressor(file, {
+                              quality: 0.8, // 80% quality
+                              maxWidth: 1920,
+                              maxHeight: 1080,
+                              convertSize: 1000000, // Convert to JPEG if > 1MB
+                              success: (compressedFile) => {
+                                // Create a new file with the original name but compressed content
+                                const newFile = new File(
+                                  [compressedFile],
+                                  file.name,
+                                  { type: compressedFile.type },
+                                );
+                                resolve(newFile);
+                              },
+                              error: (err) => {
+                                console.error("Compression error:", err);
+                                // If compression fails, use the original file
+                                resolve(file);
+                              },
+                            });
+                          }),
+                      );
+
+                      // Return a promise that resolves when all files are compressed
+                      return Promise.all(compressPromises);
+                    }}
+                    onClientUploadComplete={(res) => {
+                      if (res) {
+                        handleImageUpload(res);
+                        toast.success("Images uploaded successfully");
+                      }
+                    }}
+                    onUploadError={(error: Error) => {
+                      toast.error(`Error uploading images: ${error.message}`);
+                    }}
+                    className="ut-label:text-lg ut-allowed-content:text-muted-foreground ut-upload-icon:text-muted-foreground rounded-lg border-2 border-dashed border-muted-foreground/25 p-4 transition-all hover:border-muted-foreground/50"
+                  />
+                </div>
+
+                {/* Sortable Image List */}
+                <div className="my-4 border-t pt-4">
+                  <div className="mb-2 flex items-center">
+                    <ImageIcon className="mr-2 h-4 w-4" />
+                    <span className="text-sm font-medium">
+                      {images.length === 0
+                        ? "No images added yet"
+                        : `${images.length} image${images.length > 1 ? "s" : ""} (drag to reorder)`}
+                    </span>
+                  </div>
+
+                  {/* DnD Context for Sorting */}
+                  <DndContext
+                    sensors={sensors}
+                    collisionDetection={closestCenter}
+                    onDragEnd={handleDragEnd}
+                    modifiers={[restrictToVerticalAxis]}
+                  >
+                    <SortableContext
+                      items={images.map((i) => i.id)}
+                      strategy={verticalListSortingStrategy}
+                    >
+                      <div className="grid gap-2">
+                        {images.map((image) => (
+                          <SortableImage
+                            key={image.id}
+                            image={image}
+                            onRemove={handleImageRemove}
+                          />
+                        ))}
+                      </div>
+                    </SortableContext>
+                  </DndContext>
+                </div>
+              </div>
+            </div>
 
             {/* Hide From Search Field */}
             <FormField
@@ -394,6 +647,7 @@ export function DonorForm({
 
             <DialogFooter>
               <Button type="submit" disabled={isSaving}>
+                {isSaving && <Loader2 className="mr-2 h-4 w-4 animate-spin" />}
                 {isSaving
                   ? "Saving..."
                   : isEditing

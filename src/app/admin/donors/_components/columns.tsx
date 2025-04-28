@@ -1,6 +1,6 @@
 import { type ColumnDef } from "@tanstack/react-table";
 import { Button } from "~/components/ui/button";
-import { type Car, type Donor } from "@prisma/client";
+import { type Car, type Donor, type Image } from "@prisma/client";
 import { formatDate, formatCurrency } from "~/lib/utils";
 import { MoreHorizontal, Pencil, Trash } from "lucide-react";
 import {
@@ -16,6 +16,7 @@ import { DataTableColumnHeader } from "~/components/data-table/data-table-column
 // Extend Donor type to include the Car relationship
 export type DonorWithCar = Donor & {
   car: Car;
+  images?: Image[];
 };
 
 interface DonorActionsProps {
