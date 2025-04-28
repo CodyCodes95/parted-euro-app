@@ -361,16 +361,7 @@ export function ListOnEbayDialog({
                         onValueChange={handleCategorySearch}
                         className="flex-1"
                       />
-                      <Button
-                        type="button"
-                        variant="ghost"
-                        size="icon"
-                        onClick={handleCustomSearch}
-                        className="ml-1 h-8 w-8"
-                        disabled={!categoryInputValue.trim()}
-                      >
-                        <Search className="h-4 w-4" />
-                      </Button>
+        
                     </div>
                     <CommandList className="max-h-[250px] overflow-auto">
                       <CommandEmpty>
