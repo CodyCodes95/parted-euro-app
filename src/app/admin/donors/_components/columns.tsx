@@ -50,7 +50,6 @@ export function getDonorColumns({
           </div>
         );
       },
-      enableSorting: false,
     },
     {
       accessorKey: "year",
