@@ -86,18 +86,27 @@ export default function OrdersAdminPage() {
         <>
           <OrderDetailsDialog
             open={isOrderDetailsOpen}
-            onOpenChange={setIsOrderDetailsOpen}
+            onOpenChange={(open) => {
+              setIsOrderDetailsOpen(open);
+              if (!open) setSelectedOrder(null);
+            }}
             order={selectedOrder}
           />
           <AddTrackingDialog
             open={isAddTrackingOpen}
-            onOpenChange={setIsAddTrackingOpen}
+            onOpenChange={(open) => {
+              setIsAddTrackingOpen(open);
+              if (!open) setSelectedOrder(null);
+            }}
             order={selectedOrder}
             onSuccess={() => void ordersQuery?.refetch?.()}
           />
           <UpdateStatusDialog
             open={isUpdateStatusOpen}
-            onOpenChange={setIsUpdateStatusOpen}
+            onOpenChange={(open) => {
+              setIsUpdateStatusOpen(open);
+              if (!open) setSelectedOrder(null);
+            }}
             order={selectedOrder}
             onSuccess={() => void ordersQuery?.refetch?.()}
           />
