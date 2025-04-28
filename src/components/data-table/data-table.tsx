@@ -47,6 +47,16 @@ export function DataTable<TData, TValue>({
   const [globalFilter, setGlobalFilter] = useQueryState("search", {
     defaultValue: "",
   });
+  const [pageIndex, setPageIndex] = useQueryState("page", {
+    defaultValue: 0,
+    parse: (value) => Number(value),
+    serialize: (value) => value.toString(),
+  });
+  const [pageSize, setPageSize] = useQueryState("size", {
+    defaultValue: 10,
+    parse: (value) => Number(value),
+    serialize: (value) => value.toString(),
+  });
   const [columnVisibility, setColumnVisibility] =
     React.useState<VisibilityState>({});
   const [rowSelection, setRowSelection] = React.useState({});
@@ -63,6 +73,14 @@ export function DataTable<TData, TValue>({
     getSortedRowModel: getSortedRowModel(),
     onColumnVisibilityChange: setColumnVisibility,
     onRowSelectionChange: setRowSelection,
+    onPaginationChange: (updater) => {
+      const state =
+        typeof updater === "function"
+          ? updater(table.getState().pagination)
+          : updater;
+      void setPageIndex(state.pageIndex);
+      void setPageSize(state.pageSize);
+    },
     enableRowSelection,
     state: {
       sorting,
@@ -70,6 +88,10 @@ export function DataTable<TData, TValue>({
       globalFilter: globalFilter || "",
       columnVisibility,
       rowSelection,
+      pagination: {
+        pageIndex,
+        pageSize,
+      },
     },
   });
 
