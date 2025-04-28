@@ -79,13 +79,15 @@ export function BulkOrderDialog({
     setIsSubmitting(true);
     try {
       // Convert string values to numbers at submission time
+      // Multiply price by 100 to convert from dollars to cents
       const orderItems: OrderItem[] = inputValues.map((input) => ({
         listingId: input.listingId,
         quantity: parseInt(input.quantityValue) || 1,
-        price: parseFloat(input.priceValue) || 0,
+        price: (parseFloat(input.priceValue) || 0) * 100, // Convert dollars to cents
       }));
 
       onOrderCreate(orderItems);
+      toast.success("Order created successfully");
       onOpenChange(false);
     } catch (error) {
       toast.error("Failed to create order");
@@ -127,7 +129,7 @@ export function BulkOrderDialog({
                       id={`price-${listing.id}`}
                       type="text"
                       inputMode="decimal"
-                      value={inputValue?.priceValue || ""}
+                      value={inputValue?.priceValue ?? ""}
                       onChange={(e) =>
                         handlePriceChange(listing.id, e.target.value)
                       }
@@ -140,7 +142,7 @@ export function BulkOrderDialog({
                       id={`quantity-${listing.id}`}
                       type="text"
                       inputMode="numeric"
-                      value={inputValue?.quantityValue || ""}
+                      value={inputValue?.quantityValue ?? ""}
                       onChange={(e) =>
                         handleQuantityChange(listing.id, e.target.value)
                       }

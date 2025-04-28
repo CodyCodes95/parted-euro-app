@@ -356,7 +356,7 @@ export function FinalizeOrderDialog({
                 onClick={handleSubmit(handleCashPayment)}
                 disabled={isSubmitting}
               >
-                {createCashOrderMutation.isLoading && (
+                {createCashOrderMutation.isPending && (
                   <Loader2 className="mr-2 h-4 w-4 animate-spin" />
                 )}
                 Paid in Cash

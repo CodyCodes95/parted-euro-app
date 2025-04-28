@@ -63,7 +63,7 @@ export default function OrdersAdminPage() {
       updateStatusMutation.mutate(
         {
           orderId: order.id,
-          status: "Completed",
+          status: "COMPLETED",
         },
         {
           onSuccess: () => {
