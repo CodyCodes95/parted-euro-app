@@ -58,6 +58,40 @@ export default function OrdersAdminPage() {
     }
   };
 
+  const handleCompleteOrder = (order: AdminOrdersItem) => {
+    if (order.id) {
+      updateStatusMutation.mutate(
+        {
+          orderId: order.id,
+          status: "Completed",
+        },
+        {
+          onSuccess: () => {
+            void ordersQuery?.refetch?.();
+            toast.success("Order marked as completed");
+          },
+        },
+      );
+    }
+  };
+
+  const handleCancelOrder = (order: AdminOrdersItem) => {
+    if (order.id) {
+      updateStatusMutation.mutate(
+        {
+          orderId: order.id,
+          status: "Cancelled",
+        },
+        {
+          onSuccess: () => {
+            void ordersQuery?.refetch?.();
+            toast.success("Order cancelled");
+          },
+        },
+      );
+    }
+  };
+
   const handleUpdateStatus = (order: AdminOrdersItem) => {
     setSelectedOrder(order);
     setIsUpdateStatusOpen(true);
@@ -68,6 +102,8 @@ export default function OrdersAdminPage() {
     onAddTracking: handleAddTracking,
     onReadyForPickup: handleReadyForPickup,
     onUpdateStatus: handleUpdateStatus,
+    onCompleteOrder: handleCompleteOrder,
+    onCancelOrder: handleCancelOrder,
   });
 
   return (

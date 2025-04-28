@@ -68,6 +68,8 @@ interface OrderColumnsProps {
   onAddTracking: (order: AdminOrdersItem) => void;
   onReadyForPickup: (order: AdminOrdersItem) => void;
   onUpdateStatus: (order: AdminOrdersItem) => void;
+  onCompleteOrder: (order: AdminOrdersItem) => void;
+  onCancelOrder: (order: AdminOrdersItem) => void;
 }
 
 /**
@@ -78,6 +80,8 @@ export function getOrderColumns({
   onAddTracking,
   onReadyForPickup,
   onUpdateStatus,
+  onCompleteOrder,
+  onCancelOrder,
 }: OrderColumnsProps): ColumnDef<AdminOrdersItem>[] {
   return [
     {
@@ -154,7 +158,7 @@ export function getOrderColumns({
 
         return (
           <div className="max-w-[200px] truncate">
-            {row.original.shippingAddress || "Not specified"}
+            {row.original.shippingAddress ?? "Not specified"}
           </div>
         );
       },
@@ -230,10 +234,15 @@ export function getOrderColumns({
                 </DropdownMenuSubTrigger>
                 <DropdownMenuSubContent>
                   <DropdownMenuItem onClick={() => onUpdateStatus(order)}>
+                    <Pencil className="mr-2 h-4 w-4" />
+                    Select Status
+                  </DropdownMenuItem>
+                  <DropdownMenuSeparator />
+                  <DropdownMenuItem onClick={() => onCompleteOrder(order)}>
                     <Check className="mr-2 h-4 w-4" />
                     Completed
                   </DropdownMenuItem>
-                  <DropdownMenuItem onClick={() => onUpdateStatus(order)}>
+                  <DropdownMenuItem onClick={() => onCancelOrder(order)}>
                     <X className="mr-2 h-4 w-4" />
                     Cancelled
                   </DropdownMenuItem>
