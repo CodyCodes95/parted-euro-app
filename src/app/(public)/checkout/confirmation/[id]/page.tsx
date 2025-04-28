@@ -7,6 +7,7 @@ import { formatCurrency, formatDate } from "~/lib/utils";
 import { Button } from "~/components/ui/button";
 import { Separator } from "~/components/ui/separator";
 import { Card, CardContent, CardHeader, CardTitle } from "~/components/ui/card";
+import { ClearCartOnLoad } from "./clear-cart";
 
 export default async function OrderConfirmationPage({
   params,
@@ -24,6 +25,7 @@ export default async function OrderConfirmationPage({
 
   return (
     <div className="container mx-auto px-4 py-8">
+      <ClearCartOnLoad />
       <div className="mb-6 space-y-4">
         <Link
           href="/"
