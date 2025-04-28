@@ -147,11 +147,17 @@ export function getOrderColumns({
     {
       accessorKey: "shippingAddress",
       header: "Address",
-      cell: ({ row }) => (
-        <div className="max-w-[200px] truncate">
-          {row.original.shippingAddress || "Not specified"}
-        </div>
-      ),
+      cell: ({ row }) => {
+        if (row.original.shippingMethod?.toLowerCase()?.includes("pickup")) {
+          return <div>Pickup</div>;
+        }
+
+        return (
+          <div className="max-w-[200px] truncate">
+            {row.original.shippingAddress || "Not specified"}
+          </div>
+        );
+      },
     },
     {
       accessorKey: "trackingNumber",
