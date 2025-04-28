@@ -557,6 +557,7 @@ export function DonorForm({
                 {/* Image Upload Dropzone */}
                 <div className="mb-4">
                   <UploadDropzone
+                    config={{mode: "au"}}
                     endpoint="homepageImage"
                     onBeforeUploadBegin={(files) => {
                       // Create a promise for each file to be compressed
