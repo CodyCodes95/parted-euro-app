@@ -30,7 +30,6 @@ import {
 import { Button } from "~/components/ui/button";
 import { toast } from "sonner";
 import { api } from "~/trpc/react";
-import { formatCurrency } from "~/lib/formatters";
 import { type AdminOrdersItem } from "~/trpc/shared";
 
 const formSchema = z.object({

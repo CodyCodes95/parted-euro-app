@@ -1,6 +1,6 @@
 "use client";
 
-import { useEffect, useState } from "react";
+import { useEffect, useState, useRef } from "react";
 import {
   Dialog,
   DialogContent,
@@ -11,7 +11,13 @@ import {
 } from "~/components/ui/dialog";
 import { Button } from "~/components/ui/button";
 import { toast } from "sonner";
-import { Loader2, ChevronLeft, Search } from "lucide-react";
+import {
+  Loader2,
+  ChevronLeft,
+  Search,
+  Check,
+  ChevronsUpDown,
+} from "lucide-react";
 import { type AdminListingsItem } from "~/trpc/shared";
 import { Input } from "~/components/ui/input";
 import { Textarea } from "~/components/ui/textarea";
@@ -26,9 +32,19 @@ import {
 import { api } from "~/trpc/react";
 import { useQueryClient } from "@tanstack/react-query";
 import {
-  VirtualizedCombobox,
-  type VirtualizedOption,
-} from "~/components/ui/virtualized-combobox";
+  Command,
+  CommandEmpty,
+  CommandGroup,
+  CommandInput,
+  CommandItem,
+  CommandList,
+} from "~/components/ui/command";
+import {
+  Popover,
+  PopoverContent,
+  PopoverTrigger,
+} from "~/components/ui/popover";
+import { cn } from "~/lib/utils";
 
 interface ListOnEbayDialogProps {
   open: boolean;
@@ -77,6 +93,8 @@ export function ListOnEbayDialog({
   const [ebayCondition, setEbayCondition] = useState("");
   const [categoryId, setCategoryId] = useState<string>("");
   const [categorySearchTerm, setCategorySearchTerm] = useState<string>(title);
+  const [categoryPopoverOpen, setCategoryPopoverOpen] = useState(false);
+  const [categoryInputValue, setCategoryInputValue] = useState("");
   const [domesticShipping, setDomesticShipping] = useState<number>(0);
   const [internationalShipping, setInternationalShipping] = useState<number>(0);
   const [createNewFulfillmentPolicy, setCreateNewFulfillmentPolicy] =
@@ -100,12 +118,42 @@ export function ListOnEbayDialog({
     },
   );
 
-  // Convert categories to combobox options format
-  const categoryOptions: VirtualizedOption[] =
-    categoryIds.data?.map((category: any) => ({
-      value: category.value,
-      label: category.label,
-    })) || [];
+  // Get selected category label
+  const selectedCategoryLabel =
+    categoryIds.data?.find(
+      (category: { value: string; label: string }) =>
+        category.value === categoryId,
+    )?.label || "";
+
+  // Handle category search
+  const handleCategorySearch = (value: string) => {
+    setCategoryInputValue(value);
+    // Only update the search term after a short delay
+    if (value.trim().length > 2) {
+      const timeoutId = setTimeout(() => {
+        setCategorySearchTerm(value);
+      }, 300);
+      return () => clearTimeout(timeoutId);
+    }
+  };
+
+  // Handle category selection
+  const handleCategorySelect = (value: string) => {
+    const category = categoryIds.data?.find(
+      (c: { value: string }) => c.value === value,
+    );
+    if (category) {
+      setCategoryId(value);
+      setCategoryPopoverOpen(false);
+    }
+  };
+
+  // Custom search button click
+  const handleCustomSearch = () => {
+    if (categoryInputValue.trim()) {
+      setCategorySearchTerm(categoryInputValue);
+    }
+  };
 
   // Calculate quantity based on parts
   useEffect(() => {
@@ -231,15 +279,6 @@ export function ListOnEbayDialog({
     }
   };
 
-  // Handle category search change
-  const handleCategorySearchChange = (value: string) => {
-    setCategoryId(value);
-  };
-
-  const handleCategorySearchTermChange = (term: string) => {
-    setCategorySearchTerm(term);
-  };
-
   return (
     <Dialog open={open} onOpenChange={onOpenChange}>
       <DialogContent className="max-w-md sm:max-w-xl">
@@ -300,34 +339,110 @@ export function ListOnEbayDialog({
           <div>
             <Label htmlFor="categoryId">eBay Category</Label>
             <div className="mt-1">
-              <VirtualizedCombobox
-                options={categoryOptions}
-                value={categoryId}
-                onChange={handleCategorySearchChange}
-                placeholder="Select or search for a category"
-                searchPlaceholder="Type to search categories..."
-                height="250px"
-              />
-              {!categoryIds.data?.length && (
-                <div className="mt-2 flex items-center">
-                  <Input
-                    placeholder="Enter a custom search term for categories"
-                    value={categorySearchTerm}
-                    onChange={(e) => setCategorySearchTerm(e.target.value)}
-                    className="flex-1"
-                  />
+              <Popover
+                open={categoryPopoverOpen}
+                onOpenChange={setCategoryPopoverOpen}
+                modal={true}
+              >
+                <PopoverTrigger asChild>
                   <Button
-                    type="button"
                     variant="outline"
-                    size="icon"
-                    className="ml-2"
-                    onClick={() => setCategorySearchTerm(categorySearchTerm)}
-                    disabled={!categorySearchTerm.trim()}
+                    role="combobox"
+                    aria-expanded={categoryPopoverOpen}
+                    className="w-full justify-between"
                   >
-                    <Search className="h-4 w-4" />
+                    {selectedCategoryLabel || "Select or search for a category"}
+                    <ChevronsUpDown className="ml-2 h-4 w-4 shrink-0 opacity-50" />
                   </Button>
+                </PopoverTrigger>
+                <PopoverContent className="w-[var(--radix-popover-trigger-width)] p-0">
+                  <Command shouldFilter={false}>
+                    <div className="flex items-center border-b px-3">
+                      <CommandInput
+                        placeholder="Search for a category..."
+                        value={categoryInputValue}
+                        onValueChange={handleCategorySearch}
+                        className="flex-1"
+                      />
+                      <Button
+                        type="button"
+                        variant="ghost"
+                        size="icon"
+                        onClick={handleCustomSearch}
+                        className="ml-1 h-8 w-8"
+                        disabled={!categoryInputValue.trim()}
+                      >
+                        <Search className="h-4 w-4" />
+                      </Button>
+                    </div>
+                    <CommandList className="max-h-[250px] overflow-auto">
+                      <CommandEmpty>
+                        {categoryIds.isLoading ? (
+                          <div className="flex items-center justify-center py-6">
+                            <Loader2 className="h-6 w-6 animate-spin text-muted-foreground" />
+                          </div>
+                        ) : (
+                          <div className="py-6 text-center text-sm">
+                            No categories found. Try a different search term.
+                          </div>
+                        )}
+                      </CommandEmpty>
+                      <CommandGroup>
+                        {categoryIds.data?.map(
+                          (category: { value: string; label: string }) => (
+                            <CommandItem
+                              key={category.value}
+                              value={category.value}
+                              onSelect={handleCategorySelect}
+                            >
+                              <Check
+                                className={cn(
+                                  "mr-2 h-4 w-4",
+                                  categoryId === category.value
+                                    ? "opacity-100"
+                                    : "opacity-0",
+                                )}
+                              />
+                              {category.label}
+                            </CommandItem>
+                          ),
+                        )}
+                      </CommandGroup>
+                    </CommandList>
+                  </Command>
+                </PopoverContent>
+              </Popover>
+
+              <div className="mt-2">
+                <div className="text-xs text-muted-foreground">
+                  {categoryIds.data?.length
+                    ? `${categoryIds.data.length} categories found`
+                    : "Enter a more specific search term to find categories"}
                 </div>
-              )}
+                {!categoryIds.data?.length &&
+                  categorySearchTerm &&
+                  !categoryIds.isLoading && (
+                    <div className="mt-2">
+                      <Input
+                        placeholder="Enter a custom search term for categories"
+                        value={categoryInputValue}
+                        onChange={(e) => setCategoryInputValue(e.target.value)}
+                        className="flex-1"
+                      />
+                      <Button
+                        type="button"
+                        variant="outline"
+                        size="sm"
+                        className="mt-1 w-full"
+                        onClick={handleCustomSearch}
+                        disabled={!categoryInputValue.trim()}
+                      >
+                        <Search className="mr-2 h-4 w-4" />
+                        Search for categories
+                      </Button>
+                    </div>
+                  )}
+              </div>
             </div>
           </div>
 
