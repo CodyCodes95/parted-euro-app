@@ -30,7 +30,7 @@ export const env = createEnv({
     EBAY_CERT_ID: z.string(),
     EBAY_SITE_ID: z.string(),
     EBAY_RU_NAME: z.string(),
-    EBAY_FULFILLMENT_ID: z.string(),
+    // EBAY_FULFILLMENT_ID: z.string(),
     EBAY_PAYMENT_ID: z.string(),
     EBAY_RETURN_ID: z.string(),
     RESEND_API_KEY: z.string(),
