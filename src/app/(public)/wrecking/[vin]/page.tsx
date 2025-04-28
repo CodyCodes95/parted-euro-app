@@ -6,6 +6,13 @@ import { Calendar, Gauge, Car } from "lucide-react";
 import { Separator } from "~/components/ui/separator";
 import { Badge } from "~/components/ui/badge";
 import { DonorPartsSearch } from "./parts-search";
+import {
+  Carousel,
+  CarouselContent,
+  CarouselItem,
+  CarouselNext,
+  CarouselPrevious,
+} from "~/components/ui/carousel";
 
 type Props = {
   params: Promise<{ vin: string }>;
@@ -51,24 +58,30 @@ export default async function DonorPartsPage({ params }: Props) {
       {/* Donor Vehicle Summary */}
       <div className="mb-8 rounded-lg border bg-card p-6 shadow-sm">
         <div className="grid gap-6 md:grid-cols-3">
-          {/* Donor Image */}
+          {/* Donor Image Carousel */}
           <div className="relative h-[250px] overflow-hidden rounded-md bg-muted">
-            {donor.images?.[0] ? (
-              <Image
-                src={donor.images[0].url}
-                alt={`${donor.car.make} ${donor.car.model}`}
-                fill
-                className="object-cover"
-                priority
-              />
-            ) : donor.imageUrl ? (
-              <Image
-                src={donor.imageUrl}
-                alt={`${donor.car.make} ${donor.car.model}`}
-                fill
-                className="object-cover"
-                priority
-              />
+            {donor.images && donor.images.length > 0 ? (
+              <Carousel className="h-full w-full">
+                <CarouselContent>
+                  {donor.images.map((image, index) => (
+                    <CarouselItem key={image.id || index}>
+                      <div className="relative aspect-square h-full">
+                        <Image
+                          src={image.url}
+                          alt={`${donor.car.make} ${donor.car.model}`}
+                          fill
+                          className="object-cover"
+                          priority={index === 0}
+                        />
+                      </div>
+                    </CarouselItem>
+                  ))}
+                </CarouselContent>
+                <div className="hidden sm:block">
+                  <CarouselPrevious className="left-2" />
+                  <CarouselNext className="right-2" />
+                </div>
+              </Carousel>
             ) : (
               <div className="flex h-full w-full items-center justify-center bg-muted">
                 <Car className="h-20 w-20 text-muted-foreground" />
