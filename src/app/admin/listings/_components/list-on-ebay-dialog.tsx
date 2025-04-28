@@ -1,6 +1,6 @@
 "use client";
 
-import { useState } from "react";
+import { useEffect, useState } from "react";
 import {
   Dialog,
   DialogContent,
@@ -11,44 +11,395 @@ import {
 } from "~/components/ui/dialog";
 import { Button } from "~/components/ui/button";
 import { toast } from "sonner";
-import { Loader2 } from "lucide-react";
-import { type ListingItem } from "../page";
+import { Loader2, ChevronLeft } from "lucide-react";
+import { type AdminListingsItem } from "~/trpc/shared";
+import { Input } from "~/components/ui/input";
+import { Textarea } from "~/components/ui/textarea";
+import { Label } from "~/components/ui/label";
+import {
+  Select,
+  SelectContent,
+  SelectItem,
+  SelectTrigger,
+  SelectValue,
+} from "~/components/ui/select";
+import { api } from "~/trpc/react";
 
 interface ListOnEbayDialogProps {
   open: boolean;
   onOpenChange: (open: boolean) => void;
-  listing: ListingItem;
+  listing: AdminListingsItem;
 }
+
+type FulfillmentPolicyType = {
+  name: string;
+  marketplaceId: string;
+  categoryTypes: {
+    name: string;
+    default: boolean;
+  }[];
+  handlingTime: {
+    value: number;
+    unit: string;
+  };
+  shipToLocations: {
+    regionIncluded: {
+      regionName: string;
+    }[];
+  };
+  shippingOptions: any[];
+  globalShipping: boolean;
+  pickupDropOff: boolean;
+  localPickup: boolean;
+  freightShipping: boolean;
+  fulfillmentPolicyId: string;
+};
 
 export function ListOnEbayDialog({
   open,
   onOpenChange,
   listing,
 }: ListOnEbayDialogProps) {
+  // Form state
+  const [title, setTitle] = useState<string>(
+    `${listing.title} ${listing.parts[0]?.partDetails.partNo ?? ""}`,
+  );
+  const [description, setDescription] = useState<string>(listing.description);
+  const [condition, setCondition] = useState<string>(listing.condition);
+  const [price, setPrice] = useState<number>(
+    Math.ceil(listing.price * 0.15 + listing.price),
+  );
+  const [ebayCondition, setEbayCondition] = useState("");
+  const [categoryId, setCategoryId] = useState<string>("");
+  const [domesticShipping, setDomesticShipping] = useState<number>(0);
+  const [internationalShipping, setInternationalShipping] = useState<number>(0);
+  const [createNewFulfillmentPolicy, setCreateNewFulfillmentPolicy] =
+    useState<boolean>(false);
+  const [fulfillmentPolicy, setFulfillmentPolicy] =
+    useState<FulfillmentPolicyType | null>(null);
+  const [quantity, setQuantity] = useState<number>(1);
   const [isSubmitting, setIsSubmitting] = useState(false);
+  const [validated, setValidated] = useState<boolean>(false);
 
-  const handleListOnEbay = () => {
+  // API calls
+  const createEbayListing = api.ebay.createListing.useMutation();
+  const fulfillmentPolicies = api.ebay.getFulfillmentPolicies.useQuery();
+  const categoryIds = api.ebay.getCategoryIds.useQuery({
+    title: title,
+  });
+
+  // Calculate quantity based on parts
+  useEffect(() => {
+    // Check if all parts have the same part number
+    const allSamePartNo = listing.parts.every((part) => {
+      const partNumber = listing.parts[0]?.partDetails.partNo;
+      return part.partDetails.partNo === partNumber;
+    });
+
+    if (allSamePartNo) {
+      // Sum up quantities of all parts with the same part number
+      const totalQuantity = listing.parts.reduce((total, part) => {
+        return total + 1; // Assuming each part represents 1 quantity
+      }, 0);
+      setQuantity(totalQuantity);
+    } else {
+      // If parts have different part numbers, default to 1
+      setQuantity(1);
+    }
+  }, [listing]);
+
+  // Form validation
+  useEffect(() => {
+    if (
+      title &&
+      description &&
+      condition &&
+      price &&
+      ebayCondition &&
+      categoryId
+    ) {
+      setValidated(true);
+    } else {
+      setValidated(false);
+    }
+  }, [title, description, condition, price, ebayCondition, categoryId]);
+
+  // eBay condition options
+  const ebayConditions = [
+    { label: "New", value: "NEW" },
+    { label: "Used", value: "USED_EXCELLENT" },
+    { label: "For Parts Or Not Working", value: "FOR_PARTS_OR_NOT_WORKING" },
+  ];
+
+  // Create HTML table for part fitment
+  const makeTableHTML = () => {
+    // Deduplicate parts based on car
+    const uniqueParts = listing.parts.reduce((acc: any[], cur) => {
+      const existingPart = acc.find(
+        (part) =>
+          part.partDetails.cars?.[0] &&
+          cur.partDetails.cars?.[0] &&
+          part.partDetails.cars[0].id === cur.partDetails.cars[0].id,
+      );
+
+      if (!existingPart) {
+        acc.push(cur);
+      }
+      return acc;
+    }, []);
+
+    // Generate HTML rows
+    return uniqueParts
+      .map((part) => {
+        if (!part.partDetails.cars) return "";
+
+        return part.partDetails.cars
+          .map((car: any) => {
+            return `<tr style="padding:1rem; border-bottom: 1px solid #ddd">
+          <td>${car.series || ""}</td>
+          <td>${car.generation || ""}</td>
+          <td>${car.model || ""}</td>
+        </tr>`;
+          })
+          .join("");
+      })
+      .join("");
+  };
+
+  // Handle form submission
+  const handleListOnEbay = async () => {
+    if (!validated) return;
+
     setIsSubmitting(true);
 
-    // Placeholder for future implementation
-    setTimeout(() => {
-      toast.success(
-        `Listing "${listing.title}" will be listed on eBay (placeholder)`,
-      );
-      setIsSubmitting(false);
+    try {
+      await createEbayListing.mutateAsync({
+        listingId: listing.id,
+        title: title,
+        price: price,
+        description: description,
+        images: listing.images.map((image) => image.url),
+        condition: condition,
+        conditionDescription: ebayCondition,
+        quantity: quantity,
+        partNo: listing.parts[0]?.partDetails.partNo || "",
+        categoryId: categoryId,
+        domesticShipping: domesticShipping,
+        internationalShipping: internationalShipping,
+        fulfillmentPolicyId: fulfillmentPolicy?.fulfillmentPolicyId,
+        partsTable: `<table style="padding:1rem; text-align:center; max-width:40rem;">
+          <thead>
+            <tr style="border-bottom: 1px solid #ddd">
+              <th style="padding:1rem;">Series</th>
+              <th>Generation</th>
+              <th>Model</th>
+            </tr>
+          </thead>
+          <tbody>${makeTableHTML()}</tbody>
+        </table>`,
+      });
+
+      toast.success(`Listing "${listing.title}" has been listed on eBay`);
       onOpenChange(false);
-    }, 1000);
+    } catch (error) {
+      toast.error("Failed to create eBay listing");
+      console.error(error);
+    } finally {
+      setIsSubmitting(false);
+    }
   };
 
   return (
     <Dialog open={open} onOpenChange={onOpenChange}>
-      <DialogContent className="sm:max-w-[425px]">
+      <DialogContent className="max-w-md sm:max-w-xl">
         <DialogHeader>
           <DialogTitle>List on eBay</DialogTitle>
           <DialogDescription>
-            Do you want to list "{listing.title}" on eBay?
+            Configure your eBay listing details below
           </DialogDescription>
         </DialogHeader>
+
+        <div className="grid gap-4 py-2">
+          <div className="relative">
+            <Label htmlFor="title">Title</Label>
+            <Input
+              id="title"
+              className="mt-1"
+              value={title}
+              placeholder="Title"
+              onChange={(e) => setTitle(e.target.value)}
+            />
+            <span
+              className={`absolute bottom-1 right-2 text-xs ${
+                title.length > 80 ? "text-destructive" : "text-muted-foreground"
+              }`}
+            >
+              {title.length}/80
+            </span>
+          </div>
+
+          <div>
+            <Label htmlFor="description">Description</Label>
+            <Textarea
+              id="description"
+              className="mt-1"
+              value={description}
+              rows={4}
+              placeholder="Description"
+              onChange={(e) => setDescription(e.target.value)}
+            />
+          </div>
+
+          <div>
+            <Label htmlFor="condition">Condition Notes</Label>
+            <Input
+              id="condition"
+              className="mt-1"
+              value={condition}
+              placeholder="Condition (Will be appended to description)"
+              onChange={(e) => setCondition(e.target.value)}
+            />
+          </div>
+
+          <div>
+            <Label htmlFor="ebayCondition">eBay Condition</Label>
+            <Select value={ebayCondition} onValueChange={setEbayCondition}>
+              <SelectTrigger className="mt-1">
+                <SelectValue placeholder="Select eBay condition" />
+              </SelectTrigger>
+              <SelectContent>
+                {ebayConditions.map((condition) => (
+                  <SelectItem key={condition.value} value={condition.value}>
+                    {condition.label}
+                  </SelectItem>
+                ))}
+              </SelectContent>
+            </Select>
+          </div>
+
+          <div>
+            <Label htmlFor="categoryId">eBay Category</Label>
+            <Select value={categoryId} onValueChange={setCategoryId}>
+              <SelectTrigger className="mt-1">
+                <SelectValue placeholder="Select eBay category" />
+              </SelectTrigger>
+              <SelectContent>
+                {categoryIds.data?.map((category: any) => (
+                  <SelectItem key={category.value} value={category.value}>
+                    {category.label}
+                  </SelectItem>
+                ))}
+              </SelectContent>
+            </Select>
+          </div>
+
+          <div>
+            <Label htmlFor="price">Price (AUD)</Label>
+            <Input
+              id="price"
+              className="mt-1"
+              type="number"
+              value={price || undefined}
+              placeholder="Price"
+              onChange={(e) => setPrice(Number(e.target.value))}
+            />
+          </div>
+
+          <div>
+            <Label htmlFor="quantity">Quantity</Label>
+            <Input
+              id="quantity"
+              className="mt-1"
+              type="number"
+              value={quantity || undefined}
+              placeholder="Quantity"
+              onChange={(e) => setQuantity(Number(e.target.value))}
+            />
+          </div>
+
+          {createNewFulfillmentPolicy ? (
+            <>
+              <div
+                className="cursor-pointer bg-muted p-2"
+                onClick={() => setCreateNewFulfillmentPolicy(false)}
+              >
+                <ChevronLeft className="h-4 w-4" />
+                <span className="ml-1 text-sm">Back to policy selection</span>
+              </div>
+
+              <div>
+                <Label htmlFor="domesticShipping">
+                  Domestic Shipping (AUD)
+                </Label>
+                <Input
+                  id="domesticShipping"
+                  className="mt-1"
+                  type="number"
+                  value={domesticShipping || undefined}
+                  placeholder="Domestic shipping cost"
+                  onChange={(e) => setDomesticShipping(Number(e.target.value))}
+                />
+              </div>
+
+              <div>
+                <Label htmlFor="internationalShipping">
+                  International Shipping (AUD)
+                </Label>
+                <Input
+                  id="internationalShipping"
+                  className="mt-1"
+                  type="number"
+                  value={internationalShipping || undefined}
+                  placeholder="International shipping cost"
+                  onChange={(e) =>
+                    setInternationalShipping(Number(e.target.value))
+                  }
+                />
+              </div>
+            </>
+          ) : (
+            <>
+              <div>
+                <Label htmlFor="fulfillmentPolicy">Fulfillment Policy</Label>
+                <Select
+                  value={fulfillmentPolicy?.fulfillmentPolicyId || ""}
+                  onValueChange={(value) => {
+                    const policy = fulfillmentPolicies.data?.find(
+                      (p) => p.fulfillmentPolicyId === value,
+                    );
+                    setFulfillmentPolicy(policy || null);
+                  }}
+                >
+                  <SelectTrigger className="mt-1">
+                    <SelectValue placeholder="Select a fulfillment policy" />
+                  </SelectTrigger>
+                  <SelectContent>
+                    {fulfillmentPolicies.data?.map((policy) => (
+                      <SelectItem
+                        key={policy.fulfillmentPolicyId}
+                        value={policy.fulfillmentPolicyId}
+                      >
+                        {policy.name}
+                      </SelectItem>
+                    ))}
+                  </SelectContent>
+                </Select>
+              </div>
+
+              <Button
+                variant="link"
+                className="mt-0 justify-start p-0 text-sm"
+                onClick={() => {
+                  setFulfillmentPolicy(null);
+                  setCreateNewFulfillmentPolicy(true);
+                }}
+              >
+                Create new shipping policy
+              </Button>
+            </>
+          )}
+        </div>
+
         <DialogFooter>
           <Button
             type="button"
@@ -61,7 +412,7 @@ export function ListOnEbayDialog({
           <Button
             type="button"
             onClick={handleListOnEbay}
-            disabled={isSubmitting}
+            disabled={isSubmitting || !validated}
           >
             {isSubmitting && <Loader2 className="mr-2 h-4 w-4 animate-spin" />}
             List on eBay
