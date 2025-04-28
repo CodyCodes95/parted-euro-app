@@ -89,33 +89,7 @@ export function FinalizeOrderDialog({
   });
 
   // Prepare checkout session query (for Stripe URL)
-  const createCheckoutQuery = api.checkout.getAdminCheckoutSession.useQuery(
-    {
-      name: watch("name"),
-      email: watch("email"),
-      shippingOptions: [
-        {
-          shipping_rate_data: {
-            type: "fixed_amount",
-            fixed_amount: {
-              amount: Math.round(watch("postageCost") * 100),
-              currency: "AUD",
-            },
-            display_name: watch("shippingMethod"),
-          },
-        },
-      ],
-      countryCode: watch("countryCode"),
-      items: orderItems.map((item) => ({
-        itemId: item.listingId,
-        price: item.price,
-        quantity: item.quantity,
-      })),
-    },
-    {
-      enabled: false,
-    },
-  );
+  const createCheckoutQuery = api.checkout.getStripeCheckout.useMutation();
 
   const handleCashPayment = async (data: FormData) => {
     setIsSubmitting(true);
@@ -137,9 +111,30 @@ export function FinalizeOrderDialog({
   const handleStripePayment = async () => {
     setIsSubmitting(true);
     try {
-      const result = await createCheckoutQuery.refetch();
-      if (result.data?.url) {
-        void navigator.clipboard.writeText(result.data.url);
+      const result = await createCheckoutQuery.mutateAsync({
+        name: watch("name"),
+        email: watch("email"),
+        shippingOptions: [
+          {
+            shipping_rate_data: {
+              type: "fixed_amount",
+              fixed_amount: {
+                amount: Math.round(watch("postageCost") * 100),
+                currency: "AUD",
+              },
+              display_name: watch("shippingMethod"),
+            },
+          },
+        ],
+        countryCode: watch("countryCode"),
+        items: orderItems.map((item) => ({
+          itemId: item.listingId,
+          quantity: item.quantity,
+        })),
+      });
+
+      if (result.url) {
+        void navigator.clipboard.writeText(result.url);
         toast.success("Stripe payment URL copied to clipboard");
       }
     } catch (error) {
@@ -154,6 +149,11 @@ export function FinalizeOrderDialog({
     (sum, item) => sum + item.price * item.quantity,
     0,
   );
+
+  // Format price from cents to dollars
+  const formatPrice = (cents: number) => {
+    return (cents / 100).toFixed(2);
+  };
 
   // Remove an item from the order
   const handleRemoveItem = (listingId: string) => {
@@ -192,10 +192,10 @@ export function FinalizeOrderDialog({
                     <div className="flex-1">
                       <h5 className="font-medium">{listing.title}</h5>
                       <div className="mt-1 text-sm text-muted-foreground">
-                        <div>Price: ${item.price.toFixed(2)}</div>
+                        <div>Price: ${formatPrice(item.price)}</div>
                         <div>Quantity: {item.quantity}</div>
                         <div>
-                          Subtotal: ${(item.price * item.quantity).toFixed(2)}
+                          Subtotal: ${formatPrice(item.price * item.quantity)}
                         </div>
                       </div>
                     </div>
@@ -214,7 +214,7 @@ export function FinalizeOrderDialog({
             </div>
             <div className="mt-4 flex items-center justify-between border-t pt-2">
               <span className="font-bold">Total:</span>
-              <span className="font-bold">${totalPrice.toFixed(2)}</span>
+              <span className="font-bold">${formatPrice(totalPrice)}</span>
             </div>
           </div>
 
@@ -366,7 +366,7 @@ export function FinalizeOrderDialog({
                 onClick={handleSubmit(handleStripePayment)}
                 disabled={isSubmitting}
               >
-                {createCheckoutQuery.isFetching && (
+                {createCheckoutQuery.isPending && (
                   <Loader2 className="mr-2 h-4 w-4 animate-spin" />
                 )}
                 Get Stripe URL
