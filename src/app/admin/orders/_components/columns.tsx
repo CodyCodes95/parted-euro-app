@@ -138,7 +138,7 @@ export function getOrderColumns({
           <span>{row.original.shippingMethod ?? ""}</span>
           {row.original.shipping > 0 && (
             <span className="text-xs text-muted-foreground">
-              {formatPrice(row.original.shipping)}
+              {formatPrice(row.original.shipping * 100)}
             </span>
           )}
         </div>

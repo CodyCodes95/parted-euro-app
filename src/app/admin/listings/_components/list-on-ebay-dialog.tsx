@@ -256,17 +256,6 @@ export function ListOnEbayDialog({
           </div>
 
           <div>
-            <Label htmlFor="condition">Condition Notes</Label>
-            <Input
-              id="condition"
-              className="mt-1 hidden"
-              value={condition}
-              placeholder="Condition (Will be appended to description)"
-              onChange={(e) => setCondition(e.target.value)}
-            />
-          </div>
-
-          <div>
             <Label htmlFor="ebayCondition">eBay Condition</Label>
             <Select value={ebayCondition} onValueChange={setEbayCondition}>
               <SelectTrigger className="mt-1">

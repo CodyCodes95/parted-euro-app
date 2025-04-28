@@ -20,6 +20,7 @@ import { Badge } from "~/components/ui/badge";
 import { type AdminListingsItem } from "~/trpc/shared";
 import { Link } from "~/components/link";
 import { DataTableColumnHeader } from "~/components/data-table/data-table-column-header";
+import { Checkbox } from "~/components/ui/checkbox";
 
 const formatter = new Intl.NumberFormat("en-AU", {
   style: "currency",
@@ -43,6 +44,28 @@ export function getListingColumns({
   onListOnEbay,
 }: ListingColumnsProps): ColumnDef<AdminListingsItem>[] {
   return [
+    {
+      id: "select",
+      header: ({ table }) => (
+        <Checkbox
+          checked={
+            table.getIsAllPageRowsSelected() ||
+            (table.getIsSomePageRowsSelected() && "indeterminate")
+          }
+          onCheckedChange={(value) => table.toggleAllPageRowsSelected(!!value)}
+          aria-label="Select all"
+        />
+      ),
+      cell: ({ row }) => (
+        <Checkbox
+          checked={row.getIsSelected()}
+          onCheckedChange={(value) => row.toggleSelected(!!value)}
+          aria-label="Select row"
+        />
+      ),
+      enableSorting: false,
+      enableHiding: false,
+    },
     {
       accessorKey: "title",
       header: ({ column }) => (
