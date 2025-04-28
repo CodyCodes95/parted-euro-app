@@ -84,7 +84,6 @@ model Donor {
     createdAt      DateTime  @default(now())
     updatedAt      DateTime  @updatedAt
     parts          Part[]
-    imageUrl       String?
     images         Image[]
     hideFromSearch Boolean   @default(false)
     dateInStock    DateTime?
