@@ -13,7 +13,6 @@ import {
   CarouselNext,
   CarouselPrevious,
 } from "~/components/ui/carousel";
-import { LightboxCarousel } from "~/components/ui/lightbox-carousel";
 
 type Props = {
   params: Promise<{ vin: string }>;
@@ -62,11 +61,27 @@ export default async function DonorPartsPage({ params }: Props) {
           {/* Donor Image Carousel */}
           <div className="relative h-[250px] overflow-hidden rounded-md bg-muted">
             {donor.images && donor.images.length > 0 ? (
-              <LightboxCarousel
-                images={donor.images}
-                aspectRatio="square"
-                objectFit="cover"
-              />
+              <Carousel className="h-full w-full">
+                <CarouselContent>
+                  {donor.images.map((image, index) => (
+                    <CarouselItem key={image.id || index}>
+                      <div className="relative aspect-square h-full">
+                        <Image
+                          src={image.url}
+                          alt={`${donor.car.make} ${donor.car.model}`}
+                          fill
+                          className="object-cover"
+                          priority={index === 0}
+                        />
+                      </div>
+                    </CarouselItem>
+                  ))}
+                </CarouselContent>
+                <div className="hidden sm:block">
+                  <CarouselPrevious className="left-2" />
+                  <CarouselNext className="right-2" />
+                </div>
+              </Carousel>
             ) : (
               <div className="flex h-full w-full items-center justify-center bg-muted">
                 <Car className="h-20 w-20 text-muted-foreground" />
