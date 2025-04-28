@@ -83,7 +83,7 @@ export function BulkOrderDialog({
       const orderItems: OrderItem[] = inputValues.map((input) => ({
         listingId: input.listingId,
         quantity: parseInt(input.quantityValue) || 1,
-        price: (parseFloat(input.priceValue) || 0) * 100, // Convert dollars to cents
+        price: parseFloat(input.priceValue) || 0,
       }));
 
       onOrderCreate(orderItems);

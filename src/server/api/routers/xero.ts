@@ -131,7 +131,7 @@ export const xeroRouter = createTRPCRouter({
             name: input.name,
             email: input.email,
             shipping: input.postageCost,
-            subtotal: subtotal,
+            subtotal: subtotal / 100,
             status: "PAID",
             shippingMethod: input.shippingMethod,
             orderItems: {
