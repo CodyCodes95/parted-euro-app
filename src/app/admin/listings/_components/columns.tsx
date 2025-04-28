@@ -30,6 +30,30 @@ const formatter = new Intl.NumberFormat("en-AU", {
 
 const formatPrice = (price: number) => formatter.format(price);
 
+// Function to calculate quantity based on parts
+const calculateQty = (listing: AdminListingsItem) => {
+  // Group parts by partDetailsId and sum their quantities
+  const groupedParts = listing.parts.reduce(
+    (acc, part) => {
+      const partDetailsId = part.partDetails.partNo;
+      if (!acc[partDetailsId]) {
+        acc[partDetailsId] = 0;
+      }
+      // Now we can use the actual quantity field from the part
+      acc[partDetailsId] += part.quantity;
+      return acc;
+    },
+    {} as Record<string, number>,
+  );
+
+  // Find the maximum sum of quantities for any part number
+  const maxQuantity =
+    Object.values(groupedParts).length > 0
+      ? Math.max(...Object.values(groupedParts))
+      : 0;
+  return maxQuantity;
+};
+
 interface ListingColumnsProps {
   onEdit: (listing: AdminListingsItem) => void;
   onDelete: (listing: AdminListingsItem) => void;
@@ -127,15 +151,17 @@ export function getListingColumns({
         </span>
       ),
     },
-    // {
-    //   accessorKey: "quantity",
-    //   header: "Quantity",
-    //   cell: ({ row }) => {
-    //     const parts = row.original.parts;
-    //     const totalQuantity = parts.reduce((sum, part) => sum + 1, 0);
-    //     return totalQuantity;
-    //   },
-    // },
+    {
+      accessorKey: "quantity",
+      header: ({ column }) => (
+        <DataTableColumnHeader column={column} title="Quantity" />
+      ),
+      accessorFn: (row) => calculateQty(row),
+      cell: ({ row }) => {
+        const quantity = calculateQty(row.original);
+        return <span className="font-mono text-xs">{quantity}</span>;
+      },
+    },
     {
       accessorKey: "createdAt",
       header: ({ column }) => (
