@@ -36,9 +36,25 @@ export default function DonorsAdminPage() {
     setIsEditDonorOpen(true);
   };
 
+  const handleEditDialogChange = (open: boolean) => {
+    setIsEditDonorOpen(open);
+    if (!open) {
+      // Reset selected donor when dialog closes
+      setSelectedDonor(null);
+    }
+  };
+
   const handleDeleteDonor = (donor: DonorWithCar) => {
     setSelectedDonor(donor);
     setIsDeleteDonorOpen(true);
+  };
+
+  const handleDeleteDialogChange = (open: boolean) => {
+    setIsDeleteDonorOpen(open);
+    if (!open) {
+      // Reset selected donor when dialog closes
+      setSelectedDonor(null);
+    }
   };
 
   const columns = getDonorColumns({
@@ -71,14 +87,15 @@ export default function DonorsAdminPage() {
       {selectedDonor && (
         <>
           <DonorForm
+            key={selectedDonor.vin}
             open={isEditDonorOpen}
-            onOpenChange={setIsEditDonorOpen}
+            onOpenChange={handleEditDialogChange}
             defaultValues={selectedDonor}
             isEditing
           />
           <DeleteDonorDialog
             open={isDeleteDonorOpen}
-            onOpenChange={setIsDeleteDonorOpen}
+            onOpenChange={handleDeleteDialogChange}
             donor={selectedDonor}
           />
         </>

@@ -217,6 +217,19 @@ export function DonorForm({
     }
   }, [defaultValues]);
 
+  // Reset images and form when dialog closes
+  useEffect(() => {
+    if (!open) {
+      if (!isEditing) {
+        form.reset();
+      }
+      // When dialog closes, reset images state if not in edit mode
+      if (!isEditing || !defaultValues) {
+        setImages([]);
+      }
+    }
+  }, [open, isEditing, defaultValues, form]);
+
   // Fetch car options for the select input
   const carOptionsQuery = api.donor.getAllCars.useQuery();
   const carOptions = carOptionsQuery.data ?? [];
@@ -327,7 +340,16 @@ export function DonorForm({
   }
 
   return (
-    <Dialog open={open} onOpenChange={onOpenChange}>
+    <Dialog
+      open={open}
+      onOpenChange={(newOpen) => {
+        if (!newOpen && !isEditing) {
+          form.reset();
+          setImages([]);
+        }
+        onOpenChange(newOpen);
+      }}
+    >
       <DialogContent className="max-h-[90vh] overflow-y-auto sm:max-w-[600px]">
         <DialogHeader>
           <DialogTitle>
