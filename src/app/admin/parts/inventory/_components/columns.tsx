@@ -147,7 +147,9 @@ export function getInventoryColumns({
     },
     {
       accessorKey: "donorVin",
-      header: "Donor VIN",
+      header: ({ column }) => (
+        <DataTableColumnHeader column={column} title="Donor VIN" />
+      ),
       cell: ({ row }) => row.original.donorVin ?? "",
     },
     {
