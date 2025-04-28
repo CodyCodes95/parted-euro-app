@@ -50,7 +50,7 @@ export function getListingColumns({
       ),
       cell: ({ row }) => {
         return (
-          <Link href={`/admin/listings/${row.original.id}`}>
+          <Link href={`/listings/${row.original.id}`}>
             {row.original.title}
           </Link>
         );
