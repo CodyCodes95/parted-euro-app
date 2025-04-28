@@ -102,7 +102,7 @@ export function getListingColumns({
               <Badge
                 key={part.id}
                 variant="outline"
-                className="font-mono text-xs"
+                className="w-fit font-mono text-xs"
               >
                 {part.partDetails.partNo}
               </Badge>
