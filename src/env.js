@@ -77,7 +77,7 @@ export const env = createEnv({
     EBAY_CERT_ID: process.env.EBAY_CERT_ID,
     EBAY_SITE_ID: process.env.EBAY_SITE_ID,
     EBAY_RU_NAME: process.env.EBAY_RU_NAME,
-    EBAY_FULFILLMENT_ID: process.env.EBAY_FULFILLMENT_ID,
+    // EBAY_FULFILLMENT_ID: process.env.EBAY_FULFILLMENT_ID,
     EBAY_PAYMENT_ID: process.env.EBAY_PAYMENT_ID,
     EBAY_RETURN_ID: process.env.EBAY_RETURN_ID,
     RESEND_API_KEY: process.env.RESEND_API_KEY,
