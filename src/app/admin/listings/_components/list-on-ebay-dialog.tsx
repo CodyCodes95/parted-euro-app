@@ -30,7 +30,6 @@ import {
   SelectValue,
 } from "~/components/ui/select";
 import { api } from "~/trpc/react";
-import { useQueryClient } from "@tanstack/react-query";
 import {
   Command,
   CommandEmpty,
@@ -104,7 +103,7 @@ export function ListOnEbayDialog({
   const [quantity, setQuantity] = useState<number>(1);
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [validated, setValidated] = useState<boolean>(false);
-  const queryClient = useQueryClient();
+  const utils = api.useUtils();
 
   // API calls
   const createEbayListing = api.ebay.createListing.useMutation();
@@ -267,9 +266,7 @@ export function ListOnEbayDialog({
       });
 
       toast.success(`Listing "${listing.title}" has been listed on eBay`);
-      await queryClient.invalidateQueries({
-        queryKey: ["listings", "getAllAdmin"],
-      });
+      void utils.listings.getAllAdmin.invalidate();
       onOpenChange(false);
     } catch (error) {
       toast.error("Failed to create eBay listing");
