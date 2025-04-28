@@ -3,19 +3,13 @@ import { api } from "~/trpc/server";
 import { notFound } from "next/navigation";
 import Image from "next/image";
 import { formatCurrency } from "~/lib/utils";
-import {
-  Carousel,
-  CarouselContent,
-  CarouselItem,
-  CarouselNext,
-  CarouselPrevious,
-} from "~/components/ui/carousel";
 import { Separator } from "~/components/ui/separator";
 import { Badge } from "~/components/ui/badge";
 import { AddToCart } from "./add-to-cart";
 import { InteractiveCompatibleCars } from "./interactive-compatible-cars";
 import { RelatedListings } from "./related-listings";
 import { ListingAnalytics } from "./listing-analytics";
+import { LightboxCarousel } from "~/components/ui/lightbox-carousel";
 
 type Props = {
   params: Promise<{ id: string }>;
@@ -59,6 +53,16 @@ export default async function ListingPage({ params }: Props) {
     parts?.reduce((acc, part) => acc + (part.quantity ?? 0), 0) ?? 0;
   const inStock = quantity > 0;
 
+  // Format images to ensure consistent structure
+  const formattedImages =
+    images && images.length > 0
+      ? images.map((img) => ({
+          id: img.id || `img-${Math.random().toString(36).substr(2, 9)}`,
+          url: img.url,
+          alt: title ?? "",
+        }))
+      : [];
+
   // Deduplicate parts by partNo for the first part reference
   const uniqueParts = parts?.reduce(
     (acc, part) => {
@@ -100,28 +104,12 @@ export default async function ListingPage({ params }: Props) {
       <div className="grid gap-8 md:grid-cols-2">
         {/* Image carousel */}
         <div className="relative overflow-hidden rounded-lg bg-background">
-          {images && images.length > 0 ? (
-            <Carousel className="w-full">
-              <CarouselContent>
-                {images.map((image) => (
-                  <CarouselItem key={image.id}>
-                    <div className="relative aspect-square h-full w-full">
-                      <Image
-                        src={image.url}
-                        alt={title ?? ""}
-                        fill
-                        className="object-cover"
-                        priority={images[0] === image}
-                      />
-                    </div>
-                  </CarouselItem>
-                ))}
-              </CarouselContent>
-              <div className="hidden sm:block">
-                <CarouselPrevious className="left-4" />
-                <CarouselNext className="right-4" />
-              </div>
-            </Carousel>
+          {formattedImages.length > 0 ? (
+            <LightboxCarousel
+              images={formattedImages}
+              aspectRatio="square"
+              objectFit="cover"
+            />
           ) : (
             <div className="flex aspect-square items-center justify-center bg-muted">
               <p className="text-muted-foreground">No images available</p>
@@ -163,7 +151,7 @@ export default async function ListingPage({ params }: Props) {
                 listingId={id}
                 listingTitle={title ?? ""}
                 listingPrice={price ?? 0}
-                listingImage={images?.[0]?.url}
+                listingImage={formattedImages[0]?.url}
                 quantity={quantity}
                 dimensions={{
                   length: firstPart?.partDetails?.length ?? null,
