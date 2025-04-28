@@ -9,6 +9,7 @@ import { AddTrackingDialog } from "./_components/add-tracking-dialog";
 import { OrderDetailsDialog } from "./_components/order-details-dialog";
 import { UpdateStatusDialog } from "./_components/update-status-dialog";
 import { type AdminOrdersItem } from "~/trpc/shared";
+import { toast } from "sonner";
 
 export default function OrdersAdminPage() {
   const [selectedOrder, setSelectedOrder] = useState<AdminOrdersItem | null>(
@@ -50,6 +51,7 @@ export default function OrdersAdminPage() {
           onSuccess: () => {
             // Refetch orders to update the UI
             void ordersQuery?.refetch?.();
+            toast.success("Order status updated and notification email sent");
           },
         },
       );

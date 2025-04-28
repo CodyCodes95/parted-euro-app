@@ -66,8 +66,18 @@ export function UpdateStatusDialog({
   });
 
   const updateOrderMutation = api.orders.updateStatus.useMutation({
-    onSuccess: () => {
-      toast.success("Order status updated successfully");
+    onSuccess: (_, variables) => {
+      let successMessage = "Order status updated successfully";
+
+      if (variables.status === "Ready for pickup") {
+        successMessage =
+          "Order status updated and pickup notification email sent";
+      } else if (variables.status === "SHIPPED") {
+        successMessage =
+          "Order status updated and shipping notification email sent";
+      }
+
+      toast.success(successMessage);
       onSuccess();
       onOpenChange(false);
     },

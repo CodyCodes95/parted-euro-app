@@ -62,7 +62,9 @@ export function AddTrackingDialog({
 
   const updateOrderMutation = api.orders.updateTracking.useMutation({
     onSuccess: () => {
-      toast.success("Tracking information updated successfully");
+      toast.success(
+        "Tracking information updated and shipping notification email sent",
+      );
       onSuccess();
       onOpenChange(false);
     },

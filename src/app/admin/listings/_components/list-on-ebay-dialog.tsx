@@ -254,7 +254,7 @@ export function ListOnEbayDialog({
             <Label htmlFor="condition">Condition Notes</Label>
             <Input
               id="condition"
-              className="mt-1"
+              className="mt-1 hidden"
               value={condition}
               placeholder="Condition (Will be appended to description)"
               onChange={(e) => setCondition(e.target.value)}

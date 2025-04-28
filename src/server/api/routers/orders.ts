@@ -1,6 +1,10 @@
 import { z } from "zod";
 import { createTRPCRouter, publicProcedure, adminProcedure } from "../trpc";
 import { type Prisma } from "@prisma/client";
+import {
+  sendOrderReadyForPickupEmail,
+  sendOrderShippedEmail,
+} from "../../resend/resend";
 
 export const ordersRouter = createTRPCRouter({
   getOrderById: publicProcedure
@@ -59,14 +63,14 @@ export const ordersRouter = createTRPCRouter({
                   select: {
                     partDetails: {
                       select: {
-                        partNo: true
-                      }
-                    }
-                  }
+                        partNo: true,
+                      },
+                    },
+                  },
                 },
                 images: {
                   select: {
-                    url: true
+                    url: true,
                   },
                   orderBy: {
                     order: "asc",
@@ -109,7 +113,26 @@ export const ordersRouter = createTRPCRouter({
           // If adding tracking, typically this means it's been shipped
           status: "SHIPPED",
         },
+        include: {
+          orderItems: {
+            include: {
+              listing: {
+                include: {
+                  images: {
+                    orderBy: {
+                      order: "asc",
+                    },
+                    take: 1,
+                  },
+                },
+              },
+            },
+          },
+        },
       });
+
+      // Send shipping email notification
+      void sendOrderShippedEmail(updatedOrder);
 
       return updatedOrder;
     }),
@@ -128,7 +151,30 @@ export const ordersRouter = createTRPCRouter({
         data: {
           status: input.status,
         },
+        include: {
+          orderItems: {
+            include: {
+              listing: {
+                include: {
+                  images: {
+                    orderBy: {
+                      order: "asc",
+                    },
+                    take: 1,
+                  },
+                },
+              },
+            },
+          },
+        },
       });
+
+      // Send appropriate email based on status
+      if (input.status === "Ready for pickup") {
+        void sendOrderReadyForPickupEmail(updatedOrder);
+      } else if (input.status === "SHIPPED") {
+        void sendOrderShippedEmail(updatedOrder);
+      }
 
       return updatedOrder;
     }),
