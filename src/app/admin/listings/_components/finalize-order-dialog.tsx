@@ -149,10 +149,9 @@ export function FinalizeOrderDialog({
     (sum, item) => sum + item.price * item.quantity,
     0,
   );
-
-  // Format price from cents to dollars
-  const formatPrice = (cents: number) => {
-    return (cents / 100).toFixed(2);
+  
+  const formatPrice = (dollars: number) => {
+    return (dollars).toFixed(2);
   };
 
   // Remove an item from the order
