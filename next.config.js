@@ -17,7 +17,7 @@ const config = {
     reactCompiler: true,
   },
   images: {
-    domains: ["res.cloudinary.com"],
+    domains: ["res.cloudinary.com", "utfs.io"],
   },
 };
 
