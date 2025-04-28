@@ -162,6 +162,48 @@ export const xeroRouter = createTRPCRouter({
           });
         }
 
+        // Update inventory quantities for ordered items
+        const orderItems = await db.orderItem.findMany({
+          where: {
+            orderId: order.id,
+          },
+          include: {
+            listing: true,
+          },
+        });
+
+        for (const item of orderItems) {
+          const listing = item.listing.id;
+          const listingItems = await db.listing.findUnique({
+            where: {
+              id: listing,
+            },
+            include: {
+              parts: true,
+            },
+          });
+
+          for (const part of listingItems!.parts) {
+            await db.listing.update({
+              where: {
+                id: listing,
+              },
+              data: {
+                parts: {
+                  update: {
+                    where: {
+                      id: part.id,
+                    },
+                    data: {
+                      quantity: part.quantity - item.quantity,
+                    },
+                  },
+                },
+              },
+            });
+          }
+        }
+
         // Create Xero invoice
         await createXeroInvoice({
           items: lineItemsFormatted,
