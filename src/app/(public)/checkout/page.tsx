@@ -448,7 +448,7 @@ export default function Checkout() {
                           <AddressAutoComplete
                             address={address}
                             setAddress={setAddress}
-                            placeholder="Enter your Australian address"
+                            placeholder="Enter your postcode/suburb"
                           />
                         </FormControl>
                         <FormDescription>
