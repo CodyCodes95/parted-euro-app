@@ -88,6 +88,7 @@ type ImageItem = {
   id: string;
   url: string;
   order: number;
+  isFromPartImages?: boolean;
 };
 
 // Add an interface for part images
@@ -1356,6 +1357,7 @@ export function InventoryForm({
                                         order:
                                           images.length +
                                           partImages.indexOf(img),
+                                        isFromPartImages: true,
                                       }));
 
                                     setImages((prev) => [
@@ -1385,6 +1387,7 @@ export function InventoryForm({
                                             id: image.id,
                                             url: image.url,
                                             order: images.length,
+                                            isFromPartImages: true,
                                           },
                                         ]);
                                         toast.success(

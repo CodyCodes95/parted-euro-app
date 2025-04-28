@@ -17,6 +17,7 @@ const inventorySchema = z.object({
         id: z.string(),
         url: z.string(),
         order: z.number(),
+        isFromPartImages: z.boolean().optional(),
       }),
     )
     .optional(),
@@ -161,7 +162,9 @@ export const inventoryRouter = createTRPCRouter({
               ? {
                   createMany: {
                     data: images.map((image) => ({
-                      id: image.id,
+                      id: image.isFromPartImages
+                        ? crypto.randomUUID()
+                        : image.id,
                       url: image.url,
                       order: image.order,
                     })),
@@ -211,7 +214,11 @@ export const inventoryRouter = createTRPCRouter({
           // If images are provided, handle image updates intelligently
           if (images) {
             const currentImageIds = new Set(currentImages.map((img) => img.id));
-            const newImageIds = new Set(images.map((img) => img.id));
+            const newImageIds = new Set(
+              images
+                .filter((img) => !img.isFromPartImages) // Only include non-partImages for comparison
+                .map((img) => img.id),
+            );
 
             // Find images to remove (in current but not in new)
             const imagesToRemove = [...currentImageIds].filter(
@@ -221,6 +228,11 @@ export const inventoryRouter = createTRPCRouter({
             // Find images to add (in new but not in current)
             const imagesToAdd = [...newImageIds].filter(
               (imgId) => !currentImageIds.has(imgId),
+            );
+
+            // Find images from partImages that need new records
+            const imagesFromPartImages = images.filter(
+              (img) => img.isFromPartImages,
             );
 
             // Only delete images that are not in the new list
@@ -245,8 +257,20 @@ export const inventoryRouter = createTRPCRouter({
               });
             }
 
+            // Create new images for those from partImages
+            if (imagesFromPartImages.length > 0) {
+              await tx.image.createMany({
+                data: imagesFromPartImages.map((img) => ({
+                  id: crypto.randomUUID(),
+                  url: img.url,
+                  order: img.order,
+                  partId: id,
+                })),
+              });
+            }
+
             // Update the order of all images
-            for (const image of images) {
+            for (const image of images.filter((img) => !img.isFromPartImages)) {
               await tx.image.update({
                 where: { id: image.id },
                 data: {
