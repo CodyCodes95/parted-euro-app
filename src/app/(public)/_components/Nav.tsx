@@ -16,13 +16,13 @@ const Nav = () => {
       <div className="container mx-auto flex items-center justify-between px-4">
         {/* Logo */}
         <Link href="/" className="flex items-center">
-          <Image
+          <img
             src="/logo.png"
             alt="Parted Euro"
             width={150}
             height={40}
             className="h-auto"
-            priority
+            
           />
         </Link>
 
