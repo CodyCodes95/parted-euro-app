@@ -268,7 +268,7 @@ export const donorRouter = createTRPCRouter({
         carId: input.carId,
         year: input.year,
         mileage: input.mileage,
-        imageUrl: input.imageUrl,
+        
         hideFromSearch: input.hideFromSearch,
         dateInStock: input.dateInStock,
       },
@@ -288,7 +288,7 @@ export const donorRouter = createTRPCRouter({
           carId: data.carId,
           year: data.year,
           mileage: data.mileage,
-          imageUrl: data.imageUrl,
+          
           hideFromSearch: data.hideFromSearch,
           dateInStock: data.dateInStock,
         },
