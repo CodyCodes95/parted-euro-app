@@ -138,6 +138,36 @@ export function FilterableCarSelect({
     }
   }, [value]);
 
+  // Set up virtualization for the filtered options list
+  const parentRef = React.useRef<HTMLDivElement>(null);
+  const virtualizer = useVirtualizer({
+    count: filteredOptions.length,
+    getScrollElement: () => parentRef.current,
+    estimateSize: () => 35,
+  });
+
+  // Handle popover open state changes to ensure virtualizer is properly initialized
+  React.useEffect(() => {
+    if (open) {
+      // Small delay to ensure the DOM is ready and the parent ref is available
+      const timer = setTimeout(() => {
+        if (parentRef.current) {
+          virtualizer.measure();
+        }
+      }, 0);
+      return () => clearTimeout(timer);
+    }
+  }, [open, virtualizer]);
+
+  // Ensure virtualizer recalculates when filtered options change
+  React.useEffect(() => {
+    if (open && parentRef.current) {
+      virtualizer.measure();
+    }
+  }, [filteredOptions.length, open, virtualizer]);
+
+  const virtualOptions = virtualizer.getVirtualItems();
+
   // Handle selecting all filtered options
   const handleSelectAll = () => {
     const filteredValues = filteredOptions.map((option) => option.value);
@@ -184,16 +214,6 @@ export function FilterableCarSelect({
       .map((value) => options.find((opt) => opt.value === value)?.label ?? "")
       .filter(Boolean);
   }, [selectedOptions, options]);
-
-  // Set up virtualization for the filtered options list
-  const parentRef = React.useRef<HTMLDivElement>(null);
-  const virtualizer = useVirtualizer({
-    count: filteredOptions.length,
-    getScrollElement: () => parentRef.current,
-    estimateSize: () => 35,
-  });
-
-  const virtualOptions = virtualizer.getVirtualItems();
 
   return (
     <Popover open={open} onOpenChange={setOpen} modal={true}>
@@ -368,7 +388,9 @@ export function FilterableCarSelect({
             }}
           >
             <CommandEmpty>No cars found.</CommandEmpty>
-            <CommandGroup>
+            <CommandGroup
+              key={`${filteredOptions.length}-${search}-${seriesFilter}-${generationFilter}-${modelFilter}`}
+            >
               <div
                 style={{
                   height: `${virtualizer.getTotalSize()}px`,
@@ -376,35 +398,58 @@ export function FilterableCarSelect({
                   position: "relative",
                 }}
               >
-                {virtualOptions.map((virtualRow) => {
-                  const option = filteredOptions[virtualRow.index];
-                  if (!option) return null;
+                {virtualOptions.length > 0
+                  ? virtualOptions.map((virtualRow) => {
+                      const option = filteredOptions[virtualRow.index];
+                      if (!option) return null;
 
-                  const isSelected = selectedOptions.includes(option.value);
+                      const isSelected = selectedOptions.includes(option.value);
 
-                  return (
-                    <CommandItem
-                      key={option.value}
-                      value={option.value}
-                      onSelect={handleSelectOption}
-                      className="absolute left-0 top-0 w-full"
-                      style={{
-                        height: `${virtualRow.size}px`,
-                        transform: `translateY(${virtualRow.start}px)`,
-                      }}
-                    >
-                      <Check
-                        className={cn(
-                          "mr-2 h-4 w-4",
-                          isSelected ? "opacity-100" : "opacity-0",
-                        )}
-                      />
-                      <span className="flex flex-1 items-center truncate">
-                        {option.label}
-                      </span>
-                    </CommandItem>
-                  );
-                })}
+                      return (
+                        <CommandItem
+                          key={option.value}
+                          value={option.value}
+                          onSelect={handleSelectOption}
+                          className="absolute left-0 top-0 w-full"
+                          style={{
+                            height: `${virtualRow.size}px`,
+                            transform: `translateY(${virtualRow.start}px)`,
+                          }}
+                        >
+                          <Check
+                            className={cn(
+                              "mr-2 h-4 w-4",
+                              isSelected ? "opacity-100" : "opacity-0",
+                            )}
+                          />
+                          <span className="flex flex-1 items-center truncate">
+                            {option.label}
+                          </span>
+                        </CommandItem>
+                      );
+                    })
+                  : // Fallback rendering when virtualizer hasn't initialized properly
+                    filteredOptions.slice(0, 50).map((option, index) => {
+                      const isSelected = selectedOptions.includes(option.value);
+                      return (
+                        <CommandItem
+                          key={option.value}
+                          value={option.value}
+                          onSelect={handleSelectOption}
+                          className="flex items-center px-2 py-1.5"
+                        >
+                          <Check
+                            className={cn(
+                              "mr-2 h-4 w-4",
+                              isSelected ? "opacity-100" : "opacity-0",
+                            )}
+                          />
+                          <span className="flex flex-1 items-center truncate">
+                            {option.label}
+                          </span>
+                        </CommandItem>
+                      );
+                    })}
               </div>
             </CommandGroup>
           </CommandList>
