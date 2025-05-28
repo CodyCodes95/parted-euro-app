@@ -549,7 +549,11 @@ export function InventoryForm({
       order: images.length + index,
     }));
 
-    setImages((prev) => [...prev, ...newImages]);
+    setImages((prev) => {
+      const combined = [...prev, ...newImages];
+      // Sort by order to maintain proper sequence
+      return combined.sort((a, b) => a.order - b.order);
+    });
   };
 
   // Handle image removal
@@ -1354,16 +1358,17 @@ export function InventoryForm({
                                       .map((img) => ({
                                         id: img.id,
                                         url: img.url,
-                                        order:
-                                          images.length +
-                                          partImages.indexOf(img),
+                                        order: img.order, // Use the original order from database
                                         isFromPartImages: true,
                                       }));
 
-                                    setImages((prev) => [
-                                      ...prev,
-                                      ...newImages,
-                                    ]);
+                                    setImages((prev) => {
+                                      const combined = [...prev, ...newImages];
+                                      // Sort by order to maintain proper sequence
+                                      return combined.sort(
+                                        (a, b) => a.order - b.order,
+                                      );
+                                    });
                                   }}
                                 >
                                   Use all images
@@ -1381,15 +1386,19 @@ export function InventoryForm({
                                       );
 
                                       if (!isAlreadyAdded) {
-                                        setImages((prev) => [
-                                          ...prev,
-                                          {
+                                        setImages((prev) => {
+                                          const newImage = {
                                             id: image.id,
                                             url: image.url,
-                                            order: images.length,
+                                            order: image.order, // Use the original order from database
                                             isFromPartImages: true,
-                                          },
-                                        ]);
+                                          };
+                                          const combined = [...prev, newImage];
+                                          // Sort by order to maintain proper sequence
+                                          return combined.sort(
+                                            (a, b) => a.order - b.order,
+                                          );
+                                        });
                                         toast.success(
                                           "Image added to selection",
                                         );
