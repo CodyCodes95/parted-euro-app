@@ -67,12 +67,31 @@ type FulfillmentPolicyType = {
       regionName: string;
     }[];
   };
-  shippingOptions: any[];
+  shippingOptions: {
+    optionType: string;
+    costType: string;
+    shippingServiceCode: string;
+    shippingCost: {
+      value: string;
+      currency: string;
+    };
+    additionalShippingCost: {
+      value: string;
+      currency: string;
+    };
+    shippingCarrierCode: string;
+    sortOrder: number;
+  }[];
   globalShipping: boolean;
   pickupDropOff: boolean;
   localPickup: boolean;
   freightShipping: boolean;
   fulfillmentPolicyId: string;
+};
+
+type CategoryOption = {
+  value: string;
+  label: string;
 };
 
 export function ListOnEbayDialog({
@@ -142,10 +161,9 @@ export function ListOnEbayDialog({
 
   // Get selected category label
   const selectedCategoryLabel =
-    categoryIds.data?.find(
-      (category: { value: string; label: string }) =>
-        category.value === categoryId,
-    )?.label || "";
+    (categoryIds.data as CategoryOption[] | undefined)?.find(
+      (category) => category.value === categoryId,
+    )?.label ?? "";
 
   // Handle category search
   const handleCategorySearch = (value: string) => {
@@ -161,8 +179,8 @@ export function ListOnEbayDialog({
 
   // Handle category selection
   const handleCategorySelect = (value: string) => {
-    const category = categoryIds.data?.find(
-      (c: { value: string }) => c.value === value,
+    const category = (categoryIds.data as CategoryOption[] | undefined)?.find(
+      (c) => c.value === value,
     );
     if (category) {
       setCategoryId(value);
@@ -188,7 +206,7 @@ export function ListOnEbayDialog({
     if (allSamePartNo) {
       // Sum up quantities of all parts with the same part number
       const totalQuantity = listing.parts.reduce((total, part) => {
-        return total + 1; // Assuming each part represents 1 quantity
+        return total + part.quantity; // Use the actual quantity from each part
       }, 0);
       setQuantity(totalQuantity);
     } else {
@@ -223,19 +241,22 @@ export function ListOnEbayDialog({
   // Create HTML table for part fitment
   const makeTableHTML = () => {
     // Deduplicate parts based on car
-    const uniqueParts = listing.parts.reduce((acc: any[], cur) => {
-      const existingPart = acc.find(
-        (part) =>
-          part.partDetails.cars?.[0] &&
-          cur.partDetails.cars?.[0] &&
-          part.partDetails.cars[0].id === cur.partDetails.cars[0].id,
-      );
+    const uniqueParts = listing.parts.reduce(
+      (acc: typeof listing.parts, cur) => {
+        const existingPart = acc.find(
+          (part) =>
+            part.partDetails.cars?.[0] &&
+            cur.partDetails.cars?.[0] &&
+            part.partDetails.cars[0]?.id === cur.partDetails.cars[0]?.id,
+        );
 
-      if (!existingPart) {
-        acc.push(cur);
-      }
-      return acc;
-    }, []);
+        if (!existingPart) {
+          acc.push(cur);
+        }
+        return acc;
+      },
+      [],
+    );
 
     // Generate HTML rows
     return uniqueParts
@@ -243,13 +264,15 @@ export function ListOnEbayDialog({
         if (!part.partDetails.cars) return "";
 
         return part.partDetails.cars
-          .map((car: any) => {
-            return `<tr style="padding:1rem; border-bottom: 1px solid #ddd">
-          <td>${car.series || ""}</td>
-          <td>${car.generation || ""}</td>
-          <td>${car.model || ""}</td>
+          .map(
+            (car: { series?: string; generation?: string; model?: string }) => {
+              return `<tr style="padding:1rem; border-bottom: 1px solid #ddd">
+          <td>${car.series ?? ""}</td>
+          <td>${car.generation ?? ""}</td>
+          <td>${car.model ?? ""}</td>
         </tr>`;
-          })
+            },
+          )
           .join("");
       })
       .join("");
@@ -271,7 +294,7 @@ export function ListOnEbayDialog({
         condition: condition,
         conditionDescription: ebayCondition,
         quantity: quantity,
-        partNo: listing.parts[0]?.partDetails.partNo || "",
+        partNo: listing.parts[0]?.partDetails.partNo ?? "",
         categoryId: categoryId,
         domesticShipping: domesticShipping,
         internationalShipping: internationalShipping,
@@ -399,25 +422,25 @@ export function ListOnEbayDialog({
                         )}
                       </CommandEmpty>
                       <CommandGroup>
-                        {categoryIds.data?.map(
-                          (category: { value: string; label: string }) => (
-                            <CommandItem
-                              key={category.value}
-                              value={category.value}
-                              onSelect={handleCategorySelect}
-                            >
-                              <Check
-                                className={cn(
-                                  "mr-2 h-4 w-4",
-                                  categoryId === category.value
-                                    ? "opacity-100"
-                                    : "opacity-0",
-                                )}
-                              />
-                              {category.label}
-                            </CommandItem>
-                          ),
-                        )}
+                        {(
+                          categoryIds.data as CategoryOption[] | undefined
+                        )?.map((category) => (
+                          <CommandItem
+                            key={category.value}
+                            value={category.value}
+                            onSelect={handleCategorySelect}
+                          >
+                            <Check
+                              className={cn(
+                                "mr-2 h-4 w-4",
+                                categoryId === category.value
+                                  ? "opacity-100"
+                                  : "opacity-0",
+                              )}
+                            />
+                            {category.label}
+                          </CommandItem>
+                        ))}
                       </CommandGroup>
                     </CommandList>
                   </Command>
@@ -426,11 +449,11 @@ export function ListOnEbayDialog({
 
               <div className="mt-2">
                 <div className="text-xs text-muted-foreground">
-                  {categoryIds.data?.length
-                    ? `${categoryIds.data.length} categories found`
+                  {(categoryIds.data as CategoryOption[] | undefined)?.length
+                    ? `${(categoryIds.data as CategoryOption[] | undefined)?.length} categories found`
                     : "Enter a more specific search term to find categories"}
                 </div>
-                {!categoryIds.data?.length &&
+                {!(categoryIds.data as CategoryOption[] | undefined)?.length &&
                   categorySearchTerm &&
                   !categoryIds.isLoading && (
                     <div className="mt-2">
@@ -526,12 +549,12 @@ export function ListOnEbayDialog({
               <div>
                 <Label htmlFor="fulfillmentPolicy">Fulfillment Policy</Label>
                 <Select
-                  value={fulfillmentPolicy?.fulfillmentPolicyId || ""}
+                  value={fulfillmentPolicy?.fulfillmentPolicyId ?? ""}
                   onValueChange={(value) => {
                     const policy = fulfillmentPolicies.data?.find(
                       (p) => p.fulfillmentPolicyId === value,
                     );
-                    setFulfillmentPolicy(policy || null);
+                    setFulfillmentPolicy(policy ?? null);
                   }}
                 >
                   <SelectTrigger className="mt-1">
