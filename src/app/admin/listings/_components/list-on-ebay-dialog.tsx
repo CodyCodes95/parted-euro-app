@@ -81,17 +81,13 @@ export function ListOnEbayDialog({
   listing,
 }: ListOnEbayDialogProps) {
   // Form state
-  const [title, setTitle] = useState<string>(
-    `${listing.title} ${listing.parts[0]?.partDetails.partNo ?? ""}`,
-  );
-  const [description, setDescription] = useState<string>(listing.description);
-  const [condition, setCondition] = useState<string>(listing.condition);
-  const [price, setPrice] = useState<number>(
-    Math.ceil(listing.price * 0.15 + listing.price),
-  );
+  const [title, setTitle] = useState<string>("");
+  const [description, setDescription] = useState<string>("");
+  const [condition, setCondition] = useState<string>("");
+  const [price, setPrice] = useState<number>(0);
   const [ebayCondition, setEbayCondition] = useState("");
   const [categoryId, setCategoryId] = useState<string>("");
-  const [categorySearchTerm, setCategorySearchTerm] = useState<string>(title);
+  const [categorySearchTerm, setCategorySearchTerm] = useState<string>("");
   const [categoryPopoverOpen, setCategoryPopoverOpen] = useState(false);
   const [categoryInputValue, setCategoryInputValue] = useState("");
   const [domesticShipping, setDomesticShipping] = useState<number>(0);
@@ -104,6 +100,33 @@ export function ListOnEbayDialog({
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [validated, setValidated] = useState<boolean>(false);
   const utils = api.useUtils();
+
+  // Reset form function
+  const resetForm = () => {
+    const defaultTitle = `${listing.title} ${listing.parts[0]?.partDetails.partNo ?? ""}`;
+    setTitle(defaultTitle);
+    setDescription(listing.description);
+    setCondition(listing.condition);
+    setPrice(Math.ceil(listing.price * 0.15 + listing.price));
+    setEbayCondition("");
+    setCategoryId("");
+    setCategorySearchTerm(defaultTitle);
+    setCategoryPopoverOpen(false);
+    setCategoryInputValue("");
+    setDomesticShipping(0);
+    setInternationalShipping(0);
+    setCreateNewFulfillmentPolicy(false);
+    setFulfillmentPolicy(null);
+    setQuantity(1);
+    setValidated(false);
+  };
+
+  // Reset form when dialog opens or listing changes
+  useEffect(() => {
+    if (open && listing) {
+      resetForm();
+    }
+  }, [open, listing.id]);
 
   // API calls
   const createEbayListing = api.ebay.createListing.useMutation();
@@ -267,6 +290,7 @@ export function ListOnEbayDialog({
 
       toast.success(`Listing "${listing.title}" has been listed on eBay`);
       void utils.listings.getAllAdmin.invalidate();
+      resetForm();
       onOpenChange(false);
     } catch (error) {
       toast.error("Failed to create eBay listing");
@@ -361,7 +385,6 @@ export function ListOnEbayDialog({
                         onValueChange={handleCategorySearch}
                         className="flex-1"
                       />
-        
                     </div>
                     <CommandList className="max-h-[250px] overflow-auto">
                       <CommandEmpty>
