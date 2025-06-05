@@ -38,17 +38,43 @@ export function getDonorColumns({
       cell: ({ row }) => <div className="font-medium">{row.original.vin}</div>,
     },
     {
-      id: "car",
+      id: "make",
       header: ({ column }) => (
-        <DataTableColumnHeader column={column} title="Make & Model" />
+        <DataTableColumnHeader column={column} title="Make" />
       ),
       cell: ({ row }) => {
         const car = row.original.car;
-        return (
-          <div>
-            {car.make} {car.series} {car.generation} {car.model}
-          </div>
-        );
+        return <div>{car.make}</div>;
+      },
+    },
+    {
+      id: "model",
+      header: ({ column }) => (
+        <DataTableColumnHeader column={column} title="Model" />
+      ),
+      cell: ({ row }) => {
+        const car = row.original.car;
+        return <div>{car.model}</div>;
+      },
+    },
+    {
+      id: "series",
+      header: ({ column }) => (
+        <DataTableColumnHeader column={column} title="Series" />
+      ),
+      cell: ({ row }) => {
+        const car = row.original.car;
+        return <div>{car.series}</div>;
+      },
+    },
+    {
+      id: "generation",
+      header: ({ column }) => (
+        <DataTableColumnHeader column={column} title="Generation" />
+      ),
+      cell: ({ row }) => {
+        const car = row.original.car;
+        return <div>{car.generation}</div>;
       },
     },
     {
