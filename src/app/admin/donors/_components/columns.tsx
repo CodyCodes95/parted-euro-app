@@ -46,7 +46,7 @@ export function getDonorColumns({
         const car = row.original.car;
         return (
           <div>
-            {car.make} {car.series} {car.model}
+            {car.make} {car.series} {car.generation} {car.model}
           </div>
         );
       },

@@ -393,7 +393,11 @@ export function DonorForm({
               render={({ field }) => (
                 <FormItem className="flex flex-col">
                   <FormLabel>Car</FormLabel>
-                  <Popover open={carOpen} onOpenChange={setCarOpen}>
+                  <Popover
+                    modal={true}
+                    open={carOpen}
+                    onOpenChange={setCarOpen}
+                  >
                     <PopoverTrigger asChild>
                       <FormControl>
                         <Button
