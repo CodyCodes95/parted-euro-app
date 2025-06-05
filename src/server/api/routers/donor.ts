@@ -254,7 +254,7 @@ export const donorRouter = createTRPCRouter({
 
     // Format the response as an array of options for the filter dropdown
     return cars.map((car) => ({
-      label: `${car.make} ${car.series} ${car.generation} ${car.model}`,
+      label: `${car.make} ${car.series} ${car.generation} ${car.model} ${car.body}`,
       value: car.id,
     }));
   }),
