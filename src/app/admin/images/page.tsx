@@ -249,8 +249,16 @@ export default function MobileUploadPage() {
                 endpoint="partImage"
                 headers={{ partNo: currentPartNo }}
                 onBeforeUploadBegin={(files) => {
+                  // Sort files alphabetically by filename
+                  const sortedFiles = [...files].sort((a, b) =>
+                    a.name.localeCompare(b.name, undefined, {
+                      numeric: true,
+                      sensitivity: "base",
+                    }),
+                  );
+
                   // Create a promise for each file to be compressed
-                  const compressPromises = files.map(
+                  const compressPromises = sortedFiles.map(
                     (file) =>
                       new Promise<File>((resolve, reject) => {
                         // Skip compression for non-image files
