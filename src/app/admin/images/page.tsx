@@ -212,13 +212,6 @@ export default function MobileUploadPage() {
                       </div>
                     ))}
                   </div>
-                  <Alert>
-                    <AlertCircle className="h-4 w-4" />
-                    <AlertDescription>
-                      Make sure you&apos;re not uploading duplicate images.
-                      Review existing images before uploading new ones.
-                    </AlertDescription>
-                  </Alert>
                 </div>
               ) : (
                 <div className="flex h-32 items-center justify-center rounded-md border-2 border-dashed border-muted p-4">
