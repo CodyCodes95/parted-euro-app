@@ -168,6 +168,7 @@ export function DonorForm({
   const [isSaving, setIsSaving] = useState(false);
   const [carOpen, setCarOpen] = useState(false);
   const [images, setImages] = useState<ImageItem[]>([]);
+  const [carSearchInput, setCarSearchInput] = useState("");
 
   // DnD sensors for image reordering
   const sensors = useSensors(
@@ -232,7 +233,12 @@ export function DonorForm({
 
   // Fetch car options for the select input
   const carOptionsQuery = api.donor.getAllCars.useQuery();
-  const carOptions = carOptionsQuery.data ?? [];
+  const allCarOptions = carOptionsQuery.data ?? [];
+
+  // Filter car options based on search input
+  const filteredCarOptions = allCarOptions.filter((car) =>
+    car.label.toLowerCase().includes(carSearchInput.toLowerCase()),
+  );
 
   // TRPC mutations for creating and updating donors
   const utils = api.useUtils();
@@ -265,7 +271,7 @@ export function DonorForm({
 
   // Helper function to get the car label from its ID
   const getCarLabel = (carId: string) => {
-    const car = carOptions.find((c) => c.value === carId);
+    const car = allCarOptions.find((c) => c.value === carId);
     return car?.label ?? "";
   };
 
@@ -396,7 +402,12 @@ export function DonorForm({
                   <Popover
                     modal={true}
                     open={carOpen}
-                    onOpenChange={setCarOpen}
+                    onOpenChange={(open) => {
+                      setCarOpen(open);
+                      if (!open) {
+                        setCarSearchInput("");
+                      }
+                    }}
                   >
                     <PopoverTrigger asChild>
                       <FormControl>
@@ -417,11 +428,15 @@ export function DonorForm({
                       </FormControl>
                     </PopoverTrigger>
                     <PopoverContent className="w-[400px] p-0">
-                      <Command>
-                        <CommandInput placeholder="Search cars..." />
+                      <Command shouldFilter={false}>
+                        <CommandInput
+                          placeholder="Search cars..."
+                          value={carSearchInput}
+                          onValueChange={setCarSearchInput}
+                        />
                         <CommandEmpty>No car found.</CommandEmpty>
                         <CommandGroup className="max-h-[300px] overflow-y-auto">
-                          {(carOptions ?? []).map((car) => (
+                          {filteredCarOptions.map((car) => (
                             <CommandItem
                               keywords={[car.label]}
                               key={car.value}
