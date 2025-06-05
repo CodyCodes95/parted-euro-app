@@ -350,7 +350,7 @@ export function DonorForm({
         onOpenChange(newOpen);
       }}
     >
-      <DialogContent className="max-h-[90vh] overflow-y-auto sm:max-w-[600px]">
+      <DialogContent className="max-h-[90vh] overflow-y-auto sm:max-w-[1200px]">
         <DialogHeader>
           <DialogTitle>
             {isEditing ? "Edit Donor" : "Add New Donor"}
@@ -557,7 +557,7 @@ export function DonorForm({
                 {/* Image Upload Dropzone */}
                 <div className="mb-4">
                   <UploadDropzone
-                    config={{mode: "auto"}}
+                    config={{ mode: "auto" }}
                     endpoint="homepageImage"
                     onBeforeUploadBegin={(files) => {
                       // Create a promise for each file to be compressed
