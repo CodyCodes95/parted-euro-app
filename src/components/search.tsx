@@ -11,25 +11,26 @@ import {
   CommandList,
 } from "~/components/ui/command";
 import { useDebounce } from "use-debounce";
-import { Loader2, Search, Tag, Sparkles, X } from "lucide-react";
+import { Loader2, Search, Tag, Sparkles, X, ArrowRight } from "lucide-react";
 import Link from "next/link";
 import Image from "next/image";
 import { formatCurrency } from "~/lib/utils";
 import { api } from "~/trpc/react";
 import { cn } from "~/lib/utils";
+import { useRouter } from "next/navigation";
 
 export function SearchCommand({ className }: { className?: string }) {
   const [open, setOpen] = useState(false);
   const [query, setQuery] = useState("");
   const [debouncedQuery] = useDebounce(query, 300);
   const eventListenerRegistered = useRef(false);
+  const router = useRouter();
 
   // Enable the query whenever open is true and we have a search term
   const { data: results, isLoading } = api.listings.globalSearch.useQuery(
     { query: debouncedQuery, limit: 10 },
     {
       enabled: open && debouncedQuery.length > 0,
-      keepPreviousData: false,
     },
   );
 
@@ -57,6 +58,20 @@ export function SearchCommand({ className }: { className?: string }) {
     setOpen(!open);
   }
 
+  function handleSearch() {
+    if (query.trim()) {
+      setOpen(false);
+      router.push(`/listings?search=${encodeURIComponent(query.trim())}`);
+    }
+  }
+
+  function handleKeyDown(e: React.KeyboardEvent) {
+    if (e.key === "Enter" && query.trim()) {
+      e.preventDefault();
+      handleSearch();
+    }
+  }
+
   // Popular search suggestions
   const popularSearches = [
     { label: "BMW E36 Parts", href: "/listings?search=bmw+e36" },
@@ -78,28 +93,26 @@ export function SearchCommand({ className }: { className?: string }) {
         <Search className="h-5 w-5" />
       </button>
 
-      <CommandDialog
-        open={open}
-        onOpenChange={setOpen}
-        className="overflow-hidden"
-      >
-        <Command className="rounded-lg border shadow-md">
-          <CommandInput
-            placeholder="Search listings..."
-            value={query}
-            onValueChange={setQuery}
-            autoFocus
-            className="h-11 border-none py-3"
-          />
+      <CommandDialog open={open} onOpenChange={setOpen}>
+        <Command className="overflow-hidden rounded-lg border shadow-md">
+          <div className="flex items-center border-b px-3">
+            <CommandInput
+              placeholder="Search listings..."
+              value={query}
+              onValueChange={setQuery}
+              onKeyDown={handleKeyDown}
+              autoFocus
+              className="h-11 border-none py-3"
+            />
 
-          {query && (
             <button
-              onClick={() => setQuery("")}
-              className="absolute right-4 top-3 rounded p-1 hover:bg-muted"
+              onClick={handleSearch}
+              disabled={!query.trim()}
+              className="ml-2 mr-6 flex h-8 items-center gap-1 rounded-md bg-primary px-3 text-xs font-medium text-primary-foreground transition-colors hover:bg-primary/90 disabled:pointer-events-none disabled:opacity-50"
             >
-              <X className="h-4 w-4 opacity-50" />
+              Search <ArrowRight className="h-3 w-3" />
             </button>
-          )}
+          </div>
 
           <CommandList className="duration-200 ease-in-out animate-in fade-in-50">
             {isLoading ? (
@@ -112,7 +125,7 @@ export function SearchCommand({ className }: { className?: string }) {
             debouncedQuery.length > 0 &&
             (!results || results.length === 0) ? (
               <CommandEmpty>
-                No results found for "{debouncedQuery}"
+                No results found for &ldquo;{debouncedQuery}&rdquo;
               </CommandEmpty>
             ) : null}
 
@@ -179,7 +192,7 @@ export function SearchCommand({ className }: { className?: string }) {
                       value={listing.title}
                     >
                       <div className="relative h-16 w-16 overflow-hidden rounded-md border">
-                        {listing.images && listing.images[0] ? (
+                        {listing.images?.[0] ? (
                           <Image
                             src={listing.images[0].url}
                             alt={listing.title}
