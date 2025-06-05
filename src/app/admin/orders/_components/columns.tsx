@@ -156,9 +156,29 @@ export function getOrderColumns({
           return <div>Pickup</div>;
         }
 
+        const address = row.original.shippingAddress;
+        if (!address || address === "Not specified") {
+          return (
+            <div className="text-sm text-muted-foreground">Not specified</div>
+          );
+        }
+
+        // Parse the address string (format: "line1, line2, city, postal_code, country")
+        const addressParts = address
+          .split(", ")
+          .filter((part) => part.trim() && part.trim() !== " ");
+
+        if (addressParts.length === 0) {
+          return (
+            <div className="text-sm text-muted-foreground">Not specified</div>
+          );
+        }
+
         return (
-          <div className="max-w-[200px] truncate">
-            {row.original.shippingAddress ?? "Not specified"}
+          <div className="max-w-[280px] text-xs leading-relaxed">
+            {addressParts.map((part, index) => (
+              <div key={index}>{part.trim()}</div>
+            ))}
           </div>
         );
       },
