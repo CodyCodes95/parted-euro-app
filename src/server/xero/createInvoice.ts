@@ -36,6 +36,7 @@ type CreateInvoiceOptions = {
     city?: string;
     postal_code?: string;
     country: string;
+    state?: string;
   };
 };
 
@@ -131,6 +132,12 @@ export const createXeroInvoice = async (input: CreateInvoiceOptions) => {
       shippingAddress: `${shippingAddress?.line1}, ${
         shippingAddress?.line2 ?? " "
       }, ${shippingAddress?.city}, ${shippingAddress?.postal_code}, ${shippingAddress?.country}`,
+      shippingLine1: shippingAddress?.line1,
+      shippingLine2: shippingAddress?.line2,
+      shippingCity: shippingAddress?.city,
+      shippingPostcode: shippingAddress?.postal_code,
+      shippingCountry: shippingAddress?.country,
+      shippingState: shippingAddress?.state,
       xeroInvoiceRef: invoice?.invoiceID,
       shippingMethod,
       carrier,
@@ -190,6 +197,7 @@ export const createInvoiceFromStripeEvent = async (
         city: event.customer_details!.address!.city!,
         postal_code: event.customer_details!.address!.postal_code!,
         country: event.customer_details!.address!.country!,
+        state: event.customer_details!.address!.state!,
       },
       shippingCost: shipping ?? 0,
       shippingRateId: event.shipping_cost!.shipping_rate! as string,
@@ -213,6 +221,15 @@ export const createInvoiceFromStripeEvent = async (
       data: {
         status: "Paid",
         shippingMethod: shippingOption.display_name,
+        shippingLine1: event.customer_details!.address!.line1!,
+        shippingLine2: event.customer_details!.address!.line2!,
+        shippingCity: event.customer_details!.address!.city!,
+        shippingPostcode: event.customer_details!.address!.postal_code!,
+        shippingCountry: event.customer_details!.address!.country!,
+        shippingState: event.customer_details!.address!.state!,
+        shippingAddress: `${event.customer_details!.address!.line1!}, ${
+          event.customer_details!.address!.line2! ?? " "
+        }, ${event.customer_details!.address!.city!}, ${event.customer_details!.address!.postal_code!}, ${event.customer_details!.address!.country!}`,
       },
     });
 
