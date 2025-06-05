@@ -128,6 +128,16 @@ export function getInventoryColumns({
       ),
     },
     {
+      accessorKey: "partDetails.alternatePartNumbers",
+      header: ({ column }) => (
+        <DataTableColumnHeader column={column} title="Alt. Part Numbers" />
+      ),
+      cell: ({ row }) => {
+        const value = row.original.partDetails?.alternatePartNumbers;
+        return value ?? "-";
+      },
+    },
+    {
       accessorKey: "inventoryLocation.name",
       header: ({ column }) => (
         <DataTableColumnHeader column={column} title="Location" />
