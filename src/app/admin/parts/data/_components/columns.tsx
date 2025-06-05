@@ -62,9 +62,16 @@ export const getPartColumns = ({
   {
     accessorKey: "alternatePartNumbers",
     header: "Alt. Part Numbers",
-    cell: ({ row }) => {
-      const value = row.getValue<string | null>("alternatePartNumbers");
-      return value ?? "-";
+    accessorFn: (row) => {
+      const altPartNumbers = row.alternatePartNumbers;
+      if (Array.isArray(altPartNumbers)) {
+        return altPartNumbers.join(", ");
+      }
+      return altPartNumbers ?? "";
+    },
+    cell: ({ getValue }) => {
+      const value = getValue<string>();
+      return value || "-";
     },
   },
   {

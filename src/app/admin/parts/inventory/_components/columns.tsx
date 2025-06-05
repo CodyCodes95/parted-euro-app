@@ -129,13 +129,19 @@ export function getInventoryColumns({
     },
     {
       accessorKey: "partDetails.alternatePartNumbers",
-      enableColumnFilter: true,
       header: ({ column }) => (
         <DataTableColumnHeader column={column} title="Alt. Part Numbers" />
       ),
-      cell: ({ row }) => {
-        const value = row.original.partDetails?.alternatePartNumbers;
-        return value ?? "-";
+      accessorFn: (row) => {
+        const altPartNumbers = row.partDetails?.alternatePartNumbers;
+        if (Array.isArray(altPartNumbers)) {
+          return altPartNumbers.join(", ");
+        }
+        return altPartNumbers ?? "";
+      },
+      cell: ({ getValue }) => {
+        const value = getValue<string>();
+        return value ?? "";
       },
     },
     {
@@ -196,7 +202,7 @@ export function getInventoryColumns({
         if (!filterValue?.length) return true;
 
         // Get the row's status value and ensure it's a string
-        const status = row.getValue(id);
+        const status = row.getValue<string>(id);
 
         // Show the row if its status is included in the filter values
         return filterValue.includes(status);
