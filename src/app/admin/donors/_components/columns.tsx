@@ -39,6 +39,7 @@ export function getDonorColumns({
     },
     {
       id: "make",
+      accessorFn: (row) => row.car.make,
       header: ({ column }) => (
         <DataTableColumnHeader column={column} title="Make" />
       ),
@@ -49,6 +50,7 @@ export function getDonorColumns({
     },
     {
       id: "series",
+      accessorFn: (row) => row.car.series,
       header: ({ column }) => (
         <DataTableColumnHeader column={column} title="Series" />
       ),
@@ -59,6 +61,7 @@ export function getDonorColumns({
     },
     {
       id: "generation",
+      accessorFn: (row) => row.car.generation,
       header: ({ column }) => (
         <DataTableColumnHeader column={column} title="Generation" />
       ),
@@ -69,6 +72,7 @@ export function getDonorColumns({
     },
     {
       id: "model",
+      accessorFn: (row) => row.car.model,
       header: ({ column }) => (
         <DataTableColumnHeader column={column} title="Model" />
       ),
