@@ -129,6 +129,7 @@ export function getInventoryColumns({
     },
     {
       accessorKey: "partDetails.alternatePartNumbers",
+      enableColumnFilter: true,
       header: ({ column }) => (
         <DataTableColumnHeader column={column} title="Alt. Part Numbers" />
       ),
