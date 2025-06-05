@@ -57,6 +57,34 @@ export default function ListingsAdminPage() {
     setIsDeleteListingOpen(true);
   };
 
+  const handleDeleteDialogClose = (open: boolean) => {
+    setIsDeleteListingOpen(open);
+    if (!open) {
+      setSelectedListing(null);
+    }
+  };
+
+  const handleEditDialogClose = (open: boolean) => {
+    setIsEditListingOpen(open);
+    if (!open) {
+      setSelectedListing(null);
+    }
+  };
+
+  const handleCreateOrderDialogClose = (open: boolean) => {
+    setIsCreateOrderOpen(open);
+    if (!open) {
+      setSelectedListing(null);
+    }
+  };
+
+  const handleListOnEbayDialogClose = (open: boolean) => {
+    setIsListOnEbayOpen(open);
+    if (!open) {
+      setSelectedListing(null);
+    }
+  };
+
   const handleCreateOrder = (item: AdminListingsItem) => {
     setSelectedListing(item);
     setIsCreateOrderOpen(true);
@@ -172,23 +200,23 @@ export default function ListingsAdminPage() {
         <>
           <ListingForm
             open={isEditListingOpen}
-            onOpenChange={setIsEditListingOpen}
+            onOpenChange={handleEditDialogClose}
             defaultValues={selectedListing}
             isEditing
           />
           <DeleteListingDialog
             open={isDeleteListingOpen}
-            onOpenChange={setIsDeleteListingOpen}
+            onOpenChange={handleDeleteDialogClose}
             listing={selectedListing}
           />
           <CreateOrderDialog
             open={isCreateOrderOpen}
-            onOpenChange={setIsCreateOrderOpen}
+            onOpenChange={handleCreateOrderDialogClose}
             listing={selectedListing}
           />
           <ListOnEbayDialog
             open={isListOnEbayOpen}
-            onOpenChange={setIsListOnEbayOpen}
+            onOpenChange={handleListOnEbayDialogClose}
             listing={selectedListing}
           />
         </>
