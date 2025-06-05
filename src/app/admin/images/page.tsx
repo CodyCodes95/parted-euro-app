@@ -108,14 +108,20 @@ export default function MobileUploadPage() {
     void utils.part.getImagesByPartNo.invalidate({ partNo: currentPartNo });
   };
 
-  // Custom upload handler that maintains order
-  const handleCustomUpload = async () => {
-    if (!selectedFiles.length || !currentPartNo) return;
+  // Handle file selection and automatically start upload
+  const handleFileSelect = async (
+    event: React.ChangeEvent<HTMLInputElement>,
+  ) => {
+    const files = Array.from(event.target.files ?? []);
+    if (files.length === 0 || !currentPartNo) return;
 
+    setSelectedFiles(files);
+
+    // Automatically start upload
     setUploading(true);
     try {
       // Sort files alphabetically by filename
-      const sortedFiles = [...selectedFiles].sort((a, b) =>
+      const sortedFiles = [...files].sort((a, b) =>
         a.name.localeCompare(b.name, undefined, {
           numeric: true,
           sensitivity: "base",
@@ -198,13 +204,11 @@ export default function MobileUploadPage() {
       );
     } finally {
       setUploading(false);
+      // Clear the file input
+      if (event.target) {
+        event.target.value = "";
+      }
     }
-  };
-
-  // Handle file selection
-  const handleFileSelect = (event: React.ChangeEvent<HTMLInputElement>) => {
-    const files = Array.from(event.target.files ?? []);
-    setSelectedFiles(files);
   };
 
   return (
@@ -349,14 +353,38 @@ export default function MobileUploadPage() {
                 <div className="flex w-full items-center justify-center">
                   <label
                     htmlFor="file-upload"
-                    className="flex h-64 w-full cursor-pointer flex-col items-center justify-center rounded-lg border-2 border-dashed border-muted-foreground/25 bg-muted/10 transition-all hover:border-muted-foreground/50"
+                    className={`flex h-64 w-full cursor-pointer flex-col items-center justify-center rounded-lg border-2 border-dashed transition-all ${
+                      uploading
+                        ? "pointer-events-none border-primary/50 bg-primary/5"
+                        : "border-muted-foreground/25 bg-muted/10 hover:border-muted-foreground/50"
+                    }`}
                   >
                     <div className="flex flex-col items-center justify-center pb-6 pt-5">
-                      <Upload className="mb-3 h-10 w-10 text-muted-foreground" />
-                      <p className="mb-2 text-sm text-muted-foreground">
-                        <span className="font-semibold">Click to upload</span>{" "}
-                        or drag and drop
-                      </p>
+                      {uploading ? (
+                        <>
+                          <div className="mb-3 h-10 w-10 animate-spin rounded-full border-2 border-primary border-t-transparent" />
+                          <p className="mb-2 text-sm font-semibold text-primary">
+                            Uploading {selectedFiles.length} files...
+                          </p>
+                          <p className="text-xs text-muted-foreground">
+                            Please wait while your images are being processed
+                          </p>
+                        </>
+                      ) : (
+                        <>
+                          <Upload className="mb-3 h-10 w-10 text-muted-foreground" />
+                          <p className="mb-2 text-sm text-muted-foreground">
+                            <span className="font-semibold">
+                              Click to upload
+                            </span>{" "}
+                            or drag and drop
+                          </p>
+                          <p className="text-xs text-muted-foreground">
+                            Images will be uploaded automatically and ordered
+                            alphabetically
+                          </p>
+                        </>
+                      )}
                     </div>
                     <input
                       id="file-upload"
@@ -370,65 +398,14 @@ export default function MobileUploadPage() {
                   </label>
                 </div>
 
-                {/* Upload Button */}
-                {selectedFiles.length > 0 && (
-                  <div className="flex gap-2">
-                    <Button
-                      onClick={handleCustomUpload}
-                      disabled={uploading || !currentPartNo}
-                      className="flex-1"
-                    >
-                      {uploading ? (
-                        <>
-                          <div className="mr-2 h-4 w-4 animate-spin rounded-full border-2 border-white border-t-transparent" />
-                          Uploading {selectedFiles.length} files...
-                        </>
-                      ) : (
-                        <>
-                          <Upload className="mr-2 h-4 w-4" />
-                          Upload {selectedFiles.length} file
-                          {selectedFiles.length !== 1 ? "s" : ""}
-                        </>
-                      )}
-                    </Button>
-                    <Button
-                      variant="outline"
-                      onClick={() => setSelectedFiles([])}
-                      disabled={uploading}
-                    >
-                      Clear
-                    </Button>
-                  </div>
-                )}
-
-                {/* Selected Files Preview */}
-                {selectedFiles.length > 0 && !uploading && (
+                {/* Upload Progress or Status */}
+                {uploading && selectedFiles.length > 0 && (
                   <div className="mt-4">
                     <div className="mb-2 flex items-center">
                       <ImageIcon className="mr-2 h-4 w-4" />
                       <span className="text-sm font-medium">
-                        Selected files (will be ordered alphabetically):
+                        Processing files
                       </span>
-                    </div>
-                    <div className="max-h-32 overflow-y-auto rounded border bg-muted/20 p-2">
-                      {[...selectedFiles]
-                        .sort((a, b) =>
-                          a.name.localeCompare(b.name, undefined, {
-                            numeric: true,
-                            sensitivity: "base",
-                          }),
-                        )
-                        .map((file, index) => (
-                          <div
-                            key={file.name}
-                            className="flex items-center text-xs text-muted-foreground"
-                          >
-                            <span className="mr-2 rounded bg-primary/10 px-1 font-mono">
-                              {index + 1}
-                            </span>
-                            {file.name}
-                          </div>
-                        ))}
                     </div>
                   </div>
                 )}
@@ -464,11 +441,6 @@ export default function MobileUploadPage() {
             </div>
           </CardContent>
           <CardFooter className="flex justify-between">
-            <Button variant="outline" onClick={resetForm}>
-              <Undo2 className="mr-2 h-4 w-4" />
-              Start new part
-            </Button>
-
             {uploadComplete && (
               <Button onClick={resetForm} className="ml-auto">
                 <Plus className="mr-2 h-4 w-4" />
