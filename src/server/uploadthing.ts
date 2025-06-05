@@ -75,7 +75,7 @@ export const uploadRouter = {
 
   // Add part image upload endpoint
   partImage: f({ image: { maxFileCount: 30, maxFileSize: "16MB" } })
-    .middleware(async ({ req, files }) => {
+    .middleware(async ({ req }) => {
       // This code runs on your server before upload
       const session = await auth();
 
@@ -84,69 +84,45 @@ export const uploadRouter = {
         throw new Error("Unauthorized");
       }
 
-      // Get partNo from headers
+      // Get partNo and fileIndex from headers
       const partNo = req.headers.get("partNo");
+      const fileIndexStr = req.headers.get("fileIndex");
 
       if (!partNo) {
         throw new Error("Part number is required");
       }
 
-      const fileNames = files.map((file) => file.name).sort();
+      if (!fileIndexStr) {
+        throw new Error("File index is required");
+      }
+
+      const fileIndex = parseInt(fileIndexStr, 10);
+      if (isNaN(fileIndex)) {
+        throw new Error("File index must be a number");
+      }
 
       // Whatever is returned here is accessible in onUploadComplete as `metadata`
-      return { userId: session.user.id, partNo, fileNames };
+      return { userId: session.user.id, partNo, fileIndex };
     })
     .onUploadComplete(async ({ metadata, file }) => {
-      const { partNo, fileNames } = metadata;
+      const { partNo, fileIndex } = metadata;
       const { url } = file;
 
-      // Check if there was a recent upload (within the last minute) to this part
-      const oneMinuteAgo = new Date(Date.now() - 60 * 1000);
-      const recentUpload = await db.image.findFirst({
+      // Get the highest existing order for this part
+      const latestImage = await db.image.findFirst({
         where: {
           partNo,
-          createdAt: {
-            gte: oneMinuteAgo,
-          },
+        },
+        orderBy: {
+          order: "desc",
         },
       });
 
-      let order: number;
+      // Calculate the base order (starting point for new uploads)
+      const baseOrder = latestImage ? latestImage.order + 1 : 0;
 
-      if (recentUpload) {
-        // This is part of a multiple upload - use alphabetical order from sorted filenames
-        const fileIndex = fileNames.findIndex((name) => file.name === name);
-
-        // Get the earliest order from recent uploads to maintain consistency
-        const earliestRecentImage = await db.image.findFirst({
-          where: {
-            partNo,
-            createdAt: {
-              gte: oneMinuteAgo,
-            },
-          },
-          orderBy: {
-            order: "asc",
-          },
-        });
-
-        const baseOrder = earliestRecentImage ? earliestRecentImage.order : 0;
-        order = baseOrder + fileIndex;
-      } else {
-        // Adding to existing part - increment from highest existing order
-        const latestImage = await db.image.findFirst({
-          where: {
-            partNo,
-          },
-          orderBy: {
-            order: "desc",
-          },
-        });
-
-        const baseOrder = latestImage ? latestImage.order + 1 : 0;
-        const fileIndex = fileNames.findIndex((name) => file.name === name);
-        order = baseOrder + fileIndex;
-      }
+      // The final order is baseOrder + fileIndex (from sorted client array)
+      const order = baseOrder + fileIndex;
 
       // Store the image with partNo reference in the database
       await db.image.create({
@@ -157,7 +133,7 @@ export const uploadRouter = {
         },
       });
 
-      return { url, partNo };
+      return { url, partNo, order };
     }),
 } satisfies FileRouter;
 

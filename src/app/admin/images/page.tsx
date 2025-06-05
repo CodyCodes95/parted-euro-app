@@ -7,12 +7,15 @@ import { z } from "zod";
 import { api } from "~/trpc/react";
 import { toast } from "sonner";
 import { UploadDropzone } from "~/components/UploadThing";
+import { genUploader } from "uploadthing/client";
+import type { OurFileRouter } from "~/server/uploadthing";
 import {
   Image as ImageIcon,
   Plus,
   Undo2,
   Check,
   AlertCircle,
+  Upload,
 } from "lucide-react";
 import { Button } from "~/components/ui/button";
 import { Input } from "~/components/ui/input";
@@ -43,6 +46,9 @@ const formSchema = z.object({
 
 type FormValues = z.infer<typeof formSchema>;
 
+// Generate the typed uploader
+const { uploadFiles } = genUploader<OurFileRouter>();
+
 export default function MobileUploadPage() {
   const [currentPartNo, setCurrentPartNo] = useState<string>("");
   const [uploadedImages, setUploadedImages] = useState<
@@ -51,6 +57,7 @@ export default function MobileUploadPage() {
   const [uploading, setUploading] = useState(false);
   const [uploadComplete, setUploadComplete] = useState(false);
   const [successCount, setSuccessCount] = useState(0);
+  const [selectedFiles, setSelectedFiles] = useState<File[]>([]);
 
   // Fetch existing images for the part number
   const utils = api.useUtils();
@@ -74,6 +81,7 @@ export default function MobileUploadPage() {
     setCurrentPartNo("");
     setUploadedImages([]);
     setUploadComplete(false);
+    setSelectedFiles([]);
     setSuccessCount((prev) => prev); // Maintain the success count
   };
 
@@ -98,6 +106,105 @@ export default function MobileUploadPage() {
 
     // Invalidate the existing images query to refresh the data
     void utils.part.getImagesByPartNo.invalidate({ partNo: currentPartNo });
+  };
+
+  // Custom upload handler that maintains order
+  const handleCustomUpload = async () => {
+    if (!selectedFiles.length || !currentPartNo) return;
+
+    setUploading(true);
+    try {
+      // Sort files alphabetically by filename
+      const sortedFiles = [...selectedFiles].sort((a, b) =>
+        a.name.localeCompare(b.name, undefined, {
+          numeric: true,
+          sensitivity: "base",
+        }),
+      );
+
+      // Process and compress files first
+      const processedFiles: File[] = [];
+      for (const file of sortedFiles) {
+        let processedFile = file;
+
+        // Compress image files
+        if (file.type.startsWith("image/")) {
+          processedFile = await new Promise<File>((resolve, reject) => {
+            new Compressor(file, {
+              quality: 0.8,
+              maxWidth: 1920,
+              maxHeight: 1080,
+              convertSize: 1000000,
+              success: (compressedFile) => {
+                const newFile = new File([compressedFile], file.name, {
+                  type: compressedFile.type,
+                });
+                resolve(newFile);
+              },
+              error: (err) => {
+                console.error("Compression error:", err);
+                resolve(file); // Use original file if compression fails
+              },
+            });
+          });
+        }
+
+        processedFiles.push(processedFile);
+      }
+
+      // Upload files one by one with their correct index
+      const uploadResults = [];
+      for (let i = 0; i < processedFiles.length; i++) {
+        const file = processedFiles[i];
+        if (!file) continue; // Skip if file is undefined
+
+        const result = await uploadFiles("partImage", {
+          files: [file],
+          headers: {
+            partNo: currentPartNo,
+            fileIndex: i.toString(),
+          },
+        });
+
+        if (result?.[0]) {
+          uploadResults.push(result[0]);
+        }
+      }
+
+      // Handle successful uploads
+      if (uploadResults.length > 0) {
+        const newImages = uploadResults.map((result, index) => ({
+          url: result.url,
+          id: crypto.randomUUID(),
+          order: index,
+        }));
+
+        setUploadedImages((prev) => [...prev, ...newImages]);
+        setSuccessCount((prev) => prev + uploadResults.length);
+        setUploadComplete(true);
+        setSelectedFiles([]); // Clear selected files
+
+        // Invalidate the existing images query to refresh the data
+        void utils.part.getImagesByPartNo.invalidate({ partNo: currentPartNo });
+
+        toast.success(
+          `${uploadResults.length} image${uploadResults.length !== 1 ? "s" : ""} uploaded successfully`,
+        );
+      }
+    } catch (error) {
+      console.error("Upload error:", error);
+      toast.error(
+        `Error uploading images: ${error instanceof Error ? error.message : "Unknown error"}`,
+      );
+    } finally {
+      setUploading(false);
+    }
+  };
+
+  // Handle file selection
+  const handleFileSelect = (event: React.ChangeEvent<HTMLInputElement>) => {
+    const files = Array.from(event.target.files ?? []);
+    setSelectedFiles(files);
   };
 
   return (
@@ -237,70 +344,95 @@ export default function MobileUploadPage() {
           </CardHeader>
           <CardContent>
             <div className="space-y-4">
-              <UploadDropzone
-                config={{ mode: "auto" }}
-                endpoint="partImage"
-                headers={{ partNo: currentPartNo }}
-                onBeforeUploadBegin={(files) => {
-                  // Sort files alphabetically by filename
-                  const sortedFiles = [...files].sort((a, b) =>
-                    a.name.localeCompare(b.name, undefined, {
-                      numeric: true,
-                      sensitivity: "base",
-                    }),
-                  );
+              {/* Custom File Input */}
+              <div className="space-y-4">
+                <div className="flex w-full items-center justify-center">
+                  <label
+                    htmlFor="file-upload"
+                    className="flex h-64 w-full cursor-pointer flex-col items-center justify-center rounded-lg border-2 border-dashed border-muted-foreground/25 bg-muted/10 transition-all hover:border-muted-foreground/50"
+                  >
+                    <div className="flex flex-col items-center justify-center pb-6 pt-5">
+                      <Upload className="mb-3 h-10 w-10 text-muted-foreground" />
+                      <p className="mb-2 text-sm text-muted-foreground">
+                        <span className="font-semibold">Click to upload</span>{" "}
+                        or drag and drop
+                      </p>
+                    </div>
+                    <input
+                      id="file-upload"
+                      type="file"
+                      multiple
+                      accept="image/*"
+                      onChange={handleFileSelect}
+                      className="hidden"
+                      disabled={uploading}
+                    />
+                  </label>
+                </div>
 
-                  // Create a promise for each file to be compressed
-                  const compressPromises = sortedFiles.map(
-                    (file) =>
-                      new Promise<File>((resolve, reject) => {
-                        // Skip compression for non-image files
-                        if (!file.type.startsWith("image/")) {
-                          resolve(file);
-                          return;
-                        }
+                {/* Upload Button */}
+                {selectedFiles.length > 0 && (
+                  <div className="flex gap-2">
+                    <Button
+                      onClick={handleCustomUpload}
+                      disabled={uploading || !currentPartNo}
+                      className="flex-1"
+                    >
+                      {uploading ? (
+                        <>
+                          <div className="mr-2 h-4 w-4 animate-spin rounded-full border-2 border-white border-t-transparent" />
+                          Uploading {selectedFiles.length} files...
+                        </>
+                      ) : (
+                        <>
+                          <Upload className="mr-2 h-4 w-4" />
+                          Upload {selectedFiles.length} file
+                          {selectedFiles.length !== 1 ? "s" : ""}
+                        </>
+                      )}
+                    </Button>
+                    <Button
+                      variant="outline"
+                      onClick={() => setSelectedFiles([])}
+                      disabled={uploading}
+                    >
+                      Clear
+                    </Button>
+                  </div>
+                )}
 
-                        new Compressor(file, {
-                          quality: 0.8, // 80% quality
-                          maxWidth: 1920,
-                          maxHeight: 1080,
-                          convertSize: 1000000, // Convert to JPEG if > 1MB
-                          success: (compressedFile) => {
-                            // Create a new file with the original name but compressed content
-                            const newFile = new File(
-                              [compressedFile],
-                              file.name,
-                              { type: compressedFile.type },
-                            );
-                            resolve(newFile);
-                          },
-                          error: (err) => {
-                            console.error("Compression error:", err);
-                            // If compression fails, use the original file
-                            resolve(file);
-                          },
-                        });
-                      }),
-                  );
-
-                  // Return a promise that resolves when all files are compressed
-                  return Promise.all(compressPromises);
-                }}
-                onClientUploadComplete={(res) => {
-                  if (res) {
-                    handleImageUpload(res);
-                    toast.success(
-                      `${res.length} image${res.length !== 1 ? "s" : ""} uploaded successfully`,
-                    );
-                  }
-                  setUploading(false);
-                }}
-                onUploadError={(error: Error) => {
-                  toast.error(`Error uploading images: ${error.message}`);
-                  setUploading(false);
-                }}
-                className="ut-label:text-lg ut-allowed-content:text-muted-foreground ut-upload-icon:text-muted-foreground rounded-lg border-2 border-dashed border-muted-foreground/25 p-4 transition-all hover:border-muted-foreground/50"
-              />
+                {/* Selected Files Preview */}
+                {selectedFiles.length > 0 && !uploading && (
+                  <div className="mt-4">
+                    <div className="mb-2 flex items-center">
+                      <ImageIcon className="mr-2 h-4 w-4" />
+                      <span className="text-sm font-medium">
+                        Selected files (will be ordered alphabetically):
+                      </span>
+                    </div>
+                    <div className="max-h-32 overflow-y-auto rounded border bg-muted/20 p-2">
+                      {[...selectedFiles]
+                        .sort((a, b) =>
+                          a.name.localeCompare(b.name, undefined, {
+                            numeric: true,
+                            sensitivity: "base",
+                          }),
+                        )
+                        .map((file, index) => (
+                          <div
+                            key={file.name}
+                            className="flex items-center text-xs text-muted-foreground"
+                          >
+                            <span className="mr-2 rounded bg-primary/10 px-1 font-mono">
+                              {index + 1}
+                            </span>
+                            {file.name}
+                          </div>
+                        ))}
+                    </div>
+                  </div>
+                )}
+              </div>
 
               {uploadedImages.length > 0 && (
                 <div className="mt-4">
