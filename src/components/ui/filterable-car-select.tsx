@@ -28,6 +28,7 @@ import {
 } from "~/components/ui/select";
 import { Separator } from "~/components/ui/separator";
 import { ScrollArea } from "~/components/ui/scroll-area";
+import { Checkbox } from "~/components/ui/checkbox";
 
 export type CarOption = {
   value: string;
@@ -69,6 +70,8 @@ export function FilterableCarSelect({
   const [seriesFilter, setSeriesFilter] = React.useState<string>("");
   const [generationFilter, setGenerationFilter] = React.useState<string>("");
   const [modelFilter, setModelFilter] = React.useState<string>("");
+  const [showSelectedOnly, setShowSelectedOnly] =
+    React.useState<boolean>(false);
 
   // Extract unique filter values
   const uniqueSeries = React.useMemo(() => {
@@ -125,11 +128,27 @@ export function FilterableCarSelect({
         modelFilter === "all" ||
         option.model === modelFilter;
 
+      // Apply selected only filter
+      const matchesSelectedFilter =
+        !showSelectedOnly || selectedOptions.includes(option.value);
+
       return (
-        matchesSearch && matchesSeries && matchesGeneration && matchesModel
+        matchesSearch &&
+        matchesSeries &&
+        matchesGeneration &&
+        matchesModel &&
+        matchesSelectedFilter
       );
     });
-  }, [options, search, seriesFilter, generationFilter, modelFilter]);
+  }, [
+    options,
+    search,
+    seriesFilter,
+    generationFilter,
+    modelFilter,
+    showSelectedOnly,
+    selectedOptions,
+  ]);
 
   // Update internal state when external value changes
   React.useEffect(() => {
@@ -183,6 +202,7 @@ export function FilterableCarSelect({
     setSeriesFilter("");
     setGenerationFilter("");
     setModelFilter("");
+    setShowSelectedOnly(false);
   };
 
   const handleSelectOption = (optionValue: string) => {
@@ -287,7 +307,10 @@ export function FilterableCarSelect({
           <div className="border-t p-2">
             <div className="mb-2 flex items-center justify-between">
               <div className="text-sm font-medium">Filters</div>
-              {(seriesFilter || generationFilter || modelFilter) && (
+              {(seriesFilter ||
+                generationFilter ||
+                modelFilter ||
+                showSelectedOnly) && (
                 <Button
                   variant="ghost"
                   size="sm"
@@ -298,68 +321,89 @@ export function FilterableCarSelect({
                 </Button>
               )}
             </div>
-            <div className="flex flex-wrap gap-2">
-              <Select
-                value={seriesFilter}
-                onValueChange={(value) => {
-                  setSeriesFilter(value);
-                  // Reset dependent filters when parent filter changes
-                  setGenerationFilter("");
-                  setModelFilter("");
-                }}
-              >
-                <SelectTrigger className="h-8 w-[120px]">
-                  <SelectValue placeholder="Series" />
-                </SelectTrigger>
-                <SelectContent>
-                  <SelectItem value="all">All Series</SelectItem>
-                  {uniqueSeries.map((series) => (
-                    <SelectItem key={series} value={series}>
-                      {series}
-                    </SelectItem>
-                  ))}
-                </SelectContent>
-              </Select>
+            <div className="space-y-3">
+              <div className="flex flex-wrap gap-2">
+                <Select
+                  value={seriesFilter}
+                  onValueChange={(value) => {
+                    setSeriesFilter(value);
+                    // Reset dependent filters when parent filter changes
+                    setGenerationFilter("");
+                    setModelFilter("");
+                  }}
+                >
+                  <SelectTrigger className="h-8 w-[120px]">
+                    <SelectValue placeholder="Series" />
+                  </SelectTrigger>
+                  <SelectContent>
+                    <SelectItem value="all">All Series</SelectItem>
+                    {uniqueSeries.map((series) => (
+                      <SelectItem key={series} value={series}>
+                        {series}
+                      </SelectItem>
+                    ))}
+                  </SelectContent>
+                </Select>
 
-              <Select
-                value={generationFilter}
-                onValueChange={(value) => {
-                  setGenerationFilter(value);
-                  // Reset dependent filters
-                  setModelFilter("");
-                }}
-                disabled={uniqueGenerations.length === 0}
-              >
-                <SelectTrigger className="h-8 w-[120px]">
-                  <SelectValue placeholder="Generation" />
-                </SelectTrigger>
-                <SelectContent>
-                  <SelectItem value="all">All Generations</SelectItem>
-                  {uniqueGenerations.map((generation) => (
-                    <SelectItem key={generation} value={generation}>
-                      {generation}
-                    </SelectItem>
-                  ))}
-                </SelectContent>
-              </Select>
+                <Select
+                  value={generationFilter}
+                  onValueChange={(value) => {
+                    setGenerationFilter(value);
+                    // Reset dependent filters
+                    setModelFilter("");
+                  }}
+                  disabled={uniqueGenerations.length === 0}
+                >
+                  <SelectTrigger className="h-8 w-[120px]">
+                    <SelectValue placeholder="Generation" />
+                  </SelectTrigger>
+                  <SelectContent>
+                    <SelectItem value="all">All Generations</SelectItem>
+                    {uniqueGenerations.map((generation) => (
+                      <SelectItem key={generation} value={generation}>
+                        {generation}
+                      </SelectItem>
+                    ))}
+                  </SelectContent>
+                </Select>
 
-              <Select
-                value={modelFilter}
-                onValueChange={setModelFilter}
-                disabled={uniqueModels.length === 0}
-              >
-                <SelectTrigger className="h-8 w-[120px]">
-                  <SelectValue placeholder="Model" />
-                </SelectTrigger>
-                <SelectContent>
-                  <SelectItem value="all">All Models</SelectItem>
-                  {uniqueModels.map((model) => (
-                    <SelectItem key={model} value={model}>
-                      {model}
-                    </SelectItem>
-                  ))}
-                </SelectContent>
-              </Select>
+                <Select
+                  value={modelFilter}
+                  onValueChange={setModelFilter}
+                  disabled={uniqueModels.length === 0}
+                >
+                  <SelectTrigger className="h-8 w-[120px]">
+                    <SelectValue placeholder="Model" />
+                  </SelectTrigger>
+                  <SelectContent>
+                    <SelectItem value="all">All Models</SelectItem>
+                    {uniqueModels.map((model) => (
+                      <SelectItem key={model} value={model}>
+                        {model}
+                      </SelectItem>
+                    ))}
+                  </SelectContent>
+                </Select>
+              </div>
+
+              <div className="flex items-center space-x-2">
+                <Checkbox
+                  id="show-selected-only"
+                  checked={showSelectedOnly}
+                  onCheckedChange={(checked) => setShowSelectedOnly(!!checked)}
+                  disabled={selectedOptions.length === 0}
+                />
+                <label
+                  htmlFor="show-selected-only"
+                  className={cn(
+                    "cursor-pointer text-sm",
+                    selectedOptions.length === 0 &&
+                      "cursor-not-allowed text-muted-foreground",
+                  )}
+                >
+                  Show selected only ({selectedOptions.length})
+                </label>
+              </div>
             </div>
           </div>
 
