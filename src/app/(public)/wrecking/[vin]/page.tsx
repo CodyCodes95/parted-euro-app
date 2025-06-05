@@ -50,7 +50,7 @@ export default async function DonorPartsPage({ params }: Props) {
   const formatDate = (dateString: string | Date | null) => {
     if (!dateString) return "N/A";
     const date = new Date(dateString);
-    return date.toLocaleDateString();
+    return date.toLocaleDateString("en-AU");
   };
 
   return (
