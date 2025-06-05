@@ -156,7 +156,62 @@ export function getOrderColumns({
           return <div>Pickup</div>;
         }
 
-        const address = row.original.shippingAddress;
+        const order = row.original;
+
+        // Check if we have separate address fields (new format)
+        const hasNewAddressFields =
+          order.shippingLine1 ??
+          order.shippingLine2 ??
+          order.shippingCity ??
+          order.shippingPostcode ??
+          order.shippingCountry ??
+          order.shippingState;
+
+        if (hasNewAddressFields) {
+          return (
+            <div className="max-w-[280px] space-y-1 text-xs leading-relaxed">
+              {order.shippingLine1 && (
+                <div>
+                  <span className="font-medium">Line 1:</span>{" "}
+                  {order.shippingLine1}
+                </div>
+              )}
+              {order.shippingLine2 && (
+                <div>
+                  <span className="font-medium">Line 2:</span>{" "}
+                  {order.shippingLine2}
+                </div>
+              )}
+              {order.shippingCity && (
+                <div>
+                  <span className="font-medium">City:</span>{" "}
+                  {order.shippingCity}
+                </div>
+              )}
+              {order.shippingPostcode && (
+                <div>
+                  <span className="font-medium">Postcode:</span>{" "}
+                  {order.shippingPostcode}
+                </div>
+              )}
+              {order.shippingState && (
+                <div>
+                  <span className="font-medium">State:</span>{" "}
+                  {order.shippingState}
+                </div>
+              )}
+              {order.shippingCountry && (
+                <div>
+                  <span className="font-medium">Country:</span>{" "}
+                  {order.shippingCountry}
+                </div>
+              )}
+            </div>
+          );
+        }
+
+        // Fallback to old concatenated string format for backward compatibility
+        const address = order.shippingAddress;
         if (!address || address === "Not specified") {
           return (
             <div className="text-sm text-muted-foreground">Not specified</div>
