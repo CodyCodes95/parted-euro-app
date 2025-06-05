@@ -32,6 +32,12 @@ interface DataTableProps<TData, TValue> {
   data: TData[];
   enableRowSelection?: boolean;
   onSelectionChange?: (rows: TData[]) => void;
+  globalFilter: string;
+  setGlobalFilter: (value: string | null) => void;
+  pageIndex: number;
+  setPageIndex: (value: number | null) => void;
+  pageSize: number;
+  setPageSize: (value: number | null) => void;
 }
 
 export function DataTable<TData, TValue>({
@@ -39,24 +45,18 @@ export function DataTable<TData, TValue>({
   data,
   enableRowSelection = true,
   onSelectionChange,
+  globalFilter,
+  setGlobalFilter,
+  pageIndex,
+  setPageIndex,
+  pageSize,
+  setPageSize,
 }: DataTableProps<TData, TValue>) {
   const [sorting, setSorting] = React.useState<SortingState>([]);
   const [columnFilters, setColumnFilters] = React.useState<ColumnFiltersState>(
     [],
   );
-  const [globalFilter, setGlobalFilter] = useQueryState("search", {
-    defaultValue: "",
-  });
-  const [pageIndex, setPageIndex] = useQueryState("page", {
-    defaultValue: 0,
-    parse: (value) => Number(value),
-    serialize: (value) => value.toString(),
-  });
-  const [pageSize, setPageSize] = useQueryState("size", {
-    defaultValue: 10,
-    parse: (value) => Number(value),
-    serialize: (value) => value.toString(),
-  });
+
   const [columnVisibility, setColumnVisibility] =
     React.useState<VisibilityState>({});
   const [rowSelection, setRowSelection] = React.useState({});
@@ -66,7 +66,7 @@ export function DataTable<TData, TValue>({
     columns,
     onSortingChange: setSorting,
     onColumnFiltersChange: setColumnFilters,
-    onGlobalFilterChange: (value) => void setGlobalFilter(value),
+    onGlobalFilterChange: (value: string) => void setGlobalFilter(value),
     getCoreRowModel: getCoreRowModel(),
     getPaginationRowModel: getPaginationRowModel(),
     getFilteredRowModel: getFilteredRowModel(),
@@ -152,7 +152,8 @@ export function DataTable<TData, TValue>({
                 <TableRow
                   key={row.id}
                   data-state={row.getIsSelected() && "selected"}
-                  id={row.original?.id ?? row.id}
+                  // eslint-disable-next-line @typescript-eslint/no-unsafe-assignment
+                  id={row.id}
                 >
                   {row.getVisibleCells().map((cell) => (
                     <TableCell key={cell.id}>

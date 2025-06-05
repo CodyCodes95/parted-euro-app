@@ -7,9 +7,22 @@ import { getUserColumns } from "./_components/columns";
 import { keepPreviousData } from "@tanstack/react-query";
 import { Input } from "~/components/ui/input";
 import { type SortingState } from "@tanstack/react-table";
+import { useQueryState } from "nuqs";
 
 export default function UsersAdminPage() {
-  // Removed searchTerm and sorting state
+    const [globalFilter, setGlobalFilter] = useQueryState("search", {
+      defaultValue: "",
+    });
+    const [pageIndex, setPageIndex] = useQueryState("page", {
+      defaultValue: 0,
+      parse: (value) => Number(value),
+      serialize: (value) => value.toString(),
+    });
+    const [pageSize, setPageSize] = useQueryState("size", {
+      defaultValue: 10,
+      parse: (value) => Number(value),
+      serialize: (value) => value.toString(),
+    });
 
   // Fetch all users
   const { data: usersData, isLoading } = api.user.getAll.useQuery(undefined, {
@@ -38,7 +51,12 @@ export default function UsersAdminPage() {
         <DataTable
           columns={columns}
           data={users}
-          // Removed sorting, onSortingChange, searchKey props
+          globalFilter={globalFilter}
+          setGlobalFilter={setGlobalFilter}
+          pageIndex={pageIndex}
+          setPageIndex={setPageIndex}
+          pageSize={pageSize}
+          setPageSize={setPageSize}
         />
       )}
     </div>

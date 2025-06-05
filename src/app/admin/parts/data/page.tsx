@@ -9,12 +9,27 @@ import { DeletePartDialog } from "./_components/delete-part-dialog";
 import { keepPreviousData } from "@tanstack/react-query";
 import { Button } from "~/components/ui/button";
 import { Plus } from "lucide-react";
+import { useQueryState } from "nuqs";
 
 export default function PartsPage() {
   const [isAddPartOpen, setIsAddPartOpen] = useState(false);
   const [isEditPartOpen, setIsEditPartOpen] = useState(false);
   const [isDeletePartOpen, setIsDeletePartOpen] = useState(false);
   const [selectedPart, setSelectedPart] = useState<Part | null>(null);
+
+  const [globalFilter, setGlobalFilter] = useQueryState("search", {
+    defaultValue: "",
+  });
+  const [pageIndex, setPageIndex] = useQueryState("page", {
+    defaultValue: 0,
+    parse: (value) => Number(value),
+    serialize: (value) => value.toString(),
+  });
+  const [pageSize, setPageSize] = useQueryState("size", {
+    defaultValue: 10,
+    parse: (value) => Number(value),
+    serialize: (value) => value.toString(),
+  });
 
   // Fetch all parts
   const { data, isLoading } = api.part.getAll.useQuery(undefined, {
@@ -58,7 +73,18 @@ export default function PartsPage() {
         </div>
       )}
 
-      {!isLoading && <DataTable columns={columns} data={parts} />}
+      {!isLoading && (
+        <DataTable
+          columns={columns}
+          data={parts}
+          globalFilter={globalFilter}
+          setGlobalFilter={setGlobalFilter}
+          pageIndex={pageIndex}
+          setPageIndex={setPageIndex}
+          pageSize={pageSize}
+          setPageSize={setPageSize}
+        />
+      )}
 
       <PartForm open={isAddPartOpen} onOpenChange={setIsAddPartOpen} />
 

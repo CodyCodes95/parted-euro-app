@@ -11,12 +11,26 @@ import { Input } from "~/components/ui/input";
 import { type SortingState } from "@tanstack/react-table";
 import { Button } from "~/components/ui/button";
 import { Plus } from "lucide-react";
-
+import { useQueryState } from "nuqs";
 export default function DonorsAdminPage() {
   const [isAddDonorOpen, setIsAddDonorOpen] = useState(false);
   const [isEditDonorOpen, setIsEditDonorOpen] = useState(false);
   const [isDeleteDonorOpen, setIsDeleteDonorOpen] = useState(false);
   const [selectedDonor, setSelectedDonor] = useState<DonorWithCar | null>(null);
+
+  const [globalFilter, setGlobalFilter] = useQueryState("search", {
+    defaultValue: "",
+  });
+  const [pageIndex, setPageIndex] = useQueryState("page", {
+    defaultValue: 0,
+    parse: (value) => Number(value),
+    serialize: (value) => value.toString(),
+  });
+  const [pageSize, setPageSize] = useQueryState("size", {
+    defaultValue: 10,
+    parse: (value) => Number(value),
+    serialize: (value) => value.toString(),
+  });
 
   // Fetch all donors
   const donorsQuery = api.donor.getAll.useQuery(undefined, {
@@ -79,7 +93,16 @@ export default function DonorsAdminPage() {
       )}
 
       {!isLoading && (
-        <DataTable<DonorWithCar, unknown> columns={columns} data={donors} />
+        <DataTable
+          columns={columns}
+          data={donors}
+          globalFilter={globalFilter}
+          setGlobalFilter={setGlobalFilter}
+          pageIndex={pageIndex}
+          setPageIndex={setPageIndex}
+          pageSize={pageSize}
+          setPageSize={setPageSize}
+        />
       )}
 
       <DonorForm open={isAddDonorOpen} onOpenChange={setIsAddDonorOpen} />

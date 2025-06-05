@@ -12,12 +12,27 @@ import { type SortingState } from "@tanstack/react-table";
 import { Button } from "~/components/ui/button";
 import { Plus } from "lucide-react";
 import { type AdminCarItem } from "~/trpc/shared";
+import { useQueryState } from "nuqs";
 
 export default function CarsAdminPage() {
   const [isAddCarOpen, setIsAddCarOpen] = useState(false);
   const [isEditCarOpen, setIsEditCarOpen] = useState(false);
   const [isDeleteCarOpen, setIsDeleteCarOpen] = useState(false);
   const [selectedCar, setSelectedCar] = useState<AdminCarItem | null>(null);
+
+  const [globalFilter, setGlobalFilter] = useQueryState("search", {
+    defaultValue: "",
+  });
+  const [pageIndex, setPageIndex] = useQueryState("page", {
+    defaultValue: 0,
+    parse: (value) => Number(value),
+    serialize: (value) => value.toString(),
+  });
+  const [pageSize, setPageSize] = useQueryState("size", {
+    defaultValue: 10,
+    parse: (value) => Number(value),
+    serialize: (value) => value.toString(),
+  });
 
   // Fetch all cars
   const { data, isLoading, isError } = api.car.getAll.useQuery(undefined, {
@@ -65,6 +80,12 @@ export default function CarsAdminPage() {
         <DataTable
           columns={columns}
           data={cars}
+          globalFilter={globalFilter}
+          setGlobalFilter={setGlobalFilter}
+          pageIndex={pageIndex}
+          setPageIndex={setPageIndex}
+          pageSize={pageSize}
+          setPageSize={setPageSize}
         />
       )}
 

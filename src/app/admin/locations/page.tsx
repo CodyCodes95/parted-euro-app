@@ -11,6 +11,7 @@ import { Input } from "~/components/ui/input";
 import { type SortingState } from "@tanstack/react-table";
 import { Button } from "~/components/ui/button";
 import { Plus } from "lucide-react";
+import { useQueryState } from "nuqs";
 
 interface LocationWithTimestamps extends Location {
   createdAt: Date;
@@ -24,6 +25,20 @@ export default function LocationsAdminPage() {
   const [selectedLocation, setSelectedLocation] = useState<Location | null>(
     null,
   );
+
+    const [globalFilter, setGlobalFilter] = useQueryState("search", {
+      defaultValue: "",
+    });
+    const [pageIndex, setPageIndex] = useQueryState("page", {
+      defaultValue: 0,
+      parse: (value) => Number(value),
+      serialize: (value) => value.toString(),
+    });
+    const [pageSize, setPageSize] = useQueryState("size", {
+      defaultValue: 10,
+      parse: (value) => Number(value),
+      serialize: (value) => value.toString(),
+    });
 
   // Fetch all locations
   const locationsQuery = api.location.getAll.useQuery(undefined, {
@@ -68,7 +83,18 @@ export default function LocationsAdminPage() {
         </div>
       )}
 
-      {!isLoading && <DataTable columns={columns} data={locations} />}
+      {!isLoading && (
+        <DataTable
+          columns={columns}
+          data={locations}
+          globalFilter={globalFilter}
+          setGlobalFilter={setGlobalFilter}
+          pageIndex={pageIndex}
+          setPageIndex={setPageIndex}
+          pageSize={pageSize}
+          setPageSize={setPageSize}
+        />
+      )}
 
       <LocationForm
         open={isAddLocationOpen}

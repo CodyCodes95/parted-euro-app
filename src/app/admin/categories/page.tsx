@@ -10,6 +10,7 @@ import { keepPreviousData } from "@tanstack/react-query";
 import { Input } from "~/components/ui/input";
 import { Button } from "~/components/ui/button";
 import { Plus } from "lucide-react";
+import { useQueryState } from "nuqs";
 
 export default function CategoriesAdminPage() {
   const [isAddCategoryOpen, setIsAddCategoryOpen] = useState(false);
@@ -18,6 +19,20 @@ export default function CategoriesAdminPage() {
   const [selectedCategory, setSelectedCategory] = useState<Category | null>(
     null,
   );
+
+    const [globalFilter, setGlobalFilter] = useQueryState("search", {
+      defaultValue: "",
+    });
+    const [pageIndex, setPageIndex] = useQueryState("page", {
+      defaultValue: 0,
+      parse: (value) => Number(value),
+      serialize: (value) => value.toString(),
+    });
+    const [pageSize, setPageSize] = useQueryState("size", {
+      defaultValue: 10,
+      parse: (value) => Number(value),
+      serialize: (value) => value.toString(),
+    });
 
   // Fetch all categories
   const { data: categoriesData, isLoading } = api.category.getAll.useQuery(
@@ -64,7 +79,18 @@ export default function CategoriesAdminPage() {
         </div>
       )}
 
-      {!isLoading && <DataTable columns={columns} data={categories} />}
+      {!isLoading && (
+        <DataTable
+          columns={columns}
+          data={categories}
+          globalFilter={globalFilter}
+          setGlobalFilter={setGlobalFilter}
+          pageIndex={pageIndex}
+          setPageIndex={setPageIndex}
+          pageSize={pageSize}
+          setPageSize={setPageSize}
+        />
+      )}
 
       <CategoryForm
         open={isAddCategoryOpen}

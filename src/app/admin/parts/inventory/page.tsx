@@ -11,6 +11,7 @@ import { Button } from "~/components/ui/button";
 import { Plus } from "lucide-react";
 import { type AdminInventoryItem } from "~/trpc/shared";
 import { ListingForm } from "~/app/admin/listings/_components/listing-form";
+import { useQueryState } from "nuqs";
 
 export default function InventoryPage() {
   const [isAddInventoryOpen, setIsAddInventoryOpen] = useState(false);
@@ -21,6 +22,20 @@ export default function InventoryPage() {
   const [isCreateListingOpen, setIsCreateListingOpen] = useState(false);
   const [selectedInventory, setSelectedInventory] =
     useState<AdminInventoryItem | null>(null);
+  
+    const [globalFilter, setGlobalFilter] = useQueryState("search", {
+      defaultValue: "",
+    });
+    const [pageIndex, setPageIndex] = useQueryState("page", {
+      defaultValue: 0,
+      parse: (value) => Number(value),
+      serialize: (value) => value.toString(),
+    });
+    const [pageSize, setPageSize] = useQueryState("size", {
+      defaultValue: 10,
+      parse: (value) => Number(value),
+      serialize: (value) => value.toString(),
+    });
 
   // Fetch all inventory data
   const inventoryQuery = api.inventory.getAll.useQuery(undefined, {
@@ -83,7 +98,18 @@ export default function InventoryPage() {
         </div>
       )}
 
-      {!isLoading && <DataTable columns={columns} data={inventory} />}
+      {!isLoading && (
+        <DataTable
+          columns={columns}
+          data={inventory}
+          globalFilter={globalFilter}
+          setGlobalFilter={setGlobalFilter}
+          pageIndex={pageIndex}
+          setPageIndex={setPageIndex}
+          pageSize={pageSize}
+          setPageSize={setPageSize}
+        />
+      )}
 
       {isAddInventoryOpen && (
         <InventoryForm

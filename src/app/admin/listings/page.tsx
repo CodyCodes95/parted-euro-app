@@ -35,6 +35,20 @@ export default function ListingsAdminPage() {
   const [orderItems, setOrderItems] = useState<OrderItem[]>([]);
   const [selectedRows, setSelectedRows] = useState<AdminListingsItem[]>([]);
 
+    const [globalFilter, setGlobalFilter] = useQueryState("search", {
+      defaultValue: "",
+    });
+    const [pageIndex, setPageIndex] = useQueryState("page", {
+      defaultValue: 0,
+      parse: (value) => Number(value),
+      serialize: (value) => value.toString(),
+    });
+    const [pageSize, setPageSize] = useQueryState("size", {
+      defaultValue: 10,
+      parse: (value) => Number(value),
+      serialize: (value) => value.toString(),
+    });
+
   // Fetch all listings
   const listingsQuery = api.listings.getAllAdmin.useQuery(undefined, {
     placeholderData: keepPreviousData,
@@ -177,7 +191,13 @@ export default function ListingsAdminPage() {
             columns={columns}
             data={listings}
             onSelectionChange={setSelectedRows}
-          />
+            globalFilter={globalFilter}
+            setGlobalFilter={setGlobalFilter}
+            pageIndex={pageIndex}
+            setPageIndex={setPageIndex}
+            pageSize={pageSize}
+            setPageSize={setPageSize}
+              />
           <div className="mt-4 flex justify-end">
             <Button
               onClick={handleCreateBulkOrder}
