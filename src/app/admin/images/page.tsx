@@ -7,7 +7,13 @@ import { z } from "zod";
 import { api } from "~/trpc/react";
 import { toast } from "sonner";
 import { UploadDropzone } from "~/components/UploadThing";
-import { Image as ImageIcon, Plus, Undo2, Check } from "lucide-react";
+import {
+  Image as ImageIcon,
+  Plus,
+  Undo2,
+  Check,
+  AlertCircle,
+} from "lucide-react";
 import { Button } from "~/components/ui/button";
 import { Input } from "~/components/ui/input";
 import {
@@ -27,6 +33,7 @@ import {
   CardTitle,
 } from "~/components/ui/card";
 import { AspectRatio } from "~/components/ui/aspect-ratio";
+import { Alert, AlertDescription } from "~/components/ui/alert";
 import Compressor from "compressorjs";
 
 // Define the form schema
@@ -44,6 +51,14 @@ export default function MobileUploadPage() {
   const [uploading, setUploading] = useState(false);
   const [uploadComplete, setUploadComplete] = useState(false);
   const [successCount, setSuccessCount] = useState(0);
+
+  // Fetch existing images for the part number
+  const utils = api.useUtils();
+  const { data: existingImages, isLoading: loadingExistingImages } =
+    api.part.getImagesByPartNo.useQuery(
+      { partNo: currentPartNo },
+      { enabled: !!currentPartNo },
+    );
 
   // Create form
   const form = useForm<FormValues>({
@@ -80,6 +95,9 @@ export default function MobileUploadPage() {
     setUploadedImages((prev) => [...prev, ...newImages]);
     setSuccessCount((prev) => prev + results.length);
     setUploadComplete(true);
+
+    // Invalidate the existing images query to refresh the data
+    void utils.part.getImagesByPartNo.invalidate({ partNo: currentPartNo });
   };
 
   return (
@@ -103,7 +121,7 @@ export default function MobileUploadPage() {
         </div>
       </div>
 
-      <div className="grid gap-6 md:grid-cols-2">
+      <div className="grid gap-6 lg:grid-cols-2">
         <Card>
           <CardHeader>
             <CardTitle>Step 1: Enter Part Number</CardTitle>
@@ -153,119 +171,170 @@ export default function MobileUploadPage() {
           </CardContent>
         </Card>
 
-        <Card>
+        {/* Existing Images Section */}
+        {currentPartNo && (
+          <Card>
+            <CardHeader>
+              <CardTitle>Existing Images</CardTitle>
+              <CardDescription>
+                Currently uploaded images for part number: {currentPartNo}
+              </CardDescription>
+            </CardHeader>
+            <CardContent>
+              {loadingExistingImages ? (
+                <div className="flex h-32 items-center justify-center">
+                  <div className="text-sm text-muted-foreground">
+                    Loading existing images...
+                  </div>
+                </div>
+              ) : existingImages && existingImages.length > 0 ? (
+                <div className="space-y-2">
+                  <div className="flex items-center">
+                    <ImageIcon className="mr-2 h-4 w-4" />
+                    <span className="text-sm font-medium">
+                      {existingImages.length} existing image
+                      {existingImages.length !== 1 ? "s" : ""}
+                    </span>
+                  </div>
+                  <div className="grid grid-cols-3 gap-2">
+                    {existingImages.map((image) => (
+                      <div
+                        key={image.id}
+                        className="overflow-hidden rounded-md border"
+                      >
+                        <AspectRatio ratio={1}>
+                          <img
+                            src={image.url}
+                            alt="Existing part image"
+                            className="h-full w-full object-cover"
+                          />
+                        </AspectRatio>
+                      </div>
+                    ))}
+                  </div>
+                  <Alert>
+                    <AlertCircle className="h-4 w-4" />
+                    <AlertDescription>
+                      Make sure you&apos;re not uploading duplicate images.
+                      Review existing images before uploading new ones.
+                    </AlertDescription>
+                  </Alert>
+                </div>
+              ) : (
+                <div className="flex h-32 items-center justify-center rounded-md border-2 border-dashed border-muted p-4">
+                  <div className="text-center text-muted-foreground">
+                    <ImageIcon className="mx-auto h-10 w-10 opacity-50" />
+                    <p className="mt-2">No existing images found</p>
+                  </div>
+                </div>
+              )}
+            </CardContent>
+          </Card>
+        )}
+      </div>
+
+      {/* Upload Section */}
+      {currentPartNo && (
+        <Card className="mt-6">
           <CardHeader>
-            <CardTitle>Step 2: Upload Images</CardTitle>
+            <CardTitle>Step 2: Upload New Images</CardTitle>
             <CardDescription>
-              {currentPartNo
-                ? `Upload images for part number: ${currentPartNo}`
-                : "First enter a part number"}
+              Upload additional images for part number: {currentPartNo}
             </CardDescription>
           </CardHeader>
           <CardContent>
-            {currentPartNo ? (
-              <div className="space-y-4">
-                <UploadDropzone
-                  config={{ mode: "auto" }}
-                  endpoint="partImage"
-                  headers={{ partNo: currentPartNo }}
-                  onBeforeUploadBegin={(files) => {
-                    // Create a promise for each file to be compressed
-                    const compressPromises = files.map(
-                      (file) =>
-                        new Promise<File>((resolve, reject) => {
-                          // Skip compression for non-image files
-                          if (!file.type.startsWith("image/")) {
+            <div className="space-y-4">
+              <UploadDropzone
+                config={{ mode: "auto" }}
+                endpoint="partImage"
+                headers={{ partNo: currentPartNo }}
+                onBeforeUploadBegin={(files) => {
+                  // Create a promise for each file to be compressed
+                  const compressPromises = files.map(
+                    (file) =>
+                      new Promise<File>((resolve, reject) => {
+                        // Skip compression for non-image files
+                        if (!file.type.startsWith("image/")) {
+                          resolve(file);
+                          return;
+                        }
+
+                        new Compressor(file, {
+                          quality: 0.8, // 80% quality
+                          maxWidth: 1920,
+                          maxHeight: 1080,
+                          convertSize: 1000000, // Convert to JPEG if > 1MB
+                          success: (compressedFile) => {
+                            // Create a new file with the original name but compressed content
+                            const newFile = new File(
+                              [compressedFile],
+                              file.name,
+                              { type: compressedFile.type },
+                            );
+                            resolve(newFile);
+                          },
+                          error: (err) => {
+                            console.error("Compression error:", err);
+                            // If compression fails, use the original file
                             resolve(file);
-                            return;
-                          }
+                          },
+                        });
+                      }),
+                  );
 
-                          new Compressor(file, {
-                            quality: 0.8, // 80% quality
-                            maxWidth: 1920,
-                            maxHeight: 1080,
-                            convertSize: 1000000, // Convert to JPEG if > 1MB
-                            success: (compressedFile) => {
-                              // Create a new file with the original name but compressed content
-                              const newFile = new File(
-                                [compressedFile],
-                                file.name,
-                                { type: compressedFile.type },
-                              );
-                              resolve(newFile);
-                            },
-                            error: (err) => {
-                              console.error("Compression error:", err);
-                              // If compression fails, use the original file
-                              resolve(file);
-                            },
-                          });
-                        }),
+                  // Return a promise that resolves when all files are compressed
+                  return Promise.all(compressPromises);
+                }}
+                onClientUploadComplete={(res) => {
+                  if (res) {
+                    handleImageUpload(res);
+                    toast.success(
+                      `${res.length} image${res.length !== 1 ? "s" : ""} uploaded successfully`,
                     );
+                  }
+                  setUploading(false);
+                }}
+                onUploadError={(error: Error) => {
+                  toast.error(`Error uploading images: ${error.message}`);
+                  setUploading(false);
+                }}
+                className="ut-label:text-lg ut-allowed-content:text-muted-foreground ut-upload-icon:text-muted-foreground rounded-lg border-2 border-dashed border-muted-foreground/25 p-4 transition-all hover:border-muted-foreground/50"
+              />
 
-                    // Return a promise that resolves when all files are compressed
-                    return Promise.all(compressPromises);
-                  }}
-                  onClientUploadComplete={(res) => {
-                    if (res) {
-                      handleImageUpload(res);
-                      toast.success(
-                        `${res.length} image${res.length !== 1 ? "s" : ""} uploaded successfully`,
-                      );
-                    }
-                    setUploading(false);
-                  }}
-                  onUploadError={(error: Error) => {
-                    toast.error(`Error uploading images: ${error.message}`);
-                    setUploading(false);
-                  }}
-                  className="ut-label:text-lg ut-allowed-content:text-muted-foreground ut-upload-icon:text-muted-foreground rounded-lg border-2 border-dashed border-muted-foreground/25 p-4 transition-all hover:border-muted-foreground/50"
-                />
-
-                {uploadedImages.length > 0 && (
-                  <div className="mt-4">
-                    <div className="mb-2 flex items-center">
-                      <ImageIcon className="mr-2 h-4 w-4" />
-                      <span className="text-sm font-medium">
-                        {uploadedImages.length} image
-                        {uploadedImages.length !== 1 ? "s" : ""} uploaded
-                      </span>
-                    </div>
-                    <div className="grid grid-cols-3 gap-2">
-                      {uploadedImages.map((image) => (
-                        <div
-                          key={image.id}
-                          className="overflow-hidden rounded-md border"
-                        >
-                          <AspectRatio ratio={1}>
-                            <img
-                              src={image.url}
-                              alt="Uploaded part"
-                              className="h-full w-full object-cover"
-                            />
-                          </AspectRatio>
-                        </div>
-                      ))}
-                    </div>
+              {uploadedImages.length > 0 && (
+                <div className="mt-4">
+                  <div className="mb-2 flex items-center">
+                    <ImageIcon className="mr-2 h-4 w-4" />
+                    <span className="text-sm font-medium">
+                      {uploadedImages.length} new image
+                      {uploadedImages.length !== 1 ? "s" : ""} uploaded
+                    </span>
                   </div>
-                )}
-              </div>
-            ) : (
-              <div className="flex h-40 items-center justify-center rounded-md border-2 border-dashed border-muted p-4">
-                <div className="text-center text-muted-foreground">
-                  <ImageIcon className="mx-auto h-10 w-10 opacity-50" />
-                  <p className="mt-2">Enter a part number first</p>
+                  <div className="grid grid-cols-3 gap-2">
+                    {uploadedImages.map((image) => (
+                      <div
+                        key={image.id}
+                        className="overflow-hidden rounded-md border"
+                      >
+                        <AspectRatio ratio={1}>
+                          <img
+                            src={image.url}
+                            alt="Uploaded part"
+                            className="h-full w-full object-cover"
+                          />
+                        </AspectRatio>
+                      </div>
+                    ))}
+                  </div>
                 </div>
-              </div>
-            )}
+              )}
+            </div>
           </CardContent>
           <CardFooter className="flex justify-between">
-            {currentPartNo && (
-              <Button variant="outline" onClick={resetForm}>
-                <Undo2 className="mr-2 h-4 w-4" />
-                Start new part
-              </Button>
-            )}
+            <Button variant="outline" onClick={resetForm}>
+              <Undo2 className="mr-2 h-4 w-4" />
+              Start new part
+            </Button>
 
             {uploadComplete && (
               <Button onClick={resetForm} className="ml-auto">
@@ -275,7 +344,7 @@ export default function MobileUploadPage() {
             )}
           </CardFooter>
         </Card>
-      </div>
+      )}
     </div>
   );
 }
