@@ -48,16 +48,6 @@ export function getDonorColumns({
       },
     },
     {
-      id: "model",
-      header: ({ column }) => (
-        <DataTableColumnHeader column={column} title="Model" />
-      ),
-      cell: ({ row }) => {
-        const car = row.original.car;
-        return <div>{car.model}</div>;
-      },
-    },
-    {
       id: "series",
       header: ({ column }) => (
         <DataTableColumnHeader column={column} title="Series" />
@@ -75,6 +65,16 @@ export function getDonorColumns({
       cell: ({ row }) => {
         const car = row.original.car;
         return <div>{car.generation}</div>;
+      },
+    },
+    {
+      id: "model",
+      header: ({ column }) => (
+        <DataTableColumnHeader column={column} title="Model" />
+      ),
+      cell: ({ row }) => {
+        const car = row.original.car;
+        return <div>{car.model}</div>;
       },
     },
     {
