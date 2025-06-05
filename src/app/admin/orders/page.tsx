@@ -10,6 +10,7 @@ import { OrderDetailsDialog } from "./_components/order-details-dialog";
 import { UpdateStatusDialog } from "./_components/update-status-dialog";
 import { type AdminOrdersItem } from "~/trpc/shared";
 import { toast } from "sonner";
+import { useQueryState } from "nuqs";
 
 export default function OrdersAdminPage() {
   const [selectedOrder, setSelectedOrder] = useState<AdminOrdersItem | null>(
@@ -18,6 +19,20 @@ export default function OrdersAdminPage() {
   const [isOrderDetailsOpen, setIsOrderDetailsOpen] = useState(false);
   const [isAddTrackingOpen, setIsAddTrackingOpen] = useState(false);
   const [isUpdateStatusOpen, setIsUpdateStatusOpen] = useState(false);
+
+    const [globalFilter, setGlobalFilter] = useQueryState("search", {
+      defaultValue: "",
+    });
+    const [pageIndex, setPageIndex] = useQueryState("page", {
+      defaultValue: 0,
+      parse: (value) => Number(value),
+      serialize: (value) => value.toString(),
+    });
+    const [pageSize, setPageSize] = useQueryState("size", {
+      defaultValue: 10,
+      parse: (value) => Number(value),
+      serialize: (value) => value.toString(),
+    });
 
   // Fetch all orders
   const ordersQuery = api.orders?.getAllAdmin.useQuery(undefined, {
@@ -116,7 +131,18 @@ export default function OrdersAdminPage() {
         </div>
       )}
 
-      {!isLoading && <DataTable columns={columns} data={orders} />}
+      {!isLoading && (
+        <DataTable
+          columns={columns}
+          data={orders}
+          globalFilter={globalFilter}
+          setGlobalFilter={setGlobalFilter}
+          pageIndex={pageIndex}
+          setPageIndex={setPageIndex}
+          pageSize={pageSize}
+          setPageSize={setPageSize}
+        />
+      )}
 
       {selectedOrder && (
         <>
