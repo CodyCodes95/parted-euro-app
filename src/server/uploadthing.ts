@@ -70,7 +70,24 @@ export const uploadRouter = {
       });
 
       // Return both the URL and the generated ID
-      return { url: file.url, id: image.id };
+      return { url: file.ufsUrl, id: image.id };
+    }),
+  donorImage: f({ image: { maxFileCount: 30, maxFileSize: "16MB" } })
+    .middleware(async ({ files }) => {
+      // This code runs on your server before upload
+      const session = await auth();
+
+      // If you throw, the user will not be able to upload
+      if (!session?.user.isAdmin) {
+        throw new Error("Unauthorized");
+      }
+
+      // Whatever is returned here is accessible in onUploadComplete as `metadata`
+      return { userId: session.user.id };
+    })
+    .onUploadComplete(async ({ metadata, file }) => {
+      // Return both the URL and the generated ID
+      return { url: file.ufsUrl };
     }),
 
   // Add part image upload endpoint

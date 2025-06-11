@@ -577,7 +577,7 @@ export function DonorForm({
                 <div className="mb-4">
                   <UploadDropzone
                     config={{ mode: "auto" }}
-                    endpoint="homepageImage"
+                    endpoint="donorImage"
                     onBeforeUploadBegin={(files) => {
                       // Create a promise for each file to be compressed
                       const compressPromises = files.map(
