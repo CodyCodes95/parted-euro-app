@@ -183,7 +183,7 @@ export function OrderDetailsDialog({
                     Subtotal
                   </TableCell>
                   <TableCell className="text-right">
-                    {formatPrice(subtotal)}
+                    {(Number(formatPrice(subtotal)) * 100).toFixed(2)}
                   </TableCell>
                 </TableRow>
 
