@@ -71,7 +71,7 @@ export function OrderDetailsDialog({
   });
 
   const subtotal = order.subtotal;
-  const shipping = order.shipping || 0;
+  const shipping = order.shipping * 100 || 0;
   const total = subtotal + shipping;
 
   return (
@@ -183,7 +183,7 @@ export function OrderDetailsDialog({
                     Subtotal
                   </TableCell>
                   <TableCell className="text-right">
-                    {(Number(formatPrice(subtotal)) * 100).toFixed(2)}
+                    {formatPrice(subtotal)}
                   </TableCell>
                 </TableRow>
 
