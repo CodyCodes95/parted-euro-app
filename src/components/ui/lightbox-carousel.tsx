@@ -81,14 +81,11 @@ export function LightboxCarousel({
                 }`}
               >
                 {fill ? (
-                  <Image
+                  <img
                     src={image.url}
                     alt={image.alt ?? ""}
-                    fill
-                    sizes="(max-width: 768px) 100vw, 50vw"
-                    className={`cursor-zoom-in object-${objectFit} transition-transform duration-300 hover:scale-105`}
+                    className={`cursor-zoom-in object-${objectFit} h-full w-full transition-transform duration-300 hover:scale-105`}
                     onClick={() => openLightbox(index)}
-                    priority={index === 0}
                   />
                 ) : (
                   <img
