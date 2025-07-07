@@ -185,7 +185,9 @@ export function getInventoryColumns({
       enableColumnFilter: true,
       accessorFn: (row) => {
         const hasListing = row.listing?.length > 0;
-        const isDraft = !row.donorVin && !row.partDetailsId;
+
+        const isDraft =
+          !row.donorVin || !row.partDetailsId || !row.partDetails?.cars.length;
 
         if (hasListing) {
           return "Listed";
@@ -226,10 +228,12 @@ export function getInventoryColumns({
       id: "actions",
       cell: ({ row }) => {
         const inventory = row.original;
-
         // Determine status directly instead of using getValue which caused the linter error
         const hasListing = inventory.listing?.length > 0;
-        const isDraft = !inventory.donorVin && !inventory.partDetailsId;
+        const isDraft =
+          !inventory.donorVin ||
+          !inventory.partDetailsId ||
+          !inventory.partDetails?.cars.length;
         const isUnlisted = !hasListing && !isDraft;
 
         return (

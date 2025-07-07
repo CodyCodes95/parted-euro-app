@@ -71,6 +71,11 @@ export const inventoryRouter = createTRPCRouter({
             partNo: true,
             name: true,
             alternatePartNumbers: true,
+            cars: {
+              select: {
+                id: true,
+              },
+            },
           },
         },
         donor: {
