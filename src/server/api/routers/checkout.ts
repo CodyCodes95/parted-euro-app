@@ -171,6 +171,14 @@ const pickupShippingOption = {
   },
 };
 
+const adminShippingOption = {
+  shipping_rate_data: {
+    type: "fixed_amount",
+    fixed_amount: { amount: 1, currency: "aud" },
+    display_name: "Admin Shipping",
+  },
+};
+
 const getDomesticShippingServices = async (input: ShippingServicesInput) => {
   const { weight, length, width, height, destinationPostcode } = input;
   const ausPostRes = await fetch(
@@ -628,12 +636,17 @@ export const checkoutRouter = createTRPCRouter({
   }),
   getShippingServices: publicProcedure
     .input(getShippingServicesInputSchema)
-    .query(async ({ input }): Promise<StripeShippingOption[]> => {
+    .query(async ({ input, ctx }): Promise<StripeShippingOption[]> => {
       const { weight, destinationCountry, length, width, height } = input;
+      const isAdmin = ctx.session?.user?.isAdmin ?? false;
+
       if (weight >= 20) {
         let shippingServices = await getInterparcelShippingServices(input);
         if (destinationCountry === "AU") {
           shippingServices = [...shippingServices, pickupShippingOption];
+        }
+        if (isAdmin) {
+          shippingServices = [...shippingServices, adminShippingOption];
         }
         return shippingServices;
       }
@@ -645,6 +658,9 @@ export const checkoutRouter = createTRPCRouter({
         } else {
           shippingServices = await getInterparcelShippingServices(input);
         }
+        if (isAdmin) {
+          shippingServices = [...shippingServices, adminShippingOption];
+        }
         return shippingServices;
       }
       let shippingServices;
@@ -655,10 +671,16 @@ export const checkoutRouter = createTRPCRouter({
       } else {
         shippingServices = await getInterparcelShippingServices(input);
       }
-      return [
+      const allShippingServices = [
         pickupShippingOption,
         ...shippingServices,
         ...interparcelServices,
-      ].slice(0, 4);
+      ];
+
+      if (isAdmin) {
+        allShippingServices.push(adminShippingOption);
+      }
+
+      return allShippingServices.slice(0, 4);
     }),
 });
