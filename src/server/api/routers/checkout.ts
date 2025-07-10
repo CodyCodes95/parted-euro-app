@@ -646,7 +646,7 @@ export const checkoutRouter = createTRPCRouter({
           shippingServices = [...shippingServices, pickupShippingOption];
         }
         if (isAdmin) {
-          shippingServices = [...shippingServices, adminShippingOption];
+          shippingServices = [adminShippingOption, ...shippingServices];
         }
         return shippingServices;
       }
@@ -659,7 +659,7 @@ export const checkoutRouter = createTRPCRouter({
           shippingServices = await getInterparcelShippingServices(input);
         }
         if (isAdmin) {
-          shippingServices = [...shippingServices, adminShippingOption];
+          shippingServices = [adminShippingOption, ...shippingServices];
         }
         return shippingServices;
       }
@@ -671,14 +671,14 @@ export const checkoutRouter = createTRPCRouter({
       } else {
         shippingServices = await getInterparcelShippingServices(input);
       }
-      const allShippingServices = [
+      let allShippingServices = [
         pickupShippingOption,
         ...shippingServices,
         ...interparcelServices,
       ];
 
       if (isAdmin) {
-        allShippingServices.push(adminShippingOption);
+        allShippingServices = [adminShippingOption, ...allShippingServices];
       }
 
       return allShippingServices.slice(0, 4);
