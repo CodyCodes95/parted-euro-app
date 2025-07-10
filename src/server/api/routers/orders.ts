@@ -207,6 +207,8 @@ export const ordersRouter = createTRPCRouter({
           order.stripeCheckoutSessionId,
         );
 
+        console.dir(session, { depth: null, colors: true });
+
         if (!session.customer_details?.address) {
           throw new Error("No address found in Stripe checkout session");
         }
