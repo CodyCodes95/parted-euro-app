@@ -209,7 +209,7 @@ export const ordersRouter = createTRPCRouter({
 
         console.dir(session, { depth: null, colors: true });
 
-        if (!session.customer_details?.address) {
+        if (!session.shipping_details?.address) {
           throw new Error("No address found in Stripe checkout session");
         }
 
@@ -217,15 +217,15 @@ export const ordersRouter = createTRPCRouter({
         const updatedOrder = await ctx.db.order.update({
           where: { id: input.orderId },
           data: {
-            shippingLine1: session.customer_details.address.line1,
-            shippingLine2: session.customer_details.address.line2,
-            shippingCity: session.customer_details.address.city,
-            shippingPostcode: session.customer_details.address.postal_code,
-            shippingCountry: session.customer_details.address.country,
-            shippingState: session.customer_details.address.state,
-            shippingAddress: `${session.customer_details.address.line1}, ${
-              session.customer_details.address.line2 ?? " "
-            }, ${session.customer_details.address.city}, ${session.customer_details.address.postal_code}, ${session.customer_details.address.country}`,
+            shippingLine1: session.shipping_details.address.line1,
+            shippingLine2: session.shipping_details.address.line2,
+            shippingCity: session.shipping_details.address.city,
+            shippingPostcode: session.shipping_details.address.postal_code,
+            shippingCountry: session.shipping_details.address.country,
+            shippingState: session.shipping_details.address.state,
+            shippingAddress: `${session.shipping_details.address.line1}, ${
+              session.shipping_details.address.line2 ?? " "
+            }, ${session.shipping_details.address.city}, ${session.shipping_details.address.postal_code}, ${session.shipping_details.address.country}`,
           },
         });
 
