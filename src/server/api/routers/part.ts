@@ -264,4 +264,15 @@ export const partRouter = createTRPCRouter({
       });
       return images;
     }),
+
+  // Delete a part image
+  deleteImage: adminProcedure
+    .input(z.object({ imageId: z.string() }))
+    .mutation(async ({ ctx, input }) => {
+      const { imageId } = input;
+      await ctx.db.image.delete({
+        where: { id: imageId },
+      });
+      return { success: true };
+    }),
 });

@@ -68,6 +68,18 @@ export default function MobileUploadPage() {
       { enabled: !!currentPartNo },
     );
 
+  // Delete existing image mutation
+  const deleteExistingImageMutation = api.part.deleteImage.useMutation({
+    onSuccess: () => {
+      toast.success("Image deleted successfully");
+      // Invalidate and refetch the images
+      void utils.part.getImagesByPartNo.invalidate({ partNo: currentPartNo });
+    },
+    onError: (error) => {
+      toast.error(`Error deleting image: ${error.message ?? "Unknown error"}`);
+    },
+  });
+
   // Create form
   const form = useForm<FormValues>({
     resolver: zodResolver(formSchema),
@@ -212,10 +224,9 @@ export default function MobileUploadPage() {
     }
   };
 
-  // Handle deleting uploaded images
-  const handleDeleteImage = (imageId: string) => {
-    setUploadedImages((prev) => prev.filter((image) => image.id !== imageId));
-    toast.success("Image removed from upload");
+  // Handle deleting existing images from database
+  const handleDeleteExistingImage = (imageId: string) => {
+    deleteExistingImageMutation.mutate({ imageId });
   };
 
   return (
@@ -318,7 +329,7 @@ export default function MobileUploadPage() {
                     {existingImages.map((image) => (
                       <div
                         key={image.id}
-                        className="overflow-hidden rounded-md border"
+                        className="group relative overflow-hidden rounded-md border"
                       >
                         <AspectRatio ratio={1}>
                           <img
@@ -326,6 +337,14 @@ export default function MobileUploadPage() {
                             alt="Existing part image"
                             className="h-full w-full object-cover"
                           />
+                          <Button
+                            variant="destructive"
+                            size="icon"
+                            className="absolute right-1 top-1 h-6 w-6 opacity-0 transition-opacity group-hover:opacity-100"
+                            onClick={() => handleDeleteExistingImage(image.id)}
+                          >
+                            <X className="h-3 w-3" />
+                          </Button>
                         </AspectRatio>
                       </div>
                     ))}
@@ -431,7 +450,7 @@ export default function MobileUploadPage() {
                     {uploadedImages.map((image) => (
                       <div
                         key={image.id}
-                        className="group relative overflow-hidden rounded-md border"
+                        className="overflow-hidden rounded-md border"
                       >
                         <AspectRatio ratio={1}>
                           <img
@@ -439,14 +458,6 @@ export default function MobileUploadPage() {
                             alt="Uploaded part"
                             className="h-full w-full object-cover"
                           />
-                          <Button
-                            variant="destructive"
-                            size="icon"
-                            className="absolute right-1 top-1 h-6 w-6 opacity-0 transition-opacity group-hover:opacity-100"
-                            onClick={() => handleDeleteImage(image.id)}
-                          >
-                            <X className="h-3 w-3" />
-                          </Button>
                         </AspectRatio>
                       </div>
                     ))}
