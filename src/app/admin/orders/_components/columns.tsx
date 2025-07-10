@@ -269,7 +269,7 @@ export function getOrderColumns({
       ),
       cell: ({ row }) => {
         const subtotal = row.original.subtotal;
-        const shipping = row.original.shipping || 0;
+        const shipping = row.original.shipping * 100 || 0;
         const total = subtotal + shipping;
         return formatPrice(total);
       },
@@ -298,7 +298,9 @@ export function getOrderColumns({
                 Add Tracking
               </DropdownMenuItem>
 
-              <DropdownMenuItem onClick={() => onRefreshAddressFromStripe(order)}>
+              <DropdownMenuItem
+                onClick={() => onRefreshAddressFromStripe(order)}
+              >
                 <RefreshCw className="mr-2 h-4 w-4" />
                 Refresh Address from Stripe
               </DropdownMenuItem>
