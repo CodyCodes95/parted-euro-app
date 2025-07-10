@@ -48,6 +48,7 @@ function StatusFilter({ column }: StatusFilterProps) {
     { value: "Listed", color: "bg-green-500" },
     { value: "Draft", color: "bg-amber-500" },
     { value: "Unlisted", color: "bg-slate-500" },
+    { value: "Error", color: "bg-red-500" },
   ];
 
   const handleFilterChange = (status: string) => {
@@ -189,12 +190,17 @@ export function getInventoryColumns({
         const isDraft =
           !row.donorVin || !row.partDetailsId || !row.partDetails?.cars.length;
 
-        if (hasListing) {
-          return "Listed";
+        // Check for error condition first: listed but missing required info
+        if (hasListing && isDraft) {
+          return "Error";
         }
 
         if (isDraft) {
           return "Draft";
+        }
+
+        if (hasListing) {
+          return "Listed";
         }
 
         return "Unlisted";
@@ -217,6 +223,7 @@ export function getInventoryColumns({
               status === "Listed" && "bg-green-500 hover:bg-green-500/80",
               status === "Draft" && "bg-amber-500 hover:bg-amber-500/80",
               status === "Unlisted" && "bg-slate-500 hover:bg-slate-500/80",
+              status === "Error" && "bg-red-500 hover:bg-red-500/80",
             )}
           >
             {status}
