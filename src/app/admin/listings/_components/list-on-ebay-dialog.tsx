@@ -325,7 +325,7 @@ export function ListOnEbayDialog({
 
   return (
     <Dialog open={open} onOpenChange={onOpenChange}>
-      <DialogContent className="max-w-md sm:max-w-xl">
+      <DialogContent className="max-h-[90vh] overflow-y-auto sm:max-w-[1200px]">
         <DialogHeader>
           <DialogTitle>List on eBay</DialogTitle>
           <DialogDescription>
@@ -338,7 +338,7 @@ export function ListOnEbayDialog({
             <Label htmlFor="title">Title</Label>
             <Input
               id="title"
-              className="mt-1"
+              className="mt-1 pr-4"
               value={title}
               placeholder="Title"
               onChange={(e) => setTitle(e.target.value)}
