@@ -128,15 +128,16 @@ export function DataTable<TData, TValue>({
         </div>
       </div>
       <div className="overflow-x-auto rounded-md border">
-        <Table style={{ width: table.getCenterTotalSize() }}>
+        <Table>
           <TableHeader>
             {table.getHeaderGroups().map((headerGroup) => (
               <TableRow key={headerGroup.id}>
                 {headerGroup.headers.map((header) => {
+                  const hasSize = header.column.columnDef.size !== undefined;
                   return (
                     <TableHead
                       key={header.id}
-                      style={{ width: header.getSize() }}
+                      style={hasSize ? { width: header.getSize() } : undefined}
                     >
                       {header.isPlaceholder
                         ? null
@@ -162,7 +163,11 @@ export function DataTable<TData, TValue>({
                   {row.getVisibleCells().map((cell) => (
                     <TableCell
                       key={cell.id}
-                      style={{ width: cell.column.getSize() }}
+                      style={
+                        cell.column.columnDef.size !== undefined
+                          ? { width: cell.column.getSize() }
+                          : undefined
+                      }
                     >
                       {flexRender(
                         cell.column.columnDef.cell,
