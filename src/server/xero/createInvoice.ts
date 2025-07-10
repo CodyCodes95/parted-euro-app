@@ -185,6 +185,9 @@ export const createInvoiceFromStripeEvent = async (
       });
     }
 
+    const address =
+      event.shipping_details!.address ?? event.shipping_details!.address!;
+
     await createXeroInvoice({
       items: lineItemsFormatted,
       customerEmail: event.customer_details!.email!,
@@ -192,12 +195,12 @@ export const createInvoiceFromStripeEvent = async (
       orderId: event.metadata!.orderId!,
       customerPhone: event.customer_details?.phone ?? undefined,
       shippingAddress: {
-        line1: event.customer_details!.address!.line1!,
-        line2: event.customer_details!.address!.line2!,
-        city: event.customer_details!.address!.city!,
-        postal_code: event.customer_details!.address!.postal_code!,
-        country: event.customer_details!.address!.country!,
-        state: event.customer_details!.address!.state!,
+        line1: address.line1!,
+        line2: address.line2!,
+        city: address.city!,
+        postal_code: address.postal_code!,
+        country: address.country!,
+        state: address.state!,
       },
       shippingCost: shipping ?? 0,
       shippingRateId: event.shipping_cost!.shipping_rate! as string,
@@ -221,16 +224,16 @@ export const createInvoiceFromStripeEvent = async (
       data: {
         status: "Paid",
         shippingMethod: shippingOption.display_name,
-        shippingLine1: event.customer_details!.address!.line1!,
-        shippingLine2: event.customer_details!.address!.line2!,
-        shippingCity: event.customer_details!.address!.city!,
-        shippingPostcode: event.customer_details!.address!.postal_code!,
-        shippingCountry: event.customer_details!.address!.country!,
-        shippingState: event.customer_details!.address!.state!,
+        shippingLine1: address.line1!,
+        shippingLine2: address.line2!,
+        shippingCity: address.city!,
+        shippingPostcode: address.postal_code!,
+        shippingCountry: address.country!,
+        shippingState: address.state!,
         stripeCheckoutSessionId: event.id,
-        shippingAddress: `${event.customer_details!.address!.line1!}, ${
-          event.customer_details!.address!.line2! ?? " "
-        }, ${event.customer_details!.address!.city!}, ${event.customer_details!.address!.postal_code!}, ${event.customer_details!.address!.country!}`,
+        shippingAddress: `${address.line1!}, ${
+          address.line2! ?? " "
+        }, ${address.city!}, ${address.postal_code!}, ${address.country!}`,
       },
     });
 
