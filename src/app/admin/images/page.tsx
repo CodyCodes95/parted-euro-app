@@ -16,6 +16,7 @@ import {
   Check,
   AlertCircle,
   Upload,
+  X,
 } from "lucide-react";
 import { Button } from "~/components/ui/button";
 import { Input } from "~/components/ui/input";
@@ -209,6 +210,12 @@ export default function MobileUploadPage() {
         event.target.value = "";
       }
     }
+  };
+
+  // Handle deleting uploaded images
+  const handleDeleteImage = (imageId: string) => {
+    setUploadedImages((prev) => prev.filter((image) => image.id !== imageId));
+    toast.success("Image removed from upload");
   };
 
   return (
@@ -424,7 +431,7 @@ export default function MobileUploadPage() {
                     {uploadedImages.map((image) => (
                       <div
                         key={image.id}
-                        className="overflow-hidden rounded-md border"
+                        className="group relative overflow-hidden rounded-md border"
                       >
                         <AspectRatio ratio={1}>
                           <img
@@ -432,6 +439,14 @@ export default function MobileUploadPage() {
                             alt="Uploaded part"
                             className="h-full w-full object-cover"
                           />
+                          <Button
+                            variant="destructive"
+                            size="icon"
+                            className="absolute right-1 top-1 h-6 w-6 opacity-0 transition-opacity group-hover:opacity-100"
+                            onClick={() => handleDeleteImage(image.id)}
+                          >
+                            <X className="h-3 w-3" />
+                          </Button>
                         </AspectRatio>
                       </div>
                     ))}
