@@ -247,6 +247,7 @@ export const createInvoiceFromStripeEvent = async (
         listing: true,
       },
     });
+
     for (const item of orderItems) {
       const listing = item.listing.id;
       const listingItems = await db.listing.findUnique({
@@ -254,27 +255,46 @@ export const createInvoiceFromStripeEvent = async (
           id: listing,
         },
         include: {
-          parts: true,
+          parts: {
+            orderBy: {
+              createdAt: "asc", // FIFO - oldest parts first
+            },
+          },
         },
       });
+
+      // Allocate inventory using FIFO approach
+      let remainingQuantityToAllocate = item.quantity;
+
       for (const part of listingItems!.parts) {
-        await db.listing.update({
-          where: {
-            id: listing,
-          },
-          data: {
-            parts: {
-              update: {
-                where: {
-                  id: part.id,
-                },
-                data: {
-                  quantity: part.quantity - item.quantity,
+        if (remainingQuantityToAllocate <= 0) break;
+
+        const quantityToReduceFromThisPart = Math.min(
+          part.quantity,
+          remainingQuantityToAllocate,
+        );
+
+        if (quantityToReduceFromThisPart > 0) {
+          await db.listing.update({
+            where: {
+              id: listing,
+            },
+            data: {
+              parts: {
+                update: {
+                  where: {
+                    id: part.id,
+                  },
+                  data: {
+                    quantity: part.quantity - quantityToReduceFromThisPart,
+                  },
                 },
               },
             },
-          },
-        });
+          });
+
+          remainingQuantityToAllocate -= quantityToReduceFromThisPart;
+        }
       }
     }
     return;
