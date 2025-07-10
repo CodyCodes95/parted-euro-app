@@ -312,7 +312,18 @@ export function ListOnEbayDialog({
       });
 
       toast.success(`Listing "${listing.title}" has been listed on eBay`);
-      void utils.listings.getAllAdmin.invalidate();
+
+      // Update the specific listing in the cache instead of invalidating the entire query
+      utils.listings.getAllAdmin.setData(undefined, (oldData) => {
+        if (!oldData) return oldData;
+        return {
+          ...oldData,
+          items: oldData.items.map((item) =>
+            item.id === listing.id ? { ...item, listedOnEbay: true } : item,
+          ),
+        };
+      });
+
       resetForm();
       onOpenChange(false);
     } catch (error) {
@@ -554,7 +565,9 @@ export function ListOnEbayDialog({
                     const policy = fulfillmentPolicies.data?.find(
                       (p) => p.fulfillmentPolicyId === value,
                     );
-                    setFulfillmentPolicy(policy ?? null);
+                    setFulfillmentPolicy(
+                      policy as unknown as FulfillmentPolicyType | null,
+                    );
                   }}
                 >
                   <SelectTrigger className="mt-1">
