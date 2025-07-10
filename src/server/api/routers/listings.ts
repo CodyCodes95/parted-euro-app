@@ -25,6 +25,15 @@ export const listingsRouter = createTRPCRouter({
               select: {
                 partNo: true,
                 name: true,
+                cars: {
+                  select: {
+                    id: true,
+                    generation: true,
+                    series: true,
+                    model: true,
+                    body: true,
+                  },
+                },
               },
             },
           },
