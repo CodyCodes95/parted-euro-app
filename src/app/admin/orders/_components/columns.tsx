@@ -14,6 +14,7 @@ import {
   ArrowDown,
   Pencil,
   Trash,
+  RefreshCw,
 } from "lucide-react";
 import { Button } from "~/components/ui/button";
 import {
@@ -70,6 +71,7 @@ interface OrderColumnsProps {
   onUpdateStatus: (order: AdminOrdersItem) => void;
   onCompleteOrder: (order: AdminOrdersItem) => void;
   onCancelOrder: (order: AdminOrdersItem) => void;
+  onRefreshAddressFromStripe: (order: AdminOrdersItem) => void;
 }
 
 /**
@@ -82,6 +84,7 @@ export function getOrderColumns({
   onUpdateStatus,
   onCompleteOrder,
   onCancelOrder,
+  onRefreshAddressFromStripe,
 }: OrderColumnsProps): ColumnDef<AdminOrdersItem>[] {
   return [
     {
@@ -293,6 +296,11 @@ export function getOrderColumns({
               <DropdownMenuItem onClick={() => onAddTracking(order)}>
                 <Truck className="mr-2 h-4 w-4" />
                 Add Tracking
+              </DropdownMenuItem>
+
+              <DropdownMenuItem onClick={() => onRefreshAddressFromStripe(order)}>
+                <RefreshCw className="mr-2 h-4 w-4" />
+                Refresh Address from Stripe
               </DropdownMenuItem>
 
               <DropdownMenuItem onClick={() => onReadyForPickup(order)}>

@@ -20,26 +20,28 @@ export default function OrdersAdminPage() {
   const [isAddTrackingOpen, setIsAddTrackingOpen] = useState(false);
   const [isUpdateStatusOpen, setIsUpdateStatusOpen] = useState(false);
 
-    const [globalFilter, setGlobalFilter] = useQueryState("search", {
-      defaultValue: "",
-    });
-    const [pageIndex, setPageIndex] = useQueryState("page", {
-      defaultValue: 0,
-      parse: (value) => Number(value),
-      serialize: (value) => value.toString(),
-    });
-    const [pageSize, setPageSize] = useQueryState("size", {
-      defaultValue: 10,
-      parse: (value) => Number(value),
-      serialize: (value) => value.toString(),
-    });
+  const [globalFilter, setGlobalFilter] = useQueryState("search", {
+    defaultValue: "",
+  });
+  const [pageIndex, setPageIndex] = useQueryState("page", {
+    defaultValue: 0,
+    parse: (value) => Number(value),
+    serialize: (value) => value.toString(),
+  });
+  const [pageSize, setPageSize] = useQueryState("size", {
+    defaultValue: 10,
+    parse: (value) => Number(value),
+    serialize: (value) => value.toString(),
+  });
 
   // Fetch all orders
   const ordersQuery = api.orders?.getAllAdmin.useQuery(undefined, {
     placeholderData: keepPreviousData,
   });
 
-  const updateStatusMutation = api.orders?.updateStatus.useMutation();
+  const updateStatusMutation = api.orders.updateStatus.useMutation();
+  const refreshAddressMutation =
+    api.orders.refreshAddressFromStripe.useMutation();
 
   const orders = ordersQuery?.data?.items ?? [];
   const isLoading = ordersQuery?.isLoading ?? true;
@@ -112,6 +114,25 @@ export default function OrdersAdminPage() {
     setIsUpdateStatusOpen(true);
   };
 
+  const handleRefreshAddressFromStripe = (order: AdminOrdersItem) => {
+    if (order.id) {
+      refreshAddressMutation.mutate(
+        {
+          orderId: order.id,
+        },
+        {
+          onSuccess: () => {
+            void ordersQuery?.refetch?.();
+            toast.success("Address refreshed from Stripe successfully");
+          },
+          onError: (error) => {
+            toast.error(`Failed to refresh address: ${error.message}`);
+          },
+        },
+      );
+    }
+  };
+
   const columns = getOrderColumns({
     onViewDetails: handleViewOrderDetails,
     onAddTracking: handleAddTracking,
@@ -119,6 +140,7 @@ export default function OrdersAdminPage() {
     onUpdateStatus: handleUpdateStatus,
     onCompleteOrder: handleCompleteOrder,
     onCancelOrder: handleCancelOrder,
+    onRefreshAddressFromStripe: handleRefreshAddressFromStripe,
   });
 
   return (

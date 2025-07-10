@@ -179,31 +179,32 @@ model InventoryLocations {
 }
 
 model Order {
-    id               String        @id @default(cuid())
-    xeroInvoiceRef   String?
-    xeroInvoiceId    String?       @unique
-    name             String
-    email            String
-    phoneNumber      String?
-    subtotal         Float
-    shippingRateId   String?
-    shipping         Float?
-    status           String
-    shippingMethod   String?
-    shippingAddress  String? // Keep for backward compatibility
-    shippingLine1    String?
-    shippingLine2    String?
-    shippingCity     String?
-    shippingPostcode String?
-    shippingCountry  String?
-    shippingState    String?
-    trackingNumber   String?
-    carrier          String?
-    paymentIntentId  String?
-    createdAt        DateTime      @default(now())
-    updatedAt        DateTime      @updatedAt
-    orderItems       OrderItem[]
-    FailedOrder      FailedOrder[]
+    id                      String        @id @default(cuid())
+    xeroInvoiceRef          String?
+    xeroInvoiceId           String?       @unique
+    name                    String
+    email                   String
+    phoneNumber             String?
+    subtotal                Float
+    shippingRateId          String?
+    shipping                Float?
+    status                  String
+    shippingMethod          String?
+    shippingAddress         String? // Keep for backward compatibility
+    shippingLine1           String?
+    shippingLine2           String?
+    shippingCity            String?
+    shippingPostcode        String?
+    shippingCountry         String?
+    shippingState           String?
+    trackingNumber          String?
+    carrier                 String?
+    paymentIntentId         String?
+    stripeCheckoutSessionId String?
+    createdAt               DateTime      @default(now())
+    updatedAt               DateTime      @updatedAt
+    orderItems              OrderItem[]
+    FailedOrder             FailedOrder[]
 }
 
 model OrderItem {

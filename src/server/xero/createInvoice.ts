@@ -227,6 +227,7 @@ export const createInvoiceFromStripeEvent = async (
         shippingPostcode: event.customer_details!.address!.postal_code!,
         shippingCountry: event.customer_details!.address!.country!,
         shippingState: event.customer_details!.address!.state!,
+        stripeCheckoutSessionId: event.id,
         shippingAddress: `${event.customer_details!.address!.line1!}, ${
           event.customer_details!.address!.line2! ?? " "
         }, ${event.customer_details!.address!.city!}, ${event.customer_details!.address!.postal_code!}, ${event.customer_details!.address!.country!}`,
