@@ -82,6 +82,7 @@ export function DataTable<TData, TValue>({
       void setPageSize(state.pageSize);
     },
     enableRowSelection,
+    columnResizeMode: "onChange",
     state: {
       sorting,
       columnFilters,
@@ -127,13 +128,16 @@ export function DataTable<TData, TValue>({
         </div>
       </div>
       <div className="overflow-x-auto rounded-md border">
-        <Table>
+        <Table style={{ width: table.getCenterTotalSize() }}>
           <TableHeader>
             {table.getHeaderGroups().map((headerGroup) => (
               <TableRow key={headerGroup.id}>
                 {headerGroup.headers.map((header) => {
                   return (
-                    <TableHead key={header.id}>
+                    <TableHead
+                      key={header.id}
+                      style={{ width: header.getSize() }}
+                    >
                       {header.isPlaceholder
                         ? null
                         : flexRender(
@@ -156,7 +160,10 @@ export function DataTable<TData, TValue>({
                   id={row.id}
                 >
                   {row.getVisibleCells().map((cell) => (
-                    <TableCell key={cell.id}>
+                    <TableCell
+                      key={cell.id}
+                      style={{ width: cell.column.getSize() }}
+                    >
                       {flexRender(
                         cell.column.columnDef.cell,
                         cell.getContext(),

@@ -133,6 +133,7 @@ export function getInventoryColumns({
       header: ({ column }) => (
         <DataTableColumnHeader column={column} title="Alt. Part Numbers" />
       ),
+      size: 100, // Set column width
       accessorFn: (row) => {
         const altPartNumbers = row.partDetails?.alternatePartNumbers;
         if (Array.isArray(altPartNumbers)) {
@@ -142,7 +143,11 @@ export function getInventoryColumns({
       },
       cell: ({ getValue }) => {
         const value = getValue<string>();
-        return value ?? "";
+        return (
+          <div className="max-w-[100px] truncate" title={value || ""}>
+            {value ?? ""}
+          </div>
+        );
       },
     },
     {
