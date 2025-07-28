@@ -148,7 +148,11 @@ export function ListOnEbayDialog({
   }, [open, listing.id]);
 
   // API calls
-  const createEbayListing = api.ebay.createListing.useMutation();
+  const createEbayListing = api.ebay.createListing.useMutation({
+    onError: (error) => {
+      toast.error(error.message);
+    },
+  });
   const fulfillmentPolicies = api.ebay.getFulfillmentPolicies.useQuery();
   const categoryIds = api.ebay.getCategoryIds.useQuery(
     {
