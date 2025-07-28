@@ -214,110 +214,110 @@ export const ebayRouter = createTRPCRouter({
       console.log(input);
       console.log("====================INPUT=====================");
       await initEbay();
-      try {
-        const random = Math.floor(100000 + Math.random() * 900000);
-        let fulfillmentPolicy;
-        if (!input.fulfillmentPolicyId) {
-          console.log("CREATING FULFILLMENT POLICY");
-          const createFulfillmentPolicy =
-            await ebay.sell.account.createFulfillmentPolicy({
-              name: `${input.domesticShipping.toString()}-${input.internationalShipping.toString()}`,
-              marketplaceId: "EBAY_AU" as MarketplaceId,
-              categoryTypes: [
-                { name: "ALL_EXCLUDING_MOTORS_VEHICLES", default: true },
-              ],
-              handlingTime: {
-                unit: "DAY",
-                value: 3,
+
+      const random = Math.floor(100000 + Math.random() * 900000);
+      let fulfillmentPolicy;
+      if (!input.fulfillmentPolicyId) {
+        console.log("CREATING FULFILLMENT POLICY");
+        const createFulfillmentPolicy =
+          await ebay.sell.account.createFulfillmentPolicy({
+            name: `${input.domesticShipping.toString()}-${input.internationalShipping.toString()}`,
+            marketplaceId: "EBAY_AU" as MarketplaceId,
+            categoryTypes: [
+              { name: "ALL_EXCLUDING_MOTORS_VEHICLES", default: true },
+            ],
+            handlingTime: {
+              unit: "DAY",
+              value: 3,
+            },
+            shippingOptions: [
+              {
+                costType: "FLAT_RATE",
+                optionType: "DOMESTIC",
+                shippingServices: [
+                  {
+                    shippingServiceCode: "AU_StandardDelivery",
+                    shippingCost: {
+                      currency: "AUD",
+                      value: input.domesticShipping.toString(),
+                    },
+                  },
+                ],
               },
-              shippingOptions: [
-                {
-                  costType: "FLAT_RATE",
-                  optionType: "DOMESTIC",
-                  shippingServices: [
-                    {
-                      shippingServiceCode: "AU_StandardDelivery",
-                      shippingCost: {
-                        currency: "AUD",
-                        value: input.domesticShipping.toString(),
-                      },
+              {
+                costType: "FLAT_RATE",
+                optionType: "DOMESTIC",
+                shippingServices: [
+                  {
+                    shippingServiceCode: "AU_Pickup",
+                    shippingCost: {
+                      currency: "AUD",
+                      value: 0,
                     },
-                  ],
-                },
-                {
-                  costType: "FLAT_RATE",
-                  optionType: "DOMESTIC",
-                  shippingServices: [
-                    {
-                      shippingServiceCode: "AU_Pickup",
-                      shippingCost: {
-                        currency: "AUD",
-                        value: 0,
-                      },
-                    },
-                  ],
-                },
-                {
-                  costType: "FLAT_RATE",
-                  optionType: "INTERNATIONAL",
-                  shippingServices: [
-                    {
-                      shipToLocations: {
-                        regionIncluded: [{ regionName: "Worldwide" }],
-                      },
-                      shippingCarrierCode: "AustraliaPost",
-                      shippingServiceCode: "AU_StandardInternational",
-                      shippingCost: {
-                        currency: "AUD",
-                        value: input.internationalShipping.toString(),
-                      },
-                    },
-                  ],
-                },
-              ],
-            } as FulfillmentPolicyRequest);
-          console.log("CREATED FULFILLMENT POLICY");
-          console.log("=====================================");
-          fulfillmentPolicy = createFulfillmentPolicy.fulfillmentPolicyId;
-        } else {
-          fulfillmentPolicy = input.fulfillmentPolicyId;
-        }
-        console.log("CREATING INVENTORY ITEM");
-        const createInventoryItem =
-          await ebay.sell.inventory.createOrReplaceInventoryItem(
-            `${input.listingId} ${random}`,
-            {
-              availability: {
-                shipToLocationAvailability: {
-                  quantity: input.quantity,
-                },
+                  },
+                ],
               },
-              condition: input.conditionDescription as Condition,
-              product: {
-                title: input.title,
-                description: input.description,
-                // @ts-expect-error: TODO: Has updated api broke this?
-                aspects: {
-                  Brand: ["BMW"],
-                },
-                mpn: input.partNo,
-                brand: "BMW",
-                imageUrls: input.images,
+              {
+                costType: "FLAT_RATE",
+                optionType: "INTERNATIONAL",
+                shippingServices: [
+                  {
+                    shipToLocations: {
+                      regionIncluded: [{ regionName: "Worldwide" }],
+                    },
+                    shippingCarrierCode: "AustraliaPost",
+                    shippingServiceCode: "AU_StandardInternational",
+                    shippingCost: {
+                      currency: "AUD",
+                      value: input.internationalShipping.toString(),
+                    },
+                  },
+                ],
+              },
+            ],
+          } as FulfillmentPolicyRequest);
+        console.log("CREATED FULFILLMENT POLICY");
+        console.log("=====================================");
+        fulfillmentPolicy = createFulfillmentPolicy.fulfillmentPolicyId;
+      } else {
+        fulfillmentPolicy = input.fulfillmentPolicyId;
+      }
+      console.log("CREATING INVENTORY ITEM");
+      const createInventoryItem =
+        await ebay.sell.inventory.createOrReplaceInventoryItem(
+          `${input.listingId} ${random}`,
+          {
+            availability: {
+              shipToLocationAvailability: {
+                quantity: input.quantity,
               },
             },
-          );
-        console.log("CREATED INVENTORY ITEM");
-        console.log("=====================================");
-        console.log("CREATING OFFER");
-        const createOffer = await ebay.sell.inventory.createOffer({
-          sku: `${input.listingId} ${random}`,
-          marketplaceId: "EBAY_AU" as Marketplace,
-          format: "FIXED_PRICE" as FormatType,
-          availableQuantity: input.quantity,
-          categoryId: input.categoryId, //id of vehicle parts and accs
-          listingDescription: `<div style="font-family: Arial; display:flex; flex-direction:column"><img style="width:500px" src="https://res.cloudinary.com/dzhmqfmzi/image/upload/v1681223001/Logo_PARTED_EURO_jmszpz.png"/><h3 style="text-decoration: underline;"> Product Description: </h3><p> ${
-            input.description
-          } </p>
+            condition: input.conditionDescription as Condition,
+            product: {
+              title: input.title,
+              description: input.description,
+              // @ts-expect-error: TODO: Has updated api broke this?
+              aspects: {
+                Brand: ["BMW"],
+              },
+              mpn: input.partNo,
+              brand: "BMW",
+              imageUrls: input.images,
+            },
+          },
+        );
+      console.log("CREATED INVENTORY ITEM");
+      console.log("=====================================");
+      console.log("CREATING OFFER");
+      const createOffer = await ebay.sell.inventory.createOffer({
+        sku: `${input.listingId} ${random}`,
+        marketplaceId: "EBAY_AU" as Marketplace,
+        format: "FIXED_PRICE" as FormatType,
+        availableQuantity: input.quantity,
+        categoryId: input.categoryId, //id of vehicle parts and accs
+        listingDescription: `<div style="font-family: Arial; display:flex; flex-direction:column"><img style="width:500px" src="https://res.cloudinary.com/dzhmqfmzi/image/upload/v1681223001/Logo_PARTED_EURO_jmszpz.png"/><h3 style="text-decoration: underline;"> Product Description: </h3><p> ${
+          input.description
+        } </p>
           <p>
           Note: Some items sold through Parted Euro are 'generic items', meaning the images used <strong>may</strong> not be images of the exact item that you will receive. Cleanliness and condition of each item <strong> may </strong> vary. Rest assured, the item will definitely be in same quality condition.  For specific items such as painted bumpers or items with certain remarks / traits - this will be noted in the description above. If an item is damaged, it will be clearly highlighted and have it's own separate listing to it's undamaged variant. If you are unsure about the exact item you'll be receiving and want to confirm condition of the exact item prior to purchase, please message us directly and we will be happy to send you photos of it.
           </p>
@@ -326,44 +326,39 @@ export const ebayRouter = createTRPCRouter({
               "",
             )}<p> Please note: It is the <b> BUYERS REPSONSIBILITY </b>  to ensure fitment is correct for their vehicle. If you are unsure, feel free to send us a message and we will do our best to assist. </p><p> <b> Refunds will not be issued </b> if the part is not suitable for your car.  </p><h3 style="text-decoration: underline;"> Payment: </h3><p> We only accept PayPal for sales via eBay that are being shipped. For in-store pickup, we can also accept Card (2.5% surcharge) or Cash. Please ensure you have selected the correct delivery method at checkout. </p><h3 style="text-decoration: underline;"> Shipping: </h3><p> Any item(s) purchased will be shipped within <b> 2-3 business days </b> of the sale, once payment has been received. </p><h3 style="text-decoration: underline"> Warranty / Returns: </h3><p> We offer a 30-Day return policy, if an item fails or is not in the expected condition. <b> </p>
 <p> Unfortunately due to safety concerns, all items that are airbag / brake / hydraulic related are exempt from this warranty, as we cannot ensure the longevity of these second hand parts. Buy at your own risk. </b> We aim to be as transparent as possible with the condition of second hand parts. </p><p> Refunds will not be issued for change of mind. </p><h3 style="text-decoration: underline;"> About Us: </h3><p> We are a small wrecking business located in Knoxfield, Victoria (Australia). We ship worldwide, or offer in-store pickup. </p><p> If you are chasing something that is not listed on eBay, please feel free to send us a message and we will do our best to assist. </p></div>`,
-          listingPolicies: {
-            fulfillmentPolicyId: fulfillmentPolicy,
-            paymentPolicyId: process.env.EBAY_PAYMENT_ID!,
-            returnPolicyId: process.env.EBAY_RETURN_ID!,
+        listingPolicies: {
+          fulfillmentPolicyId: fulfillmentPolicy,
+          paymentPolicyId: process.env.EBAY_PAYMENT_ID!,
+          returnPolicyId: process.env.EBAY_RETURN_ID!,
+        },
+        merchantLocationKey: process.env.EBAY_MERCHANT_KEY!,
+        pricingSummary: {
+          price: {
+            currency: "AUD" as CurrencyCode,
+            value: input.price.toString(),
           },
-          merchantLocationKey: process.env.EBAY_MERCHANT_KEY!,
-          pricingSummary: {
-            price: {
-              currency: "AUD" as CurrencyCode,
-              value: input.price.toString(),
-            },
-          },
-        });
-        console.log("CREATED OFFER");
-        console.log("=====================================");
-        console.log("PUBLISHING OFFER");
-        console.log(`CREATED OFFER ID: ${createOffer.offerId}`);
-        const publishOffer = await ebay.sell.inventory.publishOffer(
-          createOffer.offerId,
-        );
-        console.log("PUBLISHED OFFER");
-        await ctx.db.listing.update({
-          where: {
-            id: input.listingId,
-          },
-          data: {
-            listedOnEbay: true,
-            ebayOfferId: createOffer.offerId,
-          },
-        });
-        return {
-          publishOffer,
-        };
-      } catch (err) {
-        return {
-          err: err instanceof Error ? err.message : String(err),
-        };
-      }
+        },
+      });
+      console.log("CREATED OFFER");
+      console.log("=====================================");
+      console.log("PUBLISHING OFFER");
+      console.log(`CREATED OFFER ID: ${createOffer.offerId}`);
+      const publishOffer = await ebay.sell.inventory.publishOffer(
+        createOffer.offerId,
+      );
+      console.log("PUBLISHED OFFER");
+      await ctx.db.listing.update({
+        where: {
+          id: input.listingId,
+        },
+        data: {
+          listedOnEbay: true,
+          ebayOfferId: createOffer.offerId,
+        },
+      });
+      return {
+        publishOffer,
+      };
     }),
   getFulfillmentPolicies: adminProcedure.query(async ({ ctx }) => {
     await initEbay();
