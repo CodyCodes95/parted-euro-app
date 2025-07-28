@@ -346,6 +346,7 @@ export const ebayRouter = createTRPCRouter({
         const publishOffer = await ebay.sell.inventory.publishOffer(
           createOffer.offerId,
         );
+        console.log("PUBLISHED OFFER");
         await ctx.db.listing.update({
           where: {
             id: input.listingId,
@@ -355,13 +356,12 @@ export const ebayRouter = createTRPCRouter({
             ebayOfferId: createOffer.offerId,
           },
         });
-        console.log("PUBLISHED OFFER");
         return {
           publishOffer,
         };
       } catch (err) {
         return {
-          err,
+          err: err instanceof Error ? err.message : String(err),
         };
       }
     }),
