@@ -331,7 +331,11 @@ export function ListOnEbayDialog({
       resetForm();
       onOpenChange(false);
     } catch (error) {
-      toast.error("Failed to create eBay listing");
+      toast.error(
+        error instanceof Error
+          ? error.message
+          : "Failed to create eBay listing",
+      );
       console.error(error);
     } finally {
       setIsSubmitting(false);
