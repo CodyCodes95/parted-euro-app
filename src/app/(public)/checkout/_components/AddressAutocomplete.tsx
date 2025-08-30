@@ -59,7 +59,7 @@ export function AddressAutoComplete(props: AddressAutoCompleteProps) {
         )?.short_name;
         const formattedAddress = placeDetails.formatted_address;
         if (!city || !postalCode || !region || !formattedAddress) {
-          return toast.error("Unable to find address from selected location");
+          return toast.error("Please select a more specific address");
         }
         setAddress({
           city: city,
