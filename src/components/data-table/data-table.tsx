@@ -14,7 +14,6 @@ import {
   useReactTable,
 } from "@tanstack/react-table";
 import { Search } from "lucide-react";
-import { useQueryState } from "nuqs";
 
 import {
   Table,
@@ -73,6 +72,7 @@ export function DataTable<TData, TValue>({
     getSortedRowModel: getSortedRowModel(),
     onColumnVisibilityChange: setColumnVisibility,
     onRowSelectionChange: setRowSelection,
+    autoResetPageIndex: false,
     onPaginationChange: (updater) => {
       const state =
         typeof updater === "function"
@@ -95,6 +95,12 @@ export function DataTable<TData, TValue>({
       },
     },
   });
+
+  // When the global search changes, reset to the first page for better UX
+  React.useEffect(() => {
+    table.setPageIndex(0);
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [globalFilter]);
 
   // Update the parent component when selection changes
   React.useEffect(() => {
