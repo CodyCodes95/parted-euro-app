@@ -463,9 +463,6 @@ export default function Checkout() {
                             placeholder="Enter your postcode/suburb"
                           />
                         </FormControl>
-                        <FormDescription>
-                          Start typing your suburb or postcode
-                        </FormDescription>
                         <FormMessage />
                       </FormItem>
                     )}
