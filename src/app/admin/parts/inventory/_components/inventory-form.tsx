@@ -1394,8 +1394,54 @@ export function InventoryForm({
                                       key={variantLabel}
                                       className="space-y-2"
                                     >
-                                      <div className="text-sm font-semibold">
-                                        {variantLabel}
+                                      <div className="flex items-center justify-between">
+                                        <div className="text-sm font-semibold">
+                                          {variantLabel}
+                                        </div>
+                                        <Button
+                                          type="button"
+                                          size="sm"
+                                          variant="outline"
+                                          onClick={() => {
+                                            const newImages = imgs
+                                              .filter(
+                                                (img) =>
+                                                  !images.some(
+                                                    (existing) =>
+                                                      existing.url === img.url,
+                                                  ),
+                                              )
+                                              .map((img) => ({
+                                                id: img.id,
+                                                url: img.url,
+                                                order: img.order,
+                                                isFromPartImages: true,
+                                              }));
+
+                                            if (newImages.length === 0) {
+                                              toast.info(
+                                                "All images from this group are already added",
+                                              );
+                                              return;
+                                            }
+
+                                            setImages((prev) => {
+                                              const combined = [
+                                                ...prev,
+                                                ...newImages,
+                                              ];
+                                              return combined.sort(
+                                                (a, b) => a.order - b.order,
+                                              );
+                                            });
+
+                                            toast.success(
+                                              `${newImages.length} image${newImages.length === 1 ? "" : "s"} added from ${variantLabel}`,
+                                            );
+                                          }}
+                                        >
+                                          Add all
+                                        </Button>
                                       </div>
                                       <div className="grid grid-cols-4 gap-2">
                                         {imgs.map((image) => (
@@ -1442,6 +1488,7 @@ export function InventoryForm({
                                               />
                                               <div className="absolute inset-0 flex items-center justify-center bg-black/40 opacity-0 transition-opacity group-hover:opacity-100">
                                                 <Button
+                                                  type="button"
                                                   variant="secondary"
                                                   size="sm"
                                                 >
