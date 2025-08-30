@@ -146,6 +146,8 @@ function AddressAutoCompleteInput(props: CommonProps) {
     debounce: 150,
   });
 
+  console.log(predictions);
+
   return (
     <Command
       shouldFilter={false}
@@ -186,9 +188,6 @@ function AddressAutoCompleteInput(props: CommonProps) {
                       .filter(
                         (prediction) =>
                           !prediction.types.includes("colloquial_area"),
-                      )
-                      .filter((prediction) =>
-                        prediction.types.includes("postal_code"),
                       )
                       .map((prediction) => (
                         <CommandItem
