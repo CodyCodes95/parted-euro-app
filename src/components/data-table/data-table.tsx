@@ -99,7 +99,6 @@ export function DataTable<TData, TValue>({
   // When the global search changes, reset to the first page for better UX
   React.useEffect(() => {
     table.setPageIndex(0);
-    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [globalFilter]);
 
   // Update the parent component when selection changes
