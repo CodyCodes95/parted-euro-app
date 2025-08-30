@@ -15,6 +15,7 @@ import { Label } from "~/components/ui/label";
 import { toast } from "sonner";
 import { Loader2 } from "lucide-react";
 import { type AdminListingsItem } from "~/trpc/shared";
+import { api } from "~/trpc/react";
 
 export type OrderItem = {
   listingId: string;
@@ -45,6 +46,13 @@ export function BulkOrderDialog({
   // Track raw input values
   const [inputValues, setInputValues] = useState<OrderItemInput[]>([]);
   const [isSubmitting, setIsSubmitting] = useState(false);
+
+  const utils = api.useUtils();
+  const bulkReduceMutation = api.listings.bulkReduceQuantities.useMutation({
+    onSuccess: async () => {
+      await utils.listings.getAllAdmin.invalidate();
+    },
+  });
 
   // Initialize input values when dialog opens or selected listings change
   useEffect(() => {
@@ -89,10 +97,25 @@ export function BulkOrderDialog({
       onOrderCreate(orderItems);
       toast.success("Order created successfully");
       onOpenChange(false);
-    } catch (error) {
+    } catch {
       toast.error("Failed to create order");
     } finally {
       setIsSubmitting(false);
+    }
+  };
+
+  const handleCreateEbayOrder = async () => {
+    try {
+      const items = inputValues.map((input) => ({
+        listingId: input.listingId,
+        quantity: parseInt(input.quantityValue) || 1,
+      }));
+      if (items.length === 0) return;
+      await bulkReduceMutation.mutateAsync({ items });
+      toast.success("eBay order created. Quantities updated");
+      onOpenChange(false);
+    } catch {
+      toast.error("Failed to create eBay order");
     }
   };
 
@@ -162,6 +185,17 @@ export function BulkOrderDialog({
             disabled={isSubmitting}
           >
             Cancel
+          </Button>
+          <Button
+            type="button"
+            variant="secondary"
+            onClick={handleCreateEbayOrder}
+            disabled={bulkReduceMutation.isPending}
+          >
+            {bulkReduceMutation.isPending && (
+              <Loader2 className="mr-2 h-4 w-4 animate-spin" />
+            )}
+            Create eBay Order
           </Button>
           <Button
             type="button"

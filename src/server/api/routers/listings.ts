@@ -1,5 +1,6 @@
 import { z } from "zod";
 import { adminProcedure, createTRPCRouter, publicProcedure } from "../trpc";
+import { TRPCError } from "@trpc/server";
 import { type Prisma } from "@prisma/client";
 
 const prepareSearchTerms = (search: string | undefined): string[] => {
@@ -395,6 +396,71 @@ export const listingsRouter = createTRPCRouter({
         },
       });
       return listings;
+    }),
+  bulkReduceQuantities: adminProcedure
+    .input(
+      z.object({
+        items: z.array(
+          z.object({
+            listingId: z.string(),
+            quantity: z.number().int().positive(),
+          }),
+        ),
+      }),
+    )
+    .mutation(async ({ ctx, input }) => {
+      return await ctx.db.$transaction(async (tx) => {
+        for (const item of input.items) {
+          const listing = await tx.listing.findUnique({
+            where: { id: item.listingId },
+            include: {
+              parts: {
+                orderBy: { createdAt: "asc" },
+              },
+            },
+          });
+
+          if (!listing) {
+            throw new TRPCError({
+              code: "NOT_FOUND",
+              message: "Listing not found",
+            });
+          }
+
+          const totalAvailable = listing.parts.reduce(
+            (sum, part) => sum + part.quantity,
+            0,
+          );
+          if (totalAvailable < item.quantity) {
+            throw new TRPCError({
+              code: "BAD_REQUEST",
+              message: `Insufficient quantity for listing ${item.listingId}`,
+            });
+          }
+
+          let remaining = item.quantity;
+          for (const part of listing.parts) {
+            if (remaining <= 0) break;
+            const reduceBy = Math.min(part.quantity, remaining);
+            if (reduceBy > 0) {
+              await tx.listing.update({
+                where: { id: item.listingId },
+                data: {
+                  parts: {
+                    update: {
+                      where: { id: part.id },
+                      data: { quantity: part.quantity - reduceBy },
+                    },
+                  },
+                },
+              });
+              remaining -= reduceBy;
+            }
+          }
+        }
+
+        return { success: true };
+      });
     }),
   searchListings: publicProcedure
     .input(
