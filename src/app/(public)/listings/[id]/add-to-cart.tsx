@@ -3,6 +3,7 @@
 import { useState } from "react";
 import { Button } from "~/components/ui/button";
 import { api } from "~/trpc/react";
+import { Loader2, ShoppingCart, Plus, Minus, Check } from "lucide-react";
 import { ShoppingCart, Plus, Minus, Check } from "lucide-react";
 import { toast } from "sonner";
 
@@ -29,7 +30,7 @@ export function AddToCart({
   const [quantity, setQuantity] = useState(1);
   const [isAdded, setIsAdded] = useState(false);
   const utils = api.useUtils();
-  const { mutateAsync: addItem } = api.cart.addItem.useMutation({
+  const addItemMutation = api.cart.addItem.useMutation({
     onSuccess: async () => {
       await utils.cart.getCart.invalidate();
       await utils.cart.getCartSummary.invalidate();
@@ -37,7 +38,7 @@ export function AddToCart({
   });
 
   const handleAddToCart = async () => {
-    await addItem({ listingId, quantity });
+    await addItemMutation.mutateAsync({ listingId, quantity });
     setIsAdded(true);
     toast.success(`${listingTitle} added to cart`);
     setTimeout(() => setIsAdded(false), 2000);
@@ -94,11 +95,15 @@ export function AddToCart({
         onClick={handleAddToCart}
         className="w-full"
         size="lg"
-        disabled={isAdded}
+        disabled={isAdded || addItemMutation.isPending}
       >
         {isAdded ? (
           <>
             <Check className="mr-2 h-4 w-4" /> Added to Cart
+          </>
+        ) : addItemMutation.isPending ? (
+          <>
+            <Loader2 className="mr-2 h-4 w-4 animate-spin" /> Adding...
           </>
         ) : (
           <>

@@ -4,7 +4,7 @@ import { useState, useEffect } from "react";
 import { z } from "zod";
 import { useForm } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
-import { Minus, Plus, Trash2, AlertCircle, X } from "lucide-react";
+import { Minus, Plus, Trash2, AlertCircle, X, Loader2 } from "lucide-react";
 import Image from "next/image";
 import { useMemo } from "react";
 import { api } from "~/trpc/react";
@@ -109,10 +109,10 @@ export default function Checkout() {
   const utils = api.useUtils();
   const { data: cart = [], isLoading: isCartLoading } =
     api.cart.getCart.useQuery(undefined, { refetchOnWindowFocus: true });
-  const { mutate: removeItem } = api.cart.removeItem.useMutation({
+  const removeItemMutation = api.cart.removeItem.useMutation({
     onSuccess: () => utils.cart.getCart.invalidate(),
   });
-  const { mutate: updateQuantity } = api.cart.updateItem.useMutation({
+  const updateQuantityMutation = api.cart.updateItem.useMutation({
     onSuccess: () => utils.cart.getCart.invalidate(),
   });
 
@@ -323,10 +323,12 @@ export default function Checkout() {
                             key={item.listingId}
                             item={item}
                             onRemove={() =>
-                              removeItem({ listingId: item.listingId })
+                              removeItemMutation.mutate({
+                                listingId: item.listingId,
+                              })
                             }
                             onUpdateQuantity={(quantity) =>
-                              updateQuantity({
+                              updateQuantityMutation.mutate({
                                 listingId: item.listingId,
                                 quantity,
                               })
@@ -539,6 +541,31 @@ function CartItem({
   onRemove: () => void;
   onUpdateQuantity: (quantity: number) => void;
 }) {
+  const [isUpdating, setIsUpdating] = useState(false);
+  const handleRemove = async () => {
+    setIsUpdating(true);
+    try {
+      onRemove();
+    } finally {
+      setIsUpdating(false);
+    }
+  };
+  const handleDec = async () => {
+    setIsUpdating(true);
+    try {
+      onUpdateQuantity(Math.max(1, item.quantity - 1));
+    } finally {
+      setIsUpdating(false);
+    }
+  };
+  const handleInc = async () => {
+    setIsUpdating(true);
+    try {
+      onUpdateQuantity(item.quantity + 1);
+    } finally {
+      setIsUpdating(false);
+    }
+  };
   return (
     <div className="flex items-start gap-4 rounded-md border p-3">
       {/* Product image */}
@@ -565,31 +592,45 @@ function CartItem({
             </p>
           </div>
           <button
-            className="text-muted-foreground hover:text-destructive"
-            onClick={onRemove}
+            className="text-muted-foreground hover:text-destructive disabled:opacity-50"
+            onClick={handleRemove}
             aria-label="Remove item"
+            disabled={isUpdating}
           >
-            <Trash2 className="h-4 w-4" />
+            {isUpdating ? (
+              <Loader2 className="h-4 w-4 animate-spin" />
+            ) : (
+              <Trash2 className="h-4 w-4" />
+            )}
           </button>
         </div>
 
         {/* Quantity controls */}
         <div className="mt-2 flex items-center">
           <button
-            className="rounded-md p-1 hover:bg-muted"
-            onClick={() => onUpdateQuantity(Math.max(1, item.quantity - 1))}
-            disabled={item.quantity <= 1}
+            className="rounded-md p-1 hover:bg-muted disabled:opacity-50"
+            onClick={handleDec}
+            disabled={item.quantity <= 1 || isUpdating}
             aria-label="Decrease quantity"
           >
-            <Minus className="h-3 w-3" />
+            {isUpdating ? (
+              <Loader2 className="h-3 w-3 animate-spin" />
+            ) : (
+              <Minus className="h-3 w-3" />
+            )}
           </button>
           <span className="min-w-8 text-center">{item.quantity}</span>
           <button
-            className="rounded-md p-1 hover:bg-muted"
-            onClick={() => onUpdateQuantity(item.quantity + 1)}
+            className="rounded-md p-1 hover:bg-muted disabled:opacity-50"
+            onClick={handleInc}
             aria-label="Increase quantity"
+            disabled={isUpdating}
           >
-            <Plus className="h-3 w-3" />
+            {isUpdating ? (
+              <Loader2 className="h-3 w-3 animate-spin" />
+            ) : (
+              <Plus className="h-3 w-3" />
+            )}
           </button>
         </div>
       </div>

@@ -2,7 +2,7 @@
 
 import Image from "next/image";
 import { useEffect, useMemo } from "react";
-import { X, ShoppingBag, Trash2, Plus, Minus } from "lucide-react";
+import { X, ShoppingBag, Trash2, Plus, Minus, Loader2 } from "lucide-react";
 import { formatCurrency } from "~/lib/utils";
 import { api } from "~/trpc/react";
 import { useCartUI } from "~/components/cart-provider";
@@ -40,13 +40,13 @@ export function CartDrawer() {
     refetchOnWindowFocus: true,
   });
 
-  const { mutate: removeItem } = api.cart.removeItem.useMutation({
+  const removeItemMutation = api.cart.removeItem.useMutation({
     onSuccess: () => utils.cart.getCart.invalidate(),
   });
-  const { mutate: updateItem } = api.cart.updateItem.useMutation({
+  const updateItemMutation = api.cart.updateItem.useMutation({
     onSuccess: () => utils.cart.getCart.invalidate(),
   });
-  const { mutate: clearCart } = api.cart.clear.useMutation({
+  const clearCartMutation = api.cart.clear.useMutation({
     onSuccess: () => utils.cart.getCart.invalidate(),
   });
 
@@ -105,10 +105,15 @@ export function CartDrawer() {
                         key={item.listingId}
                         item={item}
                         onRemove={() =>
-                          removeItem({ listingId: item.listingId })
+                          removeItemMutation.mutate({
+                            listingId: item.listingId,
+                          })
                         }
                         onUpdateQuantity={(quantity) =>
-                          updateItem({ listingId: item.listingId, quantity })
+                          updateItemMutation.mutate({
+                            listingId: item.listingId,
+                            quantity,
+                          })
                         }
                       />
                     ))}
@@ -148,16 +153,29 @@ export function CartDrawer() {
                     aria-disabled={isLoading}
                   >
                     <Button className="w-full" disabled={isLoading}>
-                      {isLoading ? "Loading..." : "Proceed to Checkout"}
+                      {isLoading ? (
+                        <span className="inline-flex items-center gap-2">
+                          <Loader2 className="h-4 w-4 animate-spin" />{" "}
+                          Loading...
+                        </span>
+                      ) : (
+                        "Proceed to Checkout"
+                      )}
                     </Button>
                   </Link>
                   <Button
                     variant="outline"
                     className="w-full"
-                    onClick={() => clearCart()}
-                    disabled={isLoading}
+                    onClick={() => clearCartMutation.mutate()}
+                    disabled={isLoading || clearCartMutation.isPending}
                   >
-                    Clear Cart
+                    {clearCartMutation.isPending ? (
+                      <span className="inline-flex items-center gap-2">
+                        <Loader2 className="h-4 w-4 animate-spin" /> Clearing
+                      </span>
+                    ) : (
+                      "Clear Cart"
+                    )}
                   </Button>
                 </div>
               </div>
@@ -192,6 +210,31 @@ function CartItemDisplay({
   onRemove: () => void;
   onUpdateQuantity: (quantity: number) => void;
 }) {
+  const [isUpdating, setIsUpdating] = React.useState(false);
+  const handleDec = async () => {
+    setIsUpdating(true);
+    try {
+      onUpdateQuantity(Math.max(1, item.quantity - 1));
+    } finally {
+      setIsUpdating(false);
+    }
+  };
+  const handleInc = async () => {
+    setIsUpdating(true);
+    try {
+      onUpdateQuantity(item.quantity + 1);
+    } finally {
+      setIsUpdating(false);
+    }
+  };
+  const handleRemove = async () => {
+    setIsUpdating(true);
+    try {
+      onRemove();
+    } finally {
+      setIsUpdating(false);
+    }
+  };
   return (
     <div className="flex items-start gap-4 rounded-lg border p-3">
       {/* Product image */}
@@ -220,10 +263,15 @@ function CartItemDisplay({
             </p>
           </div>
           <button
-            onClick={onRemove}
+            onClick={handleRemove}
             className="rounded-full p-1 text-muted-foreground hover:bg-destructive/10 hover:text-destructive"
+            disabled={isUpdating}
           >
-            <Trash2 className="h-4 w-4" />
+            {isUpdating ? (
+              <Loader2 className="h-4 w-4 animate-spin" />
+            ) : (
+              <Trash2 className="h-4 w-4" />
+            )}
             <span className="sr-only">Remove</span>
           </button>
         </div>
@@ -232,21 +280,30 @@ function CartItemDisplay({
         <div className="mt-2 flex items-center gap-2">
           <div className="flex items-center rounded-md border">
             <button
-              onClick={() => onUpdateQuantity(item.quantity - 1)}
-              disabled={item.quantity <= 1}
+              onClick={handleDec}
+              disabled={item.quantity <= 1 || isUpdating}
               className="flex h-8 w-8 items-center justify-center rounded-l-md border-r text-sm disabled:opacity-50"
             >
-              <Minus className="h-3 w-3" />
+              {isUpdating ? (
+                <Loader2 className="h-3 w-3 animate-spin" />
+              ) : (
+                <Minus className="h-3 w-3" />
+              )}
               <span className="sr-only">Decrease quantity</span>
             </button>
             <span className="flex h-8 min-w-[2rem] items-center justify-center px-2 text-center text-sm">
               {item.quantity}
             </span>
             <button
-              onClick={() => onUpdateQuantity(item.quantity + 1)}
-              className="flex h-8 w-8 items-center justify-center rounded-r-md border-l text-sm"
+              onClick={handleInc}
+              disabled={isUpdating}
+              className="flex h-8 w-8 items-center justify-center rounded-r-md border-l text-sm disabled:opacity-50"
             >
-              <Plus className="h-3 w-3" />
+              {isUpdating ? (
+                <Loader2 className="h-3 w-3 animate-spin" />
+              ) : (
+                <Plus className="h-3 w-3" />
+              )}
               <span className="sr-only">Increase quantity</span>
             </button>
           </div>
