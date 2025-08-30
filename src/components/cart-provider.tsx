@@ -4,6 +4,7 @@ import {
   createContext,
   useCallback,
   useContext,
+  useEffect,
   useMemo,
   useState,
   type ReactNode,
@@ -20,6 +21,12 @@ const CartUIContext = createContext<CartUIContextValue | null>(null);
 
 export function CartUIProvider({ children }: { children: ReactNode }) {
   const [isOpen, setIsOpen] = useState(false);
+  const [isHydrated, setIsHydrated] = useState(false);
+
+  // Wait for hydration to complete before rendering children
+  useEffect(() => {
+    setIsHydrated(true);
+  }, []);
 
   const open = useCallback(() => setIsOpen(true), []);
   const close = useCallback(() => setIsOpen(false), []);
@@ -29,6 +36,11 @@ export function CartUIProvider({ children }: { children: ReactNode }) {
     () => ({ isOpen, open, close, toggle }),
     [isOpen, open, close, toggle],
   );
+
+  // Force a rerender on the client to ensure the cart data is properly loaded
+  if (!isHydrated) {
+    return null;
+  }
 
   return (
     <CartUIContext.Provider value={value}>{children}</CartUIContext.Provider>

@@ -4,7 +4,6 @@ import { useState } from "react";
 import { Button } from "~/components/ui/button";
 import { api } from "~/trpc/react";
 import { Loader2, ShoppingCart, Plus, Minus, Check } from "lucide-react";
-import { ShoppingCart, Plus, Minus, Check } from "lucide-react";
 import { toast } from "sonner";
 
 type AddToCartProps = {
