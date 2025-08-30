@@ -146,8 +146,6 @@ function AddressAutoCompleteInput(props: CommonProps) {
     debounce: 150,
   });
 
-  console.log(predictions);
-
   return (
     <Command
       shouldFilter={false}
