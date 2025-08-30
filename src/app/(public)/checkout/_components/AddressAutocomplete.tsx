@@ -187,6 +187,9 @@ function AddressAutoCompleteInput(props: CommonProps) {
                         (prediction) =>
                           !prediction.types.includes("colloquial_area"),
                       )
+                      .filter((prediction) =>
+                        prediction.types.includes("postal_code"),
+                      )
                       .map((prediction) => (
                         <CommandItem
                           value={prediction.place_id}
