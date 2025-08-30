@@ -97,6 +97,7 @@ interface PartImage {
   url: string;
   order: number;
   partNo: string | null;
+  variant?: string | null;
 }
 
 // Define interfaces for API requests
@@ -386,7 +387,19 @@ export function InventoryForm({
     },
   );
 
-  const partImages = partImagesQuery.data ?? [];
+  const partImages = (partImagesQuery.data ?? []) as PartImage[];
+
+  // Group part images by variant for display
+  const groupedPartImages = React.useMemo(() => {
+    const groups = new Map<string, PartImage[]>();
+    for (const img of partImages) {
+      const key = img.variant?.trim() ?? "Uncategorized";
+      const arr = groups.get(key) ?? [];
+      arr.push(img);
+      groups.set(key, arr);
+    }
+    return groups;
+  }, [partImages]);
 
   // We need to fetch full part details when selecting a part
   // Let's use getById query instead
@@ -1374,59 +1387,79 @@ export function InventoryForm({
                                   Use all images
                                 </Button>
                               </div>
-                              <div className="grid grid-cols-4 gap-2">
-                                {partImages.map((image) => (
-                                  <div
-                                    key={image.id}
-                                    className="group relative cursor-pointer overflow-hidden rounded-md border"
-                                    onClick={() => {
-                                      // Check if this image is already in the selection
-                                      const isAlreadyAdded = images.some(
-                                        (img) => img.url === image.url,
-                                      );
-
-                                      if (!isAlreadyAdded) {
-                                        setImages((prev) => {
-                                          const newImage = {
-                                            id: image.id,
-                                            url: image.url,
-                                            order: image.order, // Use the original order from database
-                                            isFromPartImages: true,
-                                          };
-                                          const combined = [...prev, newImage];
-                                          // Sort by order to maintain proper sequence
-                                          return combined.sort(
-                                            (a, b) => a.order - b.order,
-                                          );
-                                        });
-                                        toast.success(
-                                          "Image added to selection",
-                                        );
-                                      } else {
-                                        toast.info(
-                                          "Image already in selection",
-                                        );
-                                      }
-                                    }}
-                                  >
-                                    <AspectRatio ratio={1}>
-                                      <img
-                                        src={image.url}
-                                        alt="Part"
-                                        className="h-full w-full object-cover transition-opacity group-hover:opacity-80"
-                                      />
-                                      <div className="absolute inset-0 flex items-center justify-center bg-black/40 opacity-0 transition-opacity group-hover:opacity-100">
-                                        <Button variant="secondary" size="sm">
-                                          {images.some(
-                                            (img) => img.url === image.url,
-                                          )
-                                            ? "Already added"
-                                            : "Add to selection"}
-                                        </Button>
+                              <div className="space-y-4">
+                                {Array.from(groupedPartImages.entries()).map(
+                                  ([variantLabel, imgs]) => (
+                                    <div
+                                      key={variantLabel}
+                                      className="space-y-2"
+                                    >
+                                      <div className="text-sm font-semibold">
+                                        {variantLabel}
                                       </div>
-                                    </AspectRatio>
-                                  </div>
-                                ))}
+                                      <div className="grid grid-cols-4 gap-2">
+                                        {imgs.map((image) => (
+                                          <div
+                                            key={image.id}
+                                            className="group relative cursor-pointer overflow-hidden rounded-md border"
+                                            onClick={() => {
+                                              const isAlreadyAdded =
+                                                images.some(
+                                                  (img) =>
+                                                    img.url === image.url,
+                                                );
+                                              if (!isAlreadyAdded) {
+                                                setImages((prev) => {
+                                                  const newImage = {
+                                                    id: image.id,
+                                                    url: image.url,
+                                                    order: image.order,
+                                                    isFromPartImages: true,
+                                                  };
+                                                  const combined = [
+                                                    ...prev,
+                                                    newImage,
+                                                  ];
+                                                  return combined.sort(
+                                                    (a, b) => a.order - b.order,
+                                                  );
+                                                });
+                                                toast.success(
+                                                  "Image added to selection",
+                                                );
+                                              } else {
+                                                toast.info(
+                                                  "Image already in selection",
+                                                );
+                                              }
+                                            }}
+                                          >
+                                            <AspectRatio ratio={1}>
+                                              <img
+                                                src={image.url}
+                                                alt="Part"
+                                                className="h-full w-full object-cover transition-opacity group-hover:opacity-80"
+                                              />
+                                              <div className="absolute inset-0 flex items-center justify-center bg-black/40 opacity-0 transition-opacity group-hover:opacity-100">
+                                                <Button
+                                                  variant="secondary"
+                                                  size="sm"
+                                                >
+                                                  {images.some(
+                                                    (img) =>
+                                                      img.url === image.url,
+                                                  )
+                                                    ? "Already added"
+                                                    : "Add to selection"}
+                                                </Button>
+                                              </div>
+                                            </AspectRatio>
+                                          </div>
+                                        ))}
+                                      </div>
+                                    </div>
+                                  ),
+                                )}
                               </div>
                             </div>
                           )}

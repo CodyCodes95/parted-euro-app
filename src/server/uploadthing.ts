@@ -101,9 +101,10 @@ export const uploadRouter = {
         throw new Error("Unauthorized");
       }
 
-      // Get partNo and fileIndex from headers
+      // Get partNo, fileIndex and variant from headers
       const partNo = req.headers.get("partNo");
       const fileIndexStr = req.headers.get("fileIndex");
+      const variantHeader = req.headers.get("variant");
 
       if (!partNo) {
         throw new Error("Part number is required");
@@ -119,10 +120,19 @@ export const uploadRouter = {
       }
 
       // Whatever is returned here is accessible in onUploadComplete as `metadata`
-      return { userId: session.user.id, partNo, fileIndex };
+      return {
+        userId: session.user.id,
+        partNo,
+        fileIndex,
+        variant: variantHeader ?? null,
+      };
     })
     .onUploadComplete(async ({ metadata, file }) => {
-      const { partNo, fileIndex } = metadata;
+      const { partNo, fileIndex, variant } = metadata as {
+        partNo: string;
+        fileIndex: number;
+        variant: string | null;
+      };
       const { url } = file;
 
       // Get the highest existing order for this part
@@ -141,16 +151,20 @@ export const uploadRouter = {
       // The final order is baseOrder + fileIndex (from sorted client array)
       const order = baseOrder + fileIndex;
 
+      // Normalize variant: treat blank as null
+      const variantValue = variant && variant.trim() !== "" ? variant : null;
+
       // Store the image with partNo reference in the database
       await db.image.create({
         data: {
           url,
           partNo,
           order,
+          variant: variantValue ?? undefined,
         },
       });
 
-      return { url, partNo, order };
+      return { url, partNo, order, variant: variantValue };
     }),
 } satisfies FileRouter;
 

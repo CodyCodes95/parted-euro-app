@@ -254,12 +254,13 @@ export const partRouter = createTRPCRouter({
       const { partNo } = input;
       const images = await ctx.db.image.findMany({
         where: { partNo, partId: null },
-        orderBy: { order: "asc" },
+        orderBy: [{ variant: "asc" }, { order: "asc" }],
         select: {
           id: true,
           url: true,
           order: true,
           partNo: true,
+          variant: true,
         },
       });
       return images;

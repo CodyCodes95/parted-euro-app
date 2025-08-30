@@ -43,6 +43,7 @@ import Compressor from "compressorjs";
 // Define the form schema
 const formSchema = z.object({
   partNo: z.string().min(1, "Part number is required"),
+  variant: z.string().optional(),
 });
 
 type FormValues = z.infer<typeof formSchema>;
@@ -52,6 +53,7 @@ const { uploadFiles } = genUploader<OurFileRouter>();
 
 export default function MobileUploadPage() {
   const [currentPartNo, setCurrentPartNo] = useState<string>("");
+  const [currentVariant, setCurrentVariant] = useState<string | null>(null);
   const [uploadedImages, setUploadedImages] = useState<
     { url: string; id: string; order: number }[]
   >([]);
@@ -85,13 +87,15 @@ export default function MobileUploadPage() {
     resolver: zodResolver(formSchema),
     defaultValues: {
       partNo: "",
+      variant: "",
     },
   });
 
   // Reset the form state when starting a new upload session
   const resetForm = () => {
-    form.reset({ partNo: "" });
+    form.reset({ partNo: "", variant: "" });
     setCurrentPartNo("");
+    setCurrentVariant(null);
     setUploadedImages([]);
     setUploadComplete(false);
     setSelectedFiles([]);
@@ -101,6 +105,7 @@ export default function MobileUploadPage() {
   // Handle form submission
   const onSubmit = (values: FormValues) => {
     setCurrentPartNo(values.partNo.trim());
+    setCurrentVariant(values.variant?.trim() ? values.variant.trim() : null);
     setUploadedImages([]);
     setUploadComplete(false);
   };
@@ -182,6 +187,7 @@ export default function MobileUploadPage() {
           headers: {
             partNo: currentPartNo,
             fileIndex: i.toString(),
+            variant: currentVariant ?? "",
           },
         });
 
@@ -273,6 +279,23 @@ export default function MobileUploadPage() {
                       <FormControl>
                         <Input
                           placeholder="Enter part number"
+                          {...field}
+                          disabled={!!currentPartNo}
+                        />
+                      </FormControl>
+                      <FormMessage />
+                    </FormItem>
+                  )}
+                />
+                <FormField
+                  control={form.control}
+                  name="variant"
+                  render={({ field }) => (
+                    <FormItem>
+                      <FormLabel>Variant / Notes (optional)</FormLabel>
+                      <FormControl>
+                        <Input
+                          placeholder="e.g., Driver side // Black leather"
                           {...field}
                           disabled={!!currentPartNo}
                         />
