@@ -57,14 +57,12 @@ const calculateQty = (listing: AdminListingsItem) => {
 interface ListingColumnsProps {
   onEdit: (listing: AdminListingsItem) => void;
   onDelete: (listing: AdminListingsItem) => void;
-  onCreateOrder: (listing: AdminListingsItem) => void;
   onListOnEbay: (listing: AdminListingsItem) => void;
 }
 
 export function getListingColumns({
   onEdit,
   onDelete,
-  onCreateOrder,
   onListOnEbay,
 }: ListingColumnsProps): ColumnDef<AdminListingsItem>[] {
   return [
@@ -231,10 +229,6 @@ export function getListingColumns({
               <DropdownMenuItem onClick={() => onListOnEbay(listing)}>
                 <ExternalLink className="mr-2 h-4 w-4" />
                 List on eBay
-              </DropdownMenuItem>
-              <DropdownMenuItem onClick={() => onCreateOrder(listing)}>
-                <ShoppingCart className="mr-2 h-4 w-4" />
-                Create Order
               </DropdownMenuItem>
               <DropdownMenuSeparator />
               <DropdownMenuItem

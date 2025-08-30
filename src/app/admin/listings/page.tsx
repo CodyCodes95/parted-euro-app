@@ -9,7 +9,6 @@ import { DeleteListingDialog } from "./_components/delete-listing-dialog";
 import { keepPreviousData } from "@tanstack/react-query";
 import { Button } from "~/components/ui/button";
 import { Plus, ShoppingCart } from "lucide-react";
-import { CreateOrderDialog } from "./_components/create-order-dialog";
 import { ListOnEbayDialog } from "./_components/list-on-ebay-dialog";
 import { type AdminListingsItem } from "~/trpc/shared";
 import { useQueryState } from "nuqs";
@@ -26,7 +25,6 @@ export default function ListingsAdminPage() {
   const [isAddListingOpen, setIsAddListingOpen] = useState(false);
   const [isEditListingOpen, setIsEditListingOpen] = useState(false);
   const [isDeleteListingOpen, setIsDeleteListingOpen] = useState(false);
-  const [isCreateOrderOpen, setIsCreateOrderOpen] = useState(false);
   const [isListOnEbayOpen, setIsListOnEbayOpen] = useState(false);
   const [isBulkOrderOpen, setIsBulkOrderOpen] = useState(false);
   const [isFinalizeOrderOpen, setIsFinalizeOrderOpen] = useState(false);
@@ -85,12 +83,7 @@ export default function ListingsAdminPage() {
     }
   };
 
-  const handleCreateOrderDialogClose = (open: boolean) => {
-    setIsCreateOrderOpen(open);
-    if (!open) {
-      setSelectedListing(null);
-    }
-  };
+
 
   const handleListOnEbayDialogClose = (open: boolean) => {
     setIsListOnEbayOpen(open);
@@ -99,10 +92,7 @@ export default function ListingsAdminPage() {
     }
   };
 
-  const handleCreateOrder = (item: AdminListingsItem) => {
-    setSelectedListing(item);
-    setIsCreateOrderOpen(true);
-  };
+
 
   const handleListOnEbay = (item: AdminListingsItem) => {
     setSelectedListing(item);
@@ -141,7 +131,6 @@ export default function ListingsAdminPage() {
   const columns = getListingColumns({
     onEdit: handleEditListing,
     onDelete: handleDeleteListing,
-    onCreateOrder: handleCreateOrder,
     onListOnEbay: handleListOnEbay,
   });
 
@@ -227,11 +216,6 @@ export default function ListingsAdminPage() {
           <DeleteListingDialog
             open={isDeleteListingOpen}
             onOpenChange={handleDeleteDialogClose}
-            listing={selectedListing}
-          />
-          <CreateOrderDialog
-            open={isCreateOrderOpen}
-            onOpenChange={handleCreateOrderDialogClose}
             listing={selectedListing}
           />
           <ListOnEbayDialog
