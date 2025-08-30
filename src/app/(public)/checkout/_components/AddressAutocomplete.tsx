@@ -190,12 +190,12 @@ function AddressAutoCompleteInput(props: CommonProps) {
                       .filter((prediction) =>
                         prediction.types.includes("postal_code"),
                       )
-                      .filter((prediction) =>
-                        prediction.types.includes("locality"),
-                      )
-                      .filter((prediction) =>
-                        prediction.types.includes("administrative_area_level_1"),
-                      )
+                      // .filter((prediction) =>
+                      //   prediction.types.includes("locality"),
+                      // )
+                      // .filter((prediction) =>
+                      //   prediction.types.includes("administrative_area_level_1"),
+                      // )
                       .map((prediction) => (
                         <CommandItem
                           value={prediction.place_id}
