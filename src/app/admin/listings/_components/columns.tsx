@@ -187,6 +187,30 @@ export function getListingColumns({
       },
     },
     {
+      id: "variants",
+      header: ({ column }) => (
+        <DataTableColumnHeader column={column} title="Variants" />
+      ),
+      accessorFn: (row) => {
+        const variants = Array.from(
+          new Set(
+            row.parts
+              .map((p) => (p.variant ?? "").trim())
+              .filter((v) => v.length > 0),
+          ),
+        );
+        return variants.join(", ");
+      },
+      cell: ({ row }) => {
+        const variants = row.getValue<string>("variants");
+        return variants ? (
+          <span className="text-xs">{variants}</span>
+        ) : (
+          <span className="text-xs text-muted-foreground">None</span>
+        );
+      },
+    },
+    {
       id: "actions",
       cell: ({ row }) => {
         const listing = row.original;
