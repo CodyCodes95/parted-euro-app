@@ -471,6 +471,11 @@ export const listingsRouter = createTRPCRouter({
                 order: "asc",
               },
             },
+            parts: {
+              select: {
+                quantity: true,
+              },
+            },
           },
           where: queryWhere,
           orderBy,
@@ -577,6 +582,11 @@ export const listingsRouter = createTRPCRouter({
               take: 2,
               orderBy: {
                 order: "asc",
+              },
+            },
+            parts: {
+              select: {
+                quantity: true,
               },
             },
           },

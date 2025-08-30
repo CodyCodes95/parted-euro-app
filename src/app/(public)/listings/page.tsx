@@ -528,51 +528,68 @@ export default function ListingsPage() {
           {/* Listings Grid */}
           {listings.data && listings.data.listings.length > 0 && (
             <div className="grid grid-cols-1 gap-4 sm:grid-cols-2 lg:grid-cols-3">
-              {listings.data.listings.map((listing) => (
-                <Link
-                  prefetch={true}
-                  key={listing.id}
-                  href={`/listings/${listing.id}`}
-                >
-                  <Card className="group cursor-pointer overflow-hidden transition-all duration-200 hover:scale-[1.02] hover:shadow-md">
-                    <div className="relative h-[200px] w-full bg-muted">
-                      {listing.images?.[0] ? (
-                        <img
-                          src={listing.images[0].url}
-                          alt={listing.title}
-                          className="h-full w-full object-cover transition-transform duration-300 group-hover:scale-105"
-                        />
-                      ) : (
-                        <div className="flex h-full w-full items-center justify-center bg-muted">
-                          <span className="text-muted-foreground">
-                            No image
-                          </span>
-                        </div>
-                      )}
-                    </div>
-                    <CardContent className="p-4">
-                      <h3 className="mb-2 line-clamp-1 text-lg font-medium">
-                        {listing.title}
-                      </h3>
-                      <p className="mb-2 line-clamp-2 text-sm text-muted-foreground">
-                        {listing.description || "No description available"}
-                      </p>
-                      <div className="flex items-center justify-between">
-                        <p className="text-lg font-bold">
-                          ${listing.price.toFixed(2)}
-                        </p>
-                        <Button
-                          variant="outline"
-                          size="sm"
-                          className="relative z-10"
-                        >
-                          View
-                        </Button>
+              {listings.data.listings.map((listing) => {
+                const totalQuantity =
+                  listing.parts?.reduce(
+                    (acc, p) => acc + (p.quantity ?? 0),
+                    0,
+                  ) ?? 0;
+                const inStock = totalQuantity > 0;
+
+                return (
+                  <Link
+                    prefetch={true}
+                    key={listing.id}
+                    href={`/listings/${listing.id}`}
+                  >
+                    <Card className="group cursor-pointer overflow-hidden transition-all duration-200 hover:scale-[1.02] hover:shadow-md">
+                      <div className="relative h-[200px] w-full bg-muted">
+                        {!inStock && (
+                          <Badge
+                            variant="outline"
+                            className="absolute left-2 top-2 z-10 bg-red-50 text-red-700"
+                          >
+                            Out of Stock
+                          </Badge>
+                        )}
+                        {listing.images?.[0] ? (
+                          <img
+                            src={listing.images[0].url}
+                            alt={listing.title}
+                            className="h-full w-full object-cover transition-transform duration-300 group-hover:scale-105"
+                          />
+                        ) : (
+                          <div className="flex h-full w-full items-center justify-center bg-muted">
+                            <span className="text-muted-foreground">
+                              No image
+                            </span>
+                          </div>
+                        )}
                       </div>
-                    </CardContent>
-                  </Card>
-                </Link>
-              ))}
+                      <CardContent className="p-4">
+                        <h3 className="mb-2 line-clamp-1 text-lg font-medium">
+                          {listing.title}
+                        </h3>
+                        <p className="mb-2 line-clamp-2 text-sm text-muted-foreground">
+                          {listing.description || "No description available"}
+                        </p>
+                        <div className="flex items-center justify-between">
+                          <p className="text-lg font-bold">
+                            ${listing.price.toFixed(2)}
+                          </p>
+                          <Button
+                            variant="outline"
+                            size="sm"
+                            className="relative z-10"
+                          >
+                            View
+                          </Button>
+                        </div>
+                      </CardContent>
+                    </Card>
+                  </Link>
+                );
+              })}
             </div>
           )}
 
