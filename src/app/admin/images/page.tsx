@@ -1,23 +1,14 @@
 "use client";
 
-import { useState, useEffect } from "react";
+import { useState, useMemo } from "react";
 import { useForm } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
 import { z } from "zod";
 import { api } from "~/trpc/react";
 import { toast } from "sonner";
-import { UploadDropzone } from "~/components/UploadThing";
 import { genUploader } from "uploadthing/client";
 import type { OurFileRouter } from "~/server/uploadthing";
-import {
-  Image as ImageIcon,
-  Plus,
-  Undo2,
-  Check,
-  AlertCircle,
-  Upload,
-  X,
-} from "lucide-react";
+import { Image as ImageIcon, Plus, Check, Upload, X } from "lucide-react";
 import { Button } from "~/components/ui/button";
 import { Input } from "~/components/ui/input";
 import {
@@ -37,7 +28,7 @@ import {
   CardTitle,
 } from "~/components/ui/card";
 import { AspectRatio } from "~/components/ui/aspect-ratio";
-import { Alert, AlertDescription } from "~/components/ui/alert";
+
 import Compressor from "compressorjs";
 
 // Define the form schema
@@ -47,6 +38,13 @@ const formSchema = z.object({
 });
 
 type FormValues = z.infer<typeof formSchema>;
+
+type ExistingImage = {
+  id: string;
+  url: string;
+  order: number;
+  variant?: string | null;
+};
 
 // Generate the typed uploader
 const { uploadFiles } = genUploader<OurFileRouter>();
@@ -69,6 +67,17 @@ export default function MobileUploadPage() {
       { partNo: currentPartNo },
       { enabled: !!currentPartNo },
     );
+
+  const groupedExistingImages = useMemo(() => {
+    const groups = new Map<string, ExistingImage[]>();
+    (existingImages ?? []).forEach((img: ExistingImage) => {
+      const key = (img.variant?.trim?.() ?? "Uncategorized") || "Uncategorized";
+      const arr = groups.get(key) ?? [];
+      arr.push(img);
+      groups.set(key, arr);
+    });
+    return Array.from(groups.entries());
+  }, [existingImages]);
 
   // Delete existing image mutation
   const deleteExistingImageMutation = api.part.deleteImage.useMutation({
@@ -110,21 +119,7 @@ export default function MobileUploadPage() {
     setUploadComplete(false);
   };
 
-  // Handle image upload completion
-  const handleImageUpload = (results: { url: string }[]) => {
-    const newImages = results.map((result, index) => ({
-      url: result.url,
-      id: crypto.randomUUID(),
-      order: index,
-    }));
-
-    setUploadedImages((prev) => [...prev, ...newImages]);
-    setSuccessCount((prev) => prev + results.length);
-    setUploadComplete(true);
-
-    // Invalidate the existing images query to refresh the data
-    void utils.part.getImagesByPartNo.invalidate({ partNo: currentPartNo });
-  };
+  // (legacy helper removed; handled via upload flow)
 
   // Handle file selection and automatically start upload
   const handleFileSelect = async (
@@ -153,7 +148,7 @@ export default function MobileUploadPage() {
 
         // Compress image files
         if (file.type.startsWith("image/")) {
-          processedFile = await new Promise<File>((resolve, reject) => {
+          processedFile = await new Promise<File>((resolve, _reject) => {
             new Compressor(file, {
               quality: 0.8,
               maxWidth: 1920,
@@ -340,7 +335,7 @@ export default function MobileUploadPage() {
                   </div>
                 </div>
               ) : existingImages && existingImages.length > 0 ? (
-                <div className="space-y-2">
+                <div className="space-y-4">
                   <div className="flex items-center">
                     <ImageIcon className="mr-2 h-4 w-4" />
                     <span className="text-sm font-medium">
@@ -348,27 +343,43 @@ export default function MobileUploadPage() {
                       {existingImages.length !== 1 ? "s" : ""}
                     </span>
                   </div>
-                  <div className="grid grid-cols-3 gap-2">
-                    {existingImages.map((image) => (
-                      <div
-                        key={image.id}
-                        className="group relative overflow-hidden rounded-md border"
-                      >
-                        <AspectRatio ratio={1}>
-                          <img
-                            src={image.url}
-                            alt="Existing part image"
-                            className="h-full w-full object-cover"
-                          />
-                          <Button
-                            variant="destructive"
-                            size="icon"
-                            className="absolute right-1 top-1 h-6 w-6 opacity-0 transition-opacity group-hover:opacity-100"
-                            onClick={() => handleDeleteExistingImage(image.id)}
-                          >
-                            <X className="h-3 w-3" />
-                          </Button>
-                        </AspectRatio>
+                  <div className="space-y-4">
+                    {groupedExistingImages.map(([variantLabel, imgs]) => (
+                      <div key={String(variantLabel)} className="space-y-2">
+                        <div className="flex items-center justify-between">
+                          <div className="text-sm font-semibold">
+                            {variantLabel}
+                          </div>
+                        </div>
+                        <div className="grid grid-cols-3 gap-2">
+                          {imgs
+                            .slice()
+                            .sort((a, b) => (a.order ?? 0) - (b.order ?? 0))
+                            .map((image) => (
+                              <div
+                                key={image.id}
+                                className="group relative overflow-hidden rounded-md border"
+                              >
+                                <AspectRatio ratio={1}>
+                                  <img
+                                    src={image.url}
+                                    alt="Existing part image"
+                                    className="h-full w-full object-cover"
+                                  />
+                                  <Button
+                                    variant="destructive"
+                                    size="icon"
+                                    className="absolute right-1 top-1 h-6 w-6 opacity-0 transition-opacity group-hover:opacity-100"
+                                    onClick={() =>
+                                      handleDeleteExistingImage(image.id)
+                                    }
+                                  >
+                                    <X className="h-3 w-3" />
+                                  </Button>
+                                </AspectRatio>
+                              </div>
+                            ))}
+                        </div>
                       </div>
                     ))}
                   </div>
