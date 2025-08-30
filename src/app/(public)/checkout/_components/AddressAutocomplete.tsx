@@ -143,7 +143,7 @@ function AddressAutoCompleteInput(props: CommonProps) {
         country: "AU",
       },
     },
-    debounce: 300,
+    debounce: 150,
   });
 
   return (
