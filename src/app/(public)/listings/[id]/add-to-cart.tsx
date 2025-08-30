@@ -2,7 +2,7 @@
 
 import { useState } from "react";
 import { Button } from "~/components/ui/button";
-import { useCartStore, type CartItem } from "~/stores/useCartStore";
+import { api } from "~/trpc/react";
 import { ShoppingCart, Plus, Minus, Check } from "lucide-react";
 import { toast } from "sonner";
 
@@ -28,22 +28,19 @@ export function AddToCart({
 }: AddToCartProps) {
   const [quantity, setQuantity] = useState(1);
   const [isAdded, setIsAdded] = useState(false);
-  const { addItem } = useCartStore();
+  const utils = api.useUtils();
+  const { mutateAsync: addItem } = api.cart.addItem.useMutation({
+    onSuccess: async () => {
+      await utils.cart.getCart.invalidate();
+      await utils.cart.getCartSummary.invalidate();
+    },
+  });
 
-  const handleAddToCart = () => {
-    const cartItem: CartItem = {
-      listingId,
-      quantity,
-    };
-
-    addItem(cartItem);
+  const handleAddToCart = async () => {
+    await addItem({ listingId, quantity });
     setIsAdded(true);
     toast.success(`${listingTitle} added to cart`);
-
-    // Reset the added state after a short delay
-    setTimeout(() => {
-      setIsAdded(false);
-    }, 2000);
+    setTimeout(() => setIsAdded(false), 2000);
   };
 
   const incrementQuantity = () => {

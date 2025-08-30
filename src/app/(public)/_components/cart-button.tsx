@@ -2,16 +2,20 @@
 import { ShoppingCartIcon } from "lucide-react";
 import React from "react";
 import { Button } from "~/components/ui/button";
-import { useCartStore } from "~/stores/useCartStore";
+import { useCartUI } from "~/components/cart-provider";
+import { api } from "~/trpc/react";
 
 const CartButton = () => {
-  const { toggleCart, cart } = useCartStore();
-  const itemCount = cart.reduce((count, item) => count + item.quantity, 0);
+  const { toggle } = useCartUI();
+  const { data } = api.cart.getCartSummary.useQuery(undefined, {
+    refetchOnWindowFocus: true,
+  });
+  const itemCount = data?.count ?? 0;
   return (
     <Button
       variant="ghost"
       size="icon"
-      onClick={toggleCart}
+      onClick={toggle}
       className="relative"
       aria-label="Shopping Cart"
     >

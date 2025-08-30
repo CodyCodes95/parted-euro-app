@@ -11,9 +11,10 @@ import {
   ShoppingBag,
 } from "lucide-react";
 import { cn } from "~/lib/utils";
-import { useCartStore } from "~/stores/useCartStore";
+import { useCartUI } from "~/components/cart-provider";
 import { SearchCommand } from "~/components/search";
 import { useIsMobile } from "~/hooks/use-mobile";
+import { api } from "~/trpc/react";
 
 const navLinks = [
   { href: "/listings", label: "Browse Store", icon: Home },
@@ -26,9 +27,11 @@ export function MobileNav() {
   const isMobile = useIsMobile();
   const [isOpen, setIsOpen] = useState(false);
   const [activeIndex, setActiveIndex] = useState(-1);
-  const { toggleCart, cart } = useCartStore();
-
-  const itemCount = cart.reduce((count, item) => count + item.quantity, 0);
+  const { toggle } = useCartUI();
+  const { data } = api.cart.getCartSummary.useQuery(undefined, {
+    refetchOnWindowFocus: true,
+  });
+  const itemCount = data?.count ?? 0;
 
   const toggleMenu = () => {
     setIsOpen(!isOpen);
@@ -60,7 +63,7 @@ export function MobileNav() {
 
       {/* Cart Button */}
       <button
-        onClick={toggleCart}
+        onClick={toggle}
         aria-label="Shopping cart"
         className="relative flex h-10 w-10 items-center justify-center rounded-full bg-primary/10 p-2 text-primary transition-all duration-300 hover:bg-primary/20"
       >

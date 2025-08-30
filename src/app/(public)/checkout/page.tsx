@@ -8,7 +8,6 @@ import { Minus, Plus, Trash2, AlertCircle, X } from "lucide-react";
 import Image from "next/image";
 import { useMemo } from "react";
 import { api } from "~/trpc/react";
-import { useCartStore } from "~/stores/useCartStore";
 import { formatCurrency } from "~/lib/utils";
 import { useSearchParams, useRouter } from "next/navigation";
 
@@ -107,7 +106,15 @@ export default function Checkout() {
   );
 
   const { isLoaded } = useGoogleMapsApi();
-  const { cart, removeItem, updateQuantity } = useCartStore();
+  const utils = api.useUtils();
+  const { data: cart = [], isLoading: isCartLoading } =
+    api.cart.getCart.useQuery(undefined, { refetchOnWindowFocus: true });
+  const { mutate: removeItem } = api.cart.removeItem.useMutation({
+    onSuccess: () => utils.cart.getCart.invalidate(),
+  });
+  const { mutate: updateQuantity } = api.cart.updateItem.useMutation({
+    onSuccess: () => utils.cart.getCart.invalidate(),
+  });
 
   const shippingCountries = api.checkout.getShippingCountries.useQuery();
 
@@ -135,9 +142,7 @@ export default function Checkout() {
 
   // Combine cart quantities with fetched listing data
   const populatedCart = useMemo((): PopulatedCartItem[] => {
-    if (!listingsData) {
-      return cart.map((item) => ({ ...item }));
-    }
+    if (!listingsData) return cart.map((item) => ({ ...item }));
 
     const listingsMap = new Map(
       listingsData.map((listing) => [
@@ -317,9 +322,14 @@ export default function Checkout() {
                           <CartItem
                             key={item.listingId}
                             item={item}
-                            onRemove={() => removeItem(item.listingId)}
+                            onRemove={() =>
+                              removeItem({ listingId: item.listingId })
+                            }
                             onUpdateQuantity={(quantity) =>
-                              updateQuantity(item.listingId, quantity)
+                              updateQuantity({
+                                listingId: item.listingId,
+                                quantity,
+                              })
                             }
                           />
                         ))}

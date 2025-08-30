@@ -9,7 +9,7 @@ import { Toaster } from "~/components/ui/sonner";
 import { NextSSRPlugin } from "@uploadthing/react/next-ssr-plugin";
 import { extractRouterConfig } from "uploadthing/server";
 import { uploadRouter } from "~/server/uploadthing";
-import { CartStoreInitializer } from "~/components/cart-provider";
+import { CartUIProvider } from "~/components/cart-provider";
 
 export const metadata: Metadata = {
   title: "Parted Euro",
@@ -38,9 +38,9 @@ export default function RootLayout({
       <body>
         <TRPCReactProvider>
           <NextSSRPlugin routerConfig={extractRouterConfig(uploadRouter)} />
-          <CartStoreInitializer>
+          <CartUIProvider>
             <NuqsAdapter>{children}</NuqsAdapter>
-          </CartStoreInitializer>
+          </CartUIProvider>
         </TRPCReactProvider>
         <Toaster />
       </body>

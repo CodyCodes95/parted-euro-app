@@ -2,7 +2,7 @@
 
 import { useState } from "react";
 import { Button } from "~/components/ui/button";
-import { useCartStore, type CartItem } from "~/stores/useCartStore";
+import { api } from "~/trpc/react";
 import { ShoppingCart, Plus, Minus, Check } from "lucide-react";
 import { toast } from "sonner";
 
@@ -33,26 +33,23 @@ interface AddToCartButtonProps {
 export function AddToCartButton({ listing, inStock }: AddToCartButtonProps) {
   const [quantity, setQuantity] = useState(1);
   const [isAdded, setIsAdded] = useState(false);
-  const { addItem } = useCartStore();
+  const utils = api.useUtils();
+  const { mutateAsync: addItem } = api.cart.addItem.useMutation({
+    onSuccess: async () => {
+      await utils.cart.getCart.invalidate();
+      await utils.cart.getCartSummary.invalidate();
+    },
+  });
 
   const maxQuantity = listing.parts[0]?.quantity ?? 0;
 
-  const handleAddToCart = () => {
+  const handleAddToCart = async () => {
     if (!inStock) return;
 
-    const cartItem = {
-      listingId: listing.id,
-      quantity,
-    };
-
-    addItem(cartItem);
+    await addItem({ listingId: listing.id, quantity });
     setIsAdded(true);
     toast.success(`${listing.title} added to cart`);
-
-    // Reset the added state after a short delay
-    setTimeout(() => {
-      setIsAdded(false);
-    }, 2000);
+    setTimeout(() => setIsAdded(false), 2000);
   };
 
   const incrementQuantity = () => {

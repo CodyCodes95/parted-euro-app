@@ -53,11 +53,29 @@ export function TRPCReactProvider(props: { children: React.ReactNode }) {
           headers: () => {
             const headers = new Headers();
             headers.set("x-trpc-source", "nextjs-react");
+            // Attach stable device id for public carts
+            if (typeof window !== "undefined") {
+              try {
+                const key = "device-id";
+                let deviceId = window.localStorage.getItem(key);
+                if (!deviceId) {
+                  deviceId =
+                    typeof crypto !== "undefined" && "randomUUID" in crypto
+                      ? crypto.randomUUID()
+                      : Math.random().toString(36).slice(2) +
+                        Date.now().toString(36);
+                  window.localStorage.setItem(key, deviceId);
+                }
+                headers.set("x-device-id", deviceId);
+              } catch {
+                // ignore localStorage errors
+              }
+            }
             return headers;
           },
         }),
       ],
-    })
+    }),
   );
 
   return (

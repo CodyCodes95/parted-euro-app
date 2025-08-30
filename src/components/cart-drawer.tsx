@@ -1,12 +1,11 @@
 "use client";
 
 import Image from "next/image";
-import { useEffect, useState, useMemo } from "react";
+import { useEffect, useMemo } from "react";
 import { X, ShoppingBag, Trash2, Plus, Minus } from "lucide-react";
 import { formatCurrency } from "~/lib/utils";
 import { api } from "~/trpc/react";
-
-import { useCartStore } from "~/stores/useCartStore";
+import { useCartUI } from "~/components/cart-provider";
 import {
   Drawer,
   DrawerClose,
@@ -33,55 +32,26 @@ type PopulatedCartItem = {
 };
 
 export function CartDrawer() {
-  const { cart, isOpen, closeCart, removeItem, updateQuantity, clearCart } =
-    useCartStore();
-  const [isMounted, setIsMounted] = useState(false);
+  const { isOpen, close } = useCartUI();
   const isMobile = useIsMobile();
 
-  // Extract listing IDs from the cart
-  const listingIds = useMemo(() => cart.map((item) => item.listingId), [cart]);
+  const utils = api.useUtils();
+  const { data: items = [], isLoading } = api.cart.getCart.useQuery(undefined, {
+    refetchOnWindowFocus: true,
+  });
 
-  // Fetch listing details using the new tRPC query
-  const { data: listingsData, isLoading } = api.cart.getListingsByIds.useQuery(
-    {
-      ids: listingIds,
-    },
-    {
-      enabled: isMounted && listingIds.length > 0, // Only run query when mounted and cart has items
-      staleTime: 5 * 60 * 1000, // Cache for 5 minutes
-    },
-  );
+  const { mutate: removeItem } = api.cart.removeItem.useMutation({
+    onSuccess: () => utils.cart.getCart.invalidate(),
+  });
+  const { mutate: updateItem } = api.cart.updateItem.useMutation({
+    onSuccess: () => utils.cart.getCart.invalidate(),
+  });
+  const { mutate: clearCart } = api.cart.clear.useMutation({
+    onSuccess: () => utils.cart.getCart.invalidate(),
+  });
 
-  // Prevent hydration errors
-  useEffect(() => {
-    setIsMounted(true);
-  }, []);
+  const populatedCart = items as PopulatedCartItem[];
 
-  // Combine cart quantities with fetched listing data
-  const populatedCart = useMemo((): PopulatedCartItem[] => {
-    if (!listingsData) {
-      // While loading or if data is unavailable, return cart items with only ID and quantity
-      return cart.map((item) => ({ ...item }));
-    }
-
-    const listingsMap = new Map(
-      listingsData.map((listing) => [
-        listing.id,
-        {
-          title: listing.title,
-          price: listing.price,
-          imageUrl: listing.images?.[0]?.url,
-        },
-      ]),
-    );
-
-    return cart.map((item) => ({
-      ...item,
-      ...(listingsMap.get(item.listingId) ?? {}),
-    }));
-  }, [cart, listingsData]);
-
-  // Calculate totals using populated cart data
   const subtotal = useMemo(() => {
     return populatedCart.reduce(
       (total, item) => total + (item.price ?? 0) * item.quantity,
@@ -89,15 +59,15 @@ export function CartDrawer() {
     );
   }, [populatedCart]);
 
-  const itemCount = cart.reduce((count, item) => count + item.quantity, 0);
-
-  // Only render drawer after client-side hydration
-  if (!isMounted) return null;
+  const itemCount = populatedCart.reduce(
+    (count, item) => count + item.quantity,
+    0,
+  );
 
   return (
     <Drawer
       open={isOpen}
-      onOpenChange={closeCart}
+      onOpenChange={close}
       direction={isMobile ? "bottom" : "right"}
     >
       <DrawerContent
@@ -114,13 +84,13 @@ export function CartDrawer() {
             </DrawerClose>
           </div>
           <DrawerDescription>
-            {cart.length === 0
+            {populatedCart.length === 0
               ? "Your cart is empty."
               : "Review your items before checkout."}
           </DrawerDescription>
         </DrawerHeader>
 
-        {cart.length > 0 ? (
+        {populatedCart.length > 0 ? (
           <>
             <ScrollArea className="px-4 sm:px-6">
               <div className="space-y-4 py-2">
@@ -134,9 +104,11 @@ export function CartDrawer() {
                       <CartItemDisplay
                         key={item.listingId}
                         item={item}
-                        onRemove={() => removeItem(item.listingId)}
+                        onRemove={() =>
+                          removeItem({ listingId: item.listingId })
+                        }
                         onUpdateQuantity={(quantity) =>
-                          updateQuantity(item.listingId, quantity)
+                          updateItem({ listingId: item.listingId, quantity })
                         }
                       />
                     ))}
@@ -172,7 +144,7 @@ export function CartDrawer() {
                     prefetch={true}
                     href="/checkout"
                     className="w-full"
-                    onClick={closeCart}
+                    onClick={close}
                     aria-disabled={isLoading}
                   >
                     <Button className="w-full" disabled={isLoading}>
@@ -182,7 +154,7 @@ export function CartDrawer() {
                   <Button
                     variant="outline"
                     className="w-full"
-                    onClick={clearCart}
+                    onClick={() => clearCart()}
                     disabled={isLoading}
                   >
                     Clear Cart
@@ -200,7 +172,7 @@ export function CartDrawer() {
                 Add items to your cart to see them here.
               </p>
             </div>
-            <Link href="/listings" onClick={closeCart}>
+            <Link href="/listings" onClick={close}>
               <Button variant="default">Browse Products</Button>
             </Link>
           </div>

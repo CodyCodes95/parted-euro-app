@@ -1,24 +1,42 @@
 "use client";
 
-import { useEffect, useState, type ReactNode } from "react";
-import { useCartStore } from "~/stores/useCartStore";
+import {
+  createContext,
+  useCallback,
+  useContext,
+  useMemo,
+  useState,
+  type ReactNode,
+} from "react";
 
-/**
- * Provides client-side only rendering for the cart store
- * to prevent hydration errors with localStorage
- */
-export function CartStoreInitializer({ children }: { children: ReactNode }) {
-  const [isHydrated, setIsHydrated] = useState(false);
+type CartUIContextValue = {
+  isOpen: boolean;
+  open: () => void;
+  close: () => void;
+  toggle: () => void;
+};
 
-  // Wait for hydration to complete before rendering children
-  useEffect(() => {
-    setIsHydrated(true);
-  }, []);
+const CartUIContext = createContext<CartUIContextValue | null>(null);
 
-  // Force a rerender on the client to ensure the cart data is properly loaded
-  if (!isHydrated) {
-    return null;
-  }
+export function CartUIProvider({ children }: { children: ReactNode }) {
+  const [isOpen, setIsOpen] = useState(false);
 
-  return <>{children}</>;
+  const open = useCallback(() => setIsOpen(true), []);
+  const close = useCallback(() => setIsOpen(false), []);
+  const toggle = useCallback(() => setIsOpen((v) => !v), []);
+
+  const value = useMemo<CartUIContextValue>(
+    () => ({ isOpen, open, close, toggle }),
+    [isOpen, open, close, toggle],
+  );
+
+  return (
+    <CartUIContext.Provider value={value}>{children}</CartUIContext.Provider>
+  );
+}
+
+export function useCartUI() {
+  const ctx = useContext(CartUIContext);
+  if (!ctx) throw new Error("useCartUI must be used within CartUIProvider");
+  return ctx;
 }

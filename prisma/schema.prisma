@@ -103,6 +103,7 @@ model Listing {
     listedOnEbay Boolean     @default(false)
     ebayOfferId  String?
     OrderItem    OrderItem[]
+    cartItems    CartItem[]
 }
 
 model Part {
@@ -216,6 +217,28 @@ model OrderItem {
     quantity  Int
     createdAt DateTime @default(now())
     updatedAt DateTime @updatedAt
+}
+
+/// Cart that belongs to a public device (anonymous user) identified by a deviceId
+model Cart {
+    /// Unique device fingerprint stored in localStorage; used as primary key
+    deviceId  String     @id
+    items     CartItem[]
+    createdAt DateTime   @default(now())
+    updatedAt DateTime   @updatedAt
+}
+
+model CartItem {
+    id        String   @id @default(cuid())
+    cartId    String
+    cart      Cart     @relation(fields: [cartId], references: [deviceId], onDelete: Cascade)
+    listingId String
+    listing   Listing  @relation(fields: [listingId], references: [id], onDelete: Cascade)
+    quantity  Int      @default(1)
+    createdAt DateTime @default(now())
+    updatedAt DateTime @updatedAt
+
+    @@unique([cartId, listingId])
 }
 
 model PartTypes {
