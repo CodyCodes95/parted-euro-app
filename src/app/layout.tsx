@@ -42,7 +42,7 @@ export default function RootLayout({
             <NuqsAdapter>{children}</NuqsAdapter>
           </CartUIProvider>
         </TRPCReactProvider>
-        <Toaster />
+        <Toaster richColors />
       </body>
     </html>
   );
