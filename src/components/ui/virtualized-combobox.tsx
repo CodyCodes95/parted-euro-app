@@ -54,6 +54,11 @@ export const VirtualizedCommand = ({
 
   const virtualOptions = virtualizer.getVirtualItems();
 
+  // Keep filtered options in sync with incoming options
+  React.useEffect(() => {
+    setFilteredOptions(options);
+  }, [options]);
+
   const scrollToIndex = (index: number) => {
     virtualizer.scrollToIndex(index, {
       align: "center",
@@ -234,7 +239,12 @@ export function VirtualizedCombobox({
 
   const selectedLabel = React.useMemo(() => {
     if (!selectedOption) return null;
-    return options.find((option) => option.value === selectedOption)?.label;
+    const foundLabel = options.find(
+      (option) => option.value === selectedOption,
+    )?.label;
+    // Fallback to displaying the raw value when the option label isn't available
+    // This handles cases where the option list is stale or filtered differently
+    return foundLabel ?? selectedOption;
   }, [selectedOption, options]);
 
   return (
