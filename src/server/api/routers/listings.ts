@@ -20,6 +20,7 @@ export const listingsRouter = createTRPCRouter({
         parts: {
           select: {
             id: true,
+            variant: true,
             quantity: true,
             partDetails: {
               select: {

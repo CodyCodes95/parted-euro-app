@@ -323,12 +323,12 @@ export default function Checkout() {
                             key={item.listingId}
                             item={item}
                             onRemove={() =>
-                              removeItemMutation.mutate({
+                              removeItemMutation.mutateAsync({
                                 listingId: item.listingId,
                               })
                             }
                             onUpdateQuantity={(quantity) =>
-                              updateQuantityMutation.mutate({
+                              updateQuantityMutation.mutateAsync({
                                 listingId: item.listingId,
                                 quantity,
                               })
@@ -538,32 +538,34 @@ function CartItem({
   onUpdateQuantity,
 }: {
   item: PopulatedCartItem;
-  onRemove: () => void;
-  onUpdateQuantity: (quantity: number) => void;
+  onRemove: () => Promise<void>;
+  onUpdateQuantity: (quantity: number) => Promise<void>;
 }) {
-  const [isUpdating, setIsUpdating] = useState(false);
+  const [isRemoving, setIsRemoving] = useState(false);
+  const [isIncLoading, setIsIncLoading] = useState(false);
+  const [isDecLoading, setIsDecLoading] = useState(false);
   const handleRemove = async () => {
-    setIsUpdating(true);
+    setIsRemoving(true);
     try {
-      onRemove();
+      await onRemove();
     } finally {
-      setIsUpdating(false);
+      setIsRemoving(false);
     }
   };
   const handleDec = async () => {
-    setIsUpdating(true);
+    setIsDecLoading(true);
     try {
-      onUpdateQuantity(Math.max(1, item.quantity - 1));
+      await onUpdateQuantity(Math.max(1, item.quantity - 1));
     } finally {
-      setIsUpdating(false);
+      setIsDecLoading(false);
     }
   };
   const handleInc = async () => {
-    setIsUpdating(true);
+    setIsIncLoading(true);
     try {
-      onUpdateQuantity(item.quantity + 1);
+      await onUpdateQuantity(item.quantity + 1);
     } finally {
-      setIsUpdating(false);
+      setIsIncLoading(false);
     }
   };
   return (
@@ -595,9 +597,9 @@ function CartItem({
             className="text-muted-foreground hover:text-destructive disabled:opacity-50"
             onClick={handleRemove}
             aria-label="Remove item"
-            disabled={isUpdating}
+            disabled={isRemoving || isIncLoading || isDecLoading}
           >
-            {isUpdating ? (
+            {isRemoving ? (
               <Loader2 className="h-4 w-4 animate-spin" />
             ) : (
               <Trash2 className="h-4 w-4" />
@@ -610,10 +612,12 @@ function CartItem({
           <button
             className="rounded-md p-1 hover:bg-muted disabled:opacity-50"
             onClick={handleDec}
-            disabled={item.quantity <= 1 || isUpdating}
+            disabled={
+              item.quantity <= 1 || isDecLoading || isIncLoading || isRemoving
+            }
             aria-label="Decrease quantity"
           >
-            {isUpdating ? (
+            {isDecLoading ? (
               <Loader2 className="h-3 w-3 animate-spin" />
             ) : (
               <Minus className="h-3 w-3" />
@@ -624,9 +628,9 @@ function CartItem({
             className="rounded-md p-1 hover:bg-muted disabled:opacity-50"
             onClick={handleInc}
             aria-label="Increase quantity"
-            disabled={isUpdating}
+            disabled={isIncLoading || isDecLoading || isRemoving}
           >
-            {isUpdating ? (
+            {isIncLoading ? (
               <Loader2 className="h-3 w-3 animate-spin" />
             ) : (
               <Plus className="h-3 w-3" />

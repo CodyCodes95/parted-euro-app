@@ -1,7 +1,7 @@
 "use client";
 
 import Image from "next/image";
-import { useEffect, useMemo } from "react";
+import { useEffect, useMemo, useState } from "react";
 import { X, ShoppingBag, Trash2, Plus, Minus, Loader2 } from "lucide-react";
 import { formatCurrency } from "~/lib/utils";
 import { api } from "~/trpc/react";
@@ -105,12 +105,12 @@ export function CartDrawer() {
                         key={item.listingId}
                         item={item}
                         onRemove={() =>
-                          removeItemMutation.mutate({
+                          removeItemMutation.mutateAsync({
                             listingId: item.listingId,
                           })
                         }
                         onUpdateQuantity={(quantity) =>
-                          updateItemMutation.mutate({
+                          updateItemMutation.mutateAsync({
                             listingId: item.listingId,
                             quantity,
                           })
@@ -207,32 +207,34 @@ function CartItemDisplay({
   onUpdateQuantity,
 }: {
   item: PopulatedCartItem;
-  onRemove: () => void;
-  onUpdateQuantity: (quantity: number) => void;
+  onRemove: () => Promise<void>;
+  onUpdateQuantity: (quantity: number) => Promise<void>;
 }) {
-  const [isUpdating, setIsUpdating] = React.useState(false);
+  const [isRemoving, setIsRemoving] = useState(false);
+  const [isIncLoading, setIsIncLoading] = useState(false);
+  const [isDecLoading, setIsDecLoading] = useState(false);
   const handleDec = async () => {
-    setIsUpdating(true);
+    setIsDecLoading(true);
     try {
-      onUpdateQuantity(Math.max(1, item.quantity - 1));
+      await onUpdateQuantity(Math.max(1, item.quantity - 1));
     } finally {
-      setIsUpdating(false);
+      setIsDecLoading(false);
     }
   };
   const handleInc = async () => {
-    setIsUpdating(true);
+    setIsIncLoading(true);
     try {
-      onUpdateQuantity(item.quantity + 1);
+      await onUpdateQuantity(item.quantity + 1);
     } finally {
-      setIsUpdating(false);
+      setIsIncLoading(false);
     }
   };
   const handleRemove = async () => {
-    setIsUpdating(true);
+    setIsRemoving(true);
     try {
-      onRemove();
+      await onRemove();
     } finally {
-      setIsUpdating(false);
+      setIsRemoving(false);
     }
   };
   return (
@@ -265,9 +267,9 @@ function CartItemDisplay({
           <button
             onClick={handleRemove}
             className="rounded-full p-1 text-muted-foreground hover:bg-destructive/10 hover:text-destructive"
-            disabled={isUpdating}
+            disabled={isRemoving || isIncLoading || isDecLoading}
           >
-            {isUpdating ? (
+            {isRemoving ? (
               <Loader2 className="h-4 w-4 animate-spin" />
             ) : (
               <Trash2 className="h-4 w-4" />
@@ -281,10 +283,12 @@ function CartItemDisplay({
           <div className="flex items-center rounded-md border">
             <button
               onClick={handleDec}
-              disabled={item.quantity <= 1 || isUpdating}
+              disabled={
+                item.quantity <= 1 || isDecLoading || isIncLoading || isRemoving
+              }
               className="flex h-8 w-8 items-center justify-center rounded-l-md border-r text-sm disabled:opacity-50"
             >
-              {isUpdating ? (
+              {isDecLoading ? (
                 <Loader2 className="h-3 w-3 animate-spin" />
               ) : (
                 <Minus className="h-3 w-3" />
@@ -296,10 +300,10 @@ function CartItemDisplay({
             </span>
             <button
               onClick={handleInc}
-              disabled={isUpdating}
+              disabled={isIncLoading || isDecLoading || isRemoving}
               className="flex h-8 w-8 items-center justify-center rounded-r-md border-l text-sm disabled:opacity-50"
             >
-              {isUpdating ? (
+              {isIncLoading ? (
                 <Loader2 className="h-3 w-3 animate-spin" />
               ) : (
                 <Plus className="h-3 w-3" />
