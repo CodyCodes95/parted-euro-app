@@ -309,7 +309,7 @@ const getInterparcelShippingServices = async (input: ShippingServicesInput) => {
   );
   const shippingServicesAvailableData =
     (await shippingServicesAvailableResponse.json()) as InterparcelShippingServicesResponse;
-  console.log(JSON.stringify(shippingServicesAvailableData, null, 2));
+
   if (shippingServicesAvailableData.errorMessage) {
     throw new Error(shippingServicesAvailableData.errorMessage);
   }
@@ -333,7 +333,8 @@ const getInterparcelShippingServices = async (input: ShippingServicesInput) => {
         },
       );
       const data = (await response.json()) as InterparcelShippingQuote;
-      if (!data.services.length) {
+
+      if (!data.services?.length) {
         return null;
       }
       return {
