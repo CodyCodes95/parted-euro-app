@@ -355,44 +355,58 @@ const getInterparcelShippingServices = async (input: ShippingServicesInput) => {
       return !service.service.toLowerCase().includes("b2b");
     })
     .map(async (service) => {
-      const searchParams = new URLSearchParams({
-        ...interparcelParams,
-        service: service.id,
-      });
-      const response = await fetch(
-        `${interparcelBaseUrl}/quote/quote?${searchParams.toString()}`,
-        {
-          headers: {
-            Cookie: "PHPSESSID=f",
-            "x-csrf-token": csrfToken,
+      try {
+        const searchParams = new URLSearchParams({
+          ...interparcelParams,
+          service: service.id,
+        });
+        const response = await fetch(
+          `${interparcelBaseUrl}/quote/quote?${searchParams.toString()}`,
+          {
+            headers: {
+              Cookie: "PHPSESSID=f",
+              "x-csrf-token": csrfToken!,
+            },
           },
-        },
-      );
-      const data = (await response.json()) as InterparcelShippingQuote;
+        );
 
-      if (!data.services?.length) {
+        if (!response.ok) {
+          return null;
+        }
+
+        const data = (await response.json()) as InterparcelShippingQuote;
+
+        if (!data.services?.length) {
+          return null;
+        }
+        return {
+          shipping_rate_data: {
+            type: "fixed_amount",
+            fixed_amount: {
+              amount: Math.ceil(Number(data.services[0]!.sellPrice) * 100),
+              currency: "AUD",
+            },
+            display_name: `${data.services[0]!.carrier} - ${
+              data.services[0]!.name
+            }`,
+          },
+        };
+      } catch (error) {
         return null;
       }
-      return {
-        shipping_rate_data: {
-          type: "fixed_amount",
-          fixed_amount: {
-            amount: Math.ceil(Number(data.services[0]!.sellPrice) * 100),
-            currency: "AUD",
-          },
-          display_name: `${data.services[0]!.carrier} - ${
-            data.services[0]!.name
-          }`,
-        },
-      };
     });
-  const availableServices = await Promise.all(requests);
-  if (!availableServices.length) {
+  const availableServices = await Promise.allSettled(requests);
+  const validServices = availableServices
+    .filter((result) => result.status === "fulfilled" && result.value !== null)
+    .map(
+      (result) =>
+        (result as PromiseFulfilledResult<StripeShippingOption>).value,
+    ) as StripeShippingOption[];
+
+  if (!validServices.length) {
     throw new Error("Unable to ship this item to the destination country");
   }
-  return availableServices
-    .filter(Boolean)
-    .slice(0, 4) as StripeShippingOption[];
+  return validServices.slice(0, 4);
 };
 
 export type CheckoutItem = {
@@ -704,7 +718,16 @@ export const checkoutRouter = createTRPCRouter({
       let interparcelServices = [] as StripeShippingOption[];
       if ([width, length, height].every((dimension) => dimension < 105)) {
         shippingServices = await getDomesticShippingServices(input);
-        interparcelServices = await getInterparcelShippingServices(input);
+        // Try to get Interparcel services, but don't fail if it errors
+        try {
+          interparcelServices = await getInterparcelShippingServices(input);
+        } catch (error) {
+          console.error(
+            "Failed to fetch Interparcel services for domestic AU shipping:",
+            error instanceof Error ? error.message : String(error),
+          );
+          // Continue without Interparcel services
+        }
       } else {
         shippingServices = await getInterparcelShippingServices(input);
       }
