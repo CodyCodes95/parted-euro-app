@@ -364,7 +364,7 @@ const getInterparcelShippingServices = async (input: ShippingServicesInput) => {
           `${interparcelBaseUrl}/quote/quote?${searchParams.toString()}`,
           {
             headers: {
-              Cookie: "PHPSESSID=f",
+              Cookie: "PHPSESSID=ok0o745jhn4rif5c00u0d7b0r8",
               "x-csrf-token": csrfToken!,
             },
           },
