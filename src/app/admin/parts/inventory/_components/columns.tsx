@@ -22,8 +22,9 @@ import {
 import { Badge } from "~/components/ui/badge";
 import { type AdminInventoryItem } from "~/trpc/shared";
 import { DataTableColumnHeader } from "~/components/data-table/data-table-column-header";
-import { useMemo, useState } from "react";
+import { useEffect, useMemo, useRef, useState } from "react";
 import { cn } from "~/lib/utils";
+import { Input } from "~/components/ui/input";
 
 interface InventoryColumnsProps {
   onEdit: (inventory: AdminInventoryItem) => void;
@@ -120,6 +121,8 @@ function FacetedFilter({
   normalize?: (value: unknown) => string | null; // return null to omit option
 }) {
   const [open, setOpen] = useState(false);
+  const [query, setQuery] = useState("");
+  const inputRef = useRef<HTMLInputElement | null>(null);
 
   const filterValue = column.getFilterValue() as string[] | undefined;
 
@@ -132,6 +135,21 @@ function FacetedFilter({
     // Unique + sorted
     return Array.from(new Set(normalized)).sort((a, b) => a.localeCompare(b));
   }, [column, normalize]);
+
+  const filteredOptions = useMemo(() => {
+    if (!query) return options;
+    const q = query.toLowerCase();
+    return options.filter((opt) => opt.toLowerCase().includes(q));
+  }, [options, query]);
+
+  useEffect(() => {
+    if (open) {
+      const id = window.setTimeout(() => {
+        inputRef.current?.focus();
+      }, 0);
+      return () => window.clearTimeout(id);
+    }
+  }, [open]);
 
   const handleFilterChange = (value: string) => {
     if (!filterValue) {
@@ -170,16 +188,27 @@ function FacetedFilter({
         </Button>
       </DropdownMenuTrigger>
       <DropdownMenuContent align="start" className="w-56">
-        {options.map((value) => (
-          <DropdownMenuCheckboxItem
-            key={value}
-            checked={filterValue?.includes(value) ?? false}
-            onCheckedChange={() => handleFilterChange(value)}
-            className="capitalize"
-          >
-            {value}
-          </DropdownMenuCheckboxItem>
-        ))}
+        <div className="p-2">
+          <Input
+            placeholder={`Search ${label.toLowerCase()}...`}
+            value={query}
+            onChange={(e) => setQuery(e.target.value)}
+            className="h-8"
+            ref={inputRef}
+          />
+        </div>
+        <div className="max-h-64 overflow-auto">
+          {filteredOptions.map((value) => (
+            <DropdownMenuCheckboxItem
+              key={value}
+              checked={filterValue?.includes(value) ?? false}
+              onCheckedChange={() => handleFilterChange(value)}
+              className="capitalize"
+            >
+              {value}
+            </DropdownMenuCheckboxItem>
+          ))}
+        </div>
       </DropdownMenuContent>
     </DropdownMenu>
   );
