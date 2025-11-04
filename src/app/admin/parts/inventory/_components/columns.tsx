@@ -9,6 +9,7 @@ import {
   Tag,
   Filter,
   Check,
+  X,
 } from "lucide-react";
 import { Button } from "~/components/ui/button";
 import {
@@ -105,6 +106,18 @@ function StatusFilter({ column }: StatusFilterProps) {
             </div>
           </DropdownMenuCheckboxItem>
         ))}
+        {filterValue && filterValue.length > 0 && (
+          <>
+            <DropdownMenuSeparator />
+            <DropdownMenuItem
+              onClick={() => column.setFilterValue(null)}
+              className="text-destructive focus:text-destructive"
+            >
+              <X className="mr-2 h-4 w-4" />
+              Clear all
+            </DropdownMenuItem>
+          </>
+        )}
       </DropdownMenuContent>
     </DropdownMenu>
   );
@@ -209,6 +222,18 @@ function FacetedFilter({
             </DropdownMenuCheckboxItem>
           ))}
         </div>
+        {filterValue && filterValue.length > 0 && (
+          <>
+            <DropdownMenuSeparator />
+            <DropdownMenuItem
+              onClick={() => column.setFilterValue(null)}
+              className="text-destructive focus:text-destructive"
+            >
+              <X className="mr-2 h-4 w-4" />
+              Clear all
+            </DropdownMenuItem>
+          </>
+        )}
       </DropdownMenuContent>
     </DropdownMenu>
   );
