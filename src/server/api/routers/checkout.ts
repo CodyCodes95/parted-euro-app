@@ -313,6 +313,41 @@ const getInterparcelShippingServices = async (input: ShippingServicesInput) => {
   if (shippingServicesAvailableData.errorMessage) {
     throw new Error(shippingServicesAvailableData.errorMessage);
   }
+
+  // Get CSRF token by fetching the quote page first
+  const quotePageParams = new URLSearchParams({
+    p: `${weight}|${length}|${width}|${height}`,
+    t: weight >= 35 ? "pallet" : "parcel",
+    ct: partedEuroAddress.city,
+    cs: partedEuroAddress.state,
+    cp: partedEuroAddress.postcode,
+    cc: "Australia",
+    dt: destinationCity ?? "",
+    ds: destinationState ?? "",
+    dp: destinationPostcode ?? "",
+    dc: destinationCountry,
+  });
+  const quotePageResponse = await fetch(
+    `https://au.interparcel.com/quote/select-service?${quotePageParams.toString()}`,
+  );
+  const quotePageHtml = await quotePageResponse.text();
+
+  // Extract CSRF token from HTML meta tag, JavaScript variable, or cookie
+  let csrfToken: string | undefined;
+
+  // Try meta tag first
+  const metaMatch = quotePageHtml.match(
+    /<meta\s+name=["']csrf-token["']\s+content=["']([^"']+)["']/i,
+  );
+  if (metaMatch) {
+    csrfToken = metaMatch[1];
+  }
+
+  // Try JavaScript variable
+  if (!csrfToken) {
+    throw new Error("Failed to obtain CSRF token from Interparcel");
+  }
+
   const requests = shippingServicesAvailableData.services
     .filter((service) => !service.service.includes("Hunter"))
     .filter((service) => {
@@ -329,6 +364,7 @@ const getInterparcelShippingServices = async (input: ShippingServicesInput) => {
         {
           headers: {
             Cookie: "PHPSESSID=f",
+            "x-csrf-token": csrfToken,
           },
         },
       );
