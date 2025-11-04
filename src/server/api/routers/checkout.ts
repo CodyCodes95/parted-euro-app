@@ -163,6 +163,16 @@ const partedEuroAddress = {
   country: "AU",
 };
 
+const parseSetCookieHeaders = (headers: Headers): string[] => {
+  const anyHeaders = headers as unknown as { getSetCookie?: () => string[] };
+  const arr = anyHeaders.getSetCookie?.();
+  if (arr && Array.isArray(arr)) return arr;
+  const single = headers.get("set-cookie");
+  if (!single) return [];
+  // Split cookie pairs; keep commas inside attribute values like Expires
+  return single.split(/,(?=[^;]+=[^;]+)/g);
+};
+
 const pickupShippingOption = {
   shipping_rate_data: {
     type: "fixed_amount",
@@ -314,7 +324,7 @@ const getInterparcelShippingServices = async (input: ShippingServicesInput) => {
     throw new Error(shippingServicesAvailableData.errorMessage);
   }
 
-  // Get CSRF token by fetching the quote page first
+  // Initialize session by visiting quote page, collect Set-Cookie (PHPSESSID) and CSRF token
   const quotePageParams = new URLSearchParams({
     p: `${weight}|${length}|${width}|${height}`,
     t: weight >= 35 ? "pallet" : "parcel",
@@ -327,23 +337,70 @@ const getInterparcelShippingServices = async (input: ShippingServicesInput) => {
     dp: destinationPostcode ?? "",
     dc: destinationCountry,
   });
-  const quotePageResponse = await fetch(
-    `https://au.interparcel.com/quote/select-service?${quotePageParams.toString()}`,
-  );
-  const quotePageHtml = await quotePageResponse.text();
+  const cookieJar: Record<string, string> = {};
+  let nextUrl = `https://au.interparcel.com/quote/select-service?${quotePageParams.toString()}`;
+  let quotePageHtml = "";
+  for (let i = 0; i < 5; i++) {
+    const res = await fetch(nextUrl, {
+      method: "GET",
+      redirect: "manual",
+      cache: "no-store",
+      headers: {
+        "User-Agent":
+          "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 " +
+          "(KHTML, like Gecko) Chrome/118.0.0.0 Safari/537.36",
+        Accept:
+          "text/html,application/xhtml+xml,application/xml;q=0.9,image/avif,image/webp,*/*;q=0.8",
+        "Accept-Language": "en-US,en;q=0.9",
+        ...(Object.keys(cookieJar).length
+          ? {
+              Cookie: Object.entries(cookieJar)
+                .map(([k, v]) => `${k}=${v}`)
+                .join("; "),
+            }
+          : {}),
+      },
+    });
+    for (const sc of parseSetCookieHeaders(res.headers)) {
+      const split = sc.split(";").map((p) => p.trim());
+      const first = split[0];
+      if (!first) continue;
+      const eq = first.indexOf("=");
+      if (eq > 0) {
+        const name = first.slice(0, eq);
+        const value = first.slice(eq + 1);
+        if (name && value !== undefined) cookieJar[name] = value;
+      }
+    }
+    const loc = res.headers.get("location");
+    if (res.status >= 300 && res.status < 400 && loc) {
+      nextUrl = new URL(loc, nextUrl).toString();
+      continue;
+    }
+    quotePageHtml = await res.text();
+    break;
+  }
 
-  // Extract CSRF token from HTML meta tag, JavaScript variable, or cookie
+  const phpSessId =
+    cookieJar.PHPSESSID ??
+    cookieJar.phpsessid ??
+    cookieJar.PhpSessId ??
+    (cookieJar as Record<string, string>)["phpsessionid"];
+  if (!phpSessId) {
+    throw new Error("PHPSESSID not found in Interparcel response");
+  }
+  const cookieHeader = Object.entries(cookieJar)
+    .map(([k, v]) => `${k}=${v}`)
+    .join("; ");
+
+  // Extract CSRF token from HTML
   let csrfToken: string | undefined;
-
-  // Try meta tag first
   const metaMatch = quotePageHtml.match(
     /<meta\s+name=["']csrf-token["']\s+content=["']([^"']+)["']/i,
   );
   if (metaMatch) {
     csrfToken = metaMatch[1];
   }
-
-  // Try JavaScript variable
   if (!csrfToken) {
     throw new Error("Failed to obtain CSRF token from Interparcel");
   }
@@ -364,7 +421,7 @@ const getInterparcelShippingServices = async (input: ShippingServicesInput) => {
           `${interparcelBaseUrl}/quote/quote?${searchParams.toString()}`,
           {
             headers: {
-              Cookie: "PHPSESSID=ok0o745jhn4rif5c00u0d7b0r8",
+              Cookie: cookieHeader,
               "x-csrf-token": csrfToken!,
             },
           },
