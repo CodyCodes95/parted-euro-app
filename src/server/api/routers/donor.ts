@@ -4,7 +4,7 @@ import { adminProcedure, createTRPCRouter, publicProcedure } from "../trpc";
 
 // Define donor input validation schema
 const donorSchema = z.object({
-  vin: z.string().min(1, "VIN is required"),
+  vin: z.string().trim().min(1, "VIN is required"),
   cost: z.number().min(0, "Cost must be a positive number"),
   carId: z.string().min(1, "Car is required"),
   year: z.number().int().min(1900, "Year must be after 1900"),
@@ -261,7 +261,7 @@ export const donorRouter = createTRPCRouter({
 
   // Get a donor by VIN
   getByVin: adminProcedure
-    .input(z.object({ vin: z.string() }))
+    .input(z.object({ vin: z.string().trim() }))
     .query(async ({ ctx, input }) => {
       const { vin } = input;
       const donor = await ctx.db.donor.findUnique({
@@ -310,7 +310,7 @@ export const donorRouter = createTRPCRouter({
 
   // Update a donor
   update: adminProcedure
-    .input(z.object({ vin: z.string(), data: donorSchema }))
+    .input(z.object({ vin: z.string().trim(), data: donorSchema }))
     .mutation(async ({ ctx, input }) => {
       const { vin, data } = input;
 
@@ -351,7 +351,7 @@ export const donorRouter = createTRPCRouter({
 
   // Delete a donor
   delete: adminProcedure
-    .input(z.object({ vin: z.string() }))
+    .input(z.object({ vin: z.string().trim() }))
     .mutation(async ({ ctx, input }) => {
       const { vin } = input;
       await ctx.db.donor.delete({
@@ -362,7 +362,7 @@ export const donorRouter = createTRPCRouter({
 
   // Get a donor by VIN
   getDonorByVin: publicProcedure
-    .input(z.object({ vin: z.string() }))
+    .input(z.object({ vin: z.string().trim() }))
     .query(async ({ ctx, input }) => {
       const donor = await ctx.db.donor.findUnique({
         where: { vin: input.vin },
@@ -382,7 +382,7 @@ export const donorRouter = createTRPCRouter({
 
   // Get donor parts with listings
   getDonorParts: publicProcedure
-    .input(z.object({ vin: z.string() }))
+    .input(z.object({ vin: z.string().trim() }))
     .query(async ({ ctx, input }) => {
       // Find all parts for the donor that have listings
       const parts = await ctx.db.part.findMany({

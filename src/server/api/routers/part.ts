@@ -4,7 +4,7 @@ import { adminProcedure, createTRPCRouter } from "../trpc";
 
 // Define part input validation schema
 const partDetailSchema = z.object({
-  partNo: z.string().min(1, "Part number is required"),
+  partNo: z.string().trim().min(1, "Part number is required"),
   alternatePartNumbers: z.string().optional(),
   name: z.string().min(1, "Name is required"),
   weight: z.number().min(0, "Weight must be a positive number"),
@@ -119,7 +119,7 @@ export const partRouter = createTRPCRouter({
   searchByPartNo: adminProcedure
     .input(
       z.object({
-        search: z.string().optional(),
+        search: z.string().trim().optional(),
         limit: z.number().min(1).max(50).optional().default(10),
       }),
     )
@@ -154,7 +154,7 @@ export const partRouter = createTRPCRouter({
 
   // Get a part by ID
   getById: adminProcedure
-    .input(z.object({ partNo: z.string() }))
+    .input(z.object({ partNo: z.string().trim() }))
     .query(async ({ ctx, input }) => {
       const { partNo } = input;
       const part = await ctx.db.partDetail.findUnique({
@@ -195,7 +195,7 @@ export const partRouter = createTRPCRouter({
   update: adminProcedure
     .input(
       z.object({
-        partNo: z.string(),
+        partNo: z.string().trim(),
         data: partDetailSchema,
       }),
     )
@@ -238,7 +238,7 @@ export const partRouter = createTRPCRouter({
 
   // Delete a part
   delete: adminProcedure
-    .input(z.object({ partNo: z.string() }))
+    .input(z.object({ partNo: z.string().trim() }))
     .mutation(async ({ ctx, input }) => {
       const { partNo } = input;
       await ctx.db.partDetail.delete({
@@ -249,7 +249,7 @@ export const partRouter = createTRPCRouter({
 
   // Get images by partNo
   getImagesByPartNo: adminProcedure
-    .input(z.object({ partNo: z.string() }))
+    .input(z.object({ partNo: z.string().trim() }))
     .query(async ({ ctx, input }) => {
       const { partNo } = input;
       const images = await ctx.db.image.findMany({

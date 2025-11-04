@@ -6,8 +6,8 @@ import { TRPCError } from "@trpc/server";
 // Define inventory input validation schema
 const inventorySchema = z.object({
   id: z.string().optional(),
-  partDetailsId: z.string().min(1, "Part is required"),
-  donorVin: z.string().optional().nullable(),
+  partDetailsId: z.string().trim().min(1, "Part is required"),
+  donorVin: z.string().trim().optional().nullable(),
   inventoryLocationId: z.string().optional().nullable(),
   variant: z.string().optional().nullable(),
   quantity: z.coerce.number().int().min(1, "Quantity must be at least 1"),
@@ -112,7 +112,7 @@ export const inventoryRouter = createTRPCRouter({
 
   // Get an inventory item by ID
   getById: adminProcedure
-    .input(z.object({ id: z.string() }))
+    .input(z.object({ id: z.string().trim() }))
     .query(async ({ ctx, input }) => {
       const { id } = input;
       const inventory = await ctx.db.part.findUnique({
@@ -199,7 +199,7 @@ export const inventoryRouter = createTRPCRouter({
   update: adminProcedure
     .input(
       z.object({
-        id: z.string(),
+        id: z.string().trim(),
         data: inventorySchema,
       }),
     )
@@ -325,7 +325,7 @@ export const inventoryRouter = createTRPCRouter({
 
   // Delete an inventory item
   delete: adminProcedure
-    .input(z.object({ id: z.string() }))
+    .input(z.object({ id: z.string().trim() }))
     .mutation(async ({ ctx, input }) => {
       const { id } = input;
 
