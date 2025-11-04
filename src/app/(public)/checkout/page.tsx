@@ -455,7 +455,7 @@ export default function Checkout() {
                     name="address"
                     render={() => (
                       <FormItem>
-                        <FormLabel>Address</FormLabel>
+                        <FormLabel>Postcode / Suburb</FormLabel>
                         <FormControl>
                           <AddressAutoComplete
                             address={address}
@@ -463,6 +463,11 @@ export default function Checkout() {
                             placeholder="Enter your postcode/suburb"
                           />
                         </FormControl>
+                        <FormDescription>
+                          Only your postcode/suburb is required for calculating
+                          shipping. Full delivery address will be entered on the
+                          next page.
+                        </FormDescription>
                         <FormMessage />
                       </FormItem>
                     )}
