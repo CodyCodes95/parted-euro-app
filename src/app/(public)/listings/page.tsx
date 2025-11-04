@@ -133,13 +133,25 @@ export default function ListingsPage() {
 
   // Handle filter changes
   const handleCategoryChange = (categoryName: string) => {
-    if (categoryName === category) return;
+    // Toggle off if clicking the same category
+    if (categoryName === category) {
+      void setCategory("");
+      void setSubcat("");
+      void setPage(1);
+      return;
+    }
     void setCategory(categoryName);
     void setSubcat("");
     void setPage(1);
   };
 
   const handleSubcategoryChange = (subcategoryName: string) => {
+    // Toggle off if clicking the same subcategory
+    if (subcategoryName === subcat) {
+      void setSubcat("");
+      void setPage(1);
+      return;
+    }
     void setSubcat(subcategoryName);
     void setPage(1);
   };
