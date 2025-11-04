@@ -14,16 +14,25 @@ import { Alert, AlertDescription, AlertTitle } from "~/components/ui/alert";
 import { CheckCircle, AlertCircle, Loader2 } from "lucide-react";
 import { useEffect, useState } from "react";
 import { useAdminTitle } from "~/hooks/use-admin-title";
+import { Textarea } from "~/components/ui/textarea";
 
 export default function EbaySettingsPage() {
   useAdminTitle("Settings - eBay");
   const router = useRouter();
   const [isChecking, setIsChecking] = useState(true);
+  const [template, setTemplate] = useState("");
 
   const ebayLogin = api.ebay.authenticate.useMutation();
   const connectionStatus = api.ebay.testEbayConnection.useQuery(undefined, {
     retry: 1,
     retryDelay: 1000,
+  });
+  const templateQuery = api.ebay.getListingTemplate.useQuery();
+  const defaultTemplateQuery = api.ebay.getDefaultListingTemplate.useQuery();
+  const saveTemplate = api.ebay.saveListingTemplate.useMutation({
+    onSuccess: () => {
+      void templateQuery.refetch();
+    },
   });
 
   useEffect(() => {
@@ -31,6 +40,12 @@ export default function EbaySettingsPage() {
       setIsChecking(false);
     }
   }, [connectionStatus.isSuccess, connectionStatus.isError]);
+
+  useEffect(() => {
+    if (templateQuery.isSuccess && template === "") {
+      setTemplate(templateQuery.data ?? "");
+    }
+  }, [templateQuery.isSuccess, templateQuery.data, template]);
 
   const authenticateEbay = async () => {
     const url = await ebayLogin.mutateAsync();
@@ -109,6 +124,58 @@ export default function EbaySettingsPage() {
             >
               {ebayLogin.isPending ? "Reconnecting..." : "Refresh eBay Token"}
             </Button>
+          )}
+        </CardContent>
+      </Card>
+
+      <Card className="mb-6">
+        <CardHeader>
+          <CardTitle>Listing Template</CardTitle>
+          <CardDescription>
+            Edit the HTML used for eBay listing descriptions. Supported
+            placeholders:
+            <span className="ml-2 rounded bg-muted px-2 py-0.5 font-mono text-xs">
+              {"{{DESCRIPTION}}"}
+            </span>
+            <span className="ml-2 rounded bg-muted px-2 py-0.5 font-mono text-xs">
+              {"{{PARTS_TABLE}}"}
+            </span>
+          </CardDescription>
+        </CardHeader>
+        <CardContent>
+          {templateQuery.isLoading ? (
+            <div className="flex items-center gap-2 text-muted-foreground">
+              <Loader2 className="h-4 w-4 animate-spin" />
+              <span>Loading template...</span>
+            </div>
+          ) : (
+            <div className="flex flex-col gap-4">
+              <Textarea
+                value={template}
+                onChange={(e) => setTemplate(e.target.value)}
+                className="h-[420px] font-mono text-sm"
+                placeholder="Enter eBay HTML template"
+              />
+              <div className="flex items-center gap-2">
+                <Button
+                  onClick={() => saveTemplate.mutate({ template })}
+                  disabled={saveTemplate.isPending || template.length === 0}
+                >
+                  {saveTemplate.isPending ? "Saving..." : "Save Template"}
+                </Button>
+                <Button
+                  variant="outline"
+                  onClick={() =>
+                    defaultTemplateQuery.data
+                      ? setTemplate(defaultTemplateQuery.data)
+                      : undefined
+                  }
+                  disabled={defaultTemplateQuery.isLoading}
+                >
+                  Reset to Default
+                </Button>
+              </div>
+            </div>
           )}
         </CardContent>
       </Card>

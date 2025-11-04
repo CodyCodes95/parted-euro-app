@@ -100,6 +100,45 @@ type FulfillmentPolicyResponse = {
   total: string;
 };
 
+// Default listing template used for eBay description. Supports placeholders:
+// {{DESCRIPTION}} and {{PARTS_TABLE}}
+const DEFAULT_EBAY_LISTING_TEMPLATE = `<div style="font-family: Arial; display:flex; flex-direction:column">
+  <img style="width:500px" src="https://res.cloudinary.com/dzhmqfmzi/image/upload/v1681223001/Logo_PARTED_EURO_jmszpz.png"/>
+  <h3 style="text-decoration: underline;"> Product Description: </h3>
+  <p>{{DESCRIPTION}}</p>
+  <p>
+    Note: Some items sold through Parted Euro are 'generic items', meaning the images used <strong>may</strong> not be images of the exact item that you will receive. Cleanliness and condition of each item <strong> may </strong> vary. Rest assured, the item will definitely be in same quality condition. For specific items such as painted bumpers or items with certain remarks / traits - this will be noted in the description above. If an item is damaged, it will be clearly highlighted and have it's own separate listing to it's undamaged variant. If you are unsure about the exact item you'll be receiving and want to confirm condition of the exact item prior to purchase, please message us directly and we will be happy to send you photos of it.
+  </p>
+  <h3 style="text-decoration: underline;"> Fitment:</h3>
+  {{PARTS_TABLE}}
+  <p> Please note: It is the <b> BUYERS REPSONSIBILITY </b> to ensure fitment is correct for their vehicle. If you are unsure, feel free to send us a message and we will do our best to assist. </p>
+  <p> <b> Refunds will not be issued </b> if the part is not suitable for your car. </p>
+  <h3 style="text-decoration: underline;"> Payment: </h3>
+  <p> We only accept PayPal for sales via eBay that are being shipped. For in-store pickup, we can also accept Card (2.5% surcharge) or Cash. Please ensure you have selected the correct delivery method at checkout. </p>
+  <h3 style="text-decoration: underline;"> Shipping: </h3>
+  <p> Any item(s) purchased will be shipped within <b> 2-3 business days </b> of the sale, once payment has been received. </p>
+  <h3 style="text-decoration: underline;"> Warranty / Returns: </h3>
+  <p> We offer a 30-Day return policy, if an item fails or is not in the expected condition. </p>
+  <p> Unfortunately due to safety concerns, all items that are airbag / brake / hydraulic related are exempt from this warranty, as we cannot ensure the longevity of these second hand parts. Buy at your own risk. </p>
+  <p> Refunds will not be issued for change of mind. </p>
+  <h3 style="text-decoration: underline;"> About Us: </h3>
+  <p> We are a small wrecking business located in Knoxfield, Victoria (Australia). We ship worldwide, or offer in-store pickup. </p>
+  <p> If you are chasing something that is not listed on eBay, please feel free to send us a message and we will do our best to assist. </p>
+</div>`;
+
+const renderTemplate = (
+  template: string,
+  variables: Record<string, string>,
+) => {
+  let output = template;
+  for (const [key, value] of Object.entries(variables)) {
+    const token = `{{${key}}}`;
+    // Use split/join for global replacement without regex pitfalls
+    output = output.split(token).join(value);
+  }
+  return output;
+};
+
 // Init ebay
 const ebay = eBayApi.fromEnv();
 ebay.config.acceptLanguage = "en-AU";
@@ -135,6 +174,34 @@ export const ebayRouter = createTRPCRouter({
     const url = ebay.OAuth2.generateAuthUrl();
     return url;
   }),
+  // Template management
+  getListingTemplate: adminProcedure.query(async ({ ctx }) => {
+    const settings = await ctx.db.ebaySettings.findFirst();
+    return settings?.listingTemplate ?? DEFAULT_EBAY_LISTING_TEMPLATE;
+  }),
+  getDefaultListingTemplate: adminProcedure.query(async () => {
+    return DEFAULT_EBAY_LISTING_TEMPLATE;
+  }),
+  saveListingTemplate: adminProcedure
+    .input(
+      z.object({
+        template: z.string().min(1),
+      }),
+    )
+    .mutation(async ({ ctx, input }) => {
+      const existing = await ctx.db.ebaySettings.findFirst();
+      if (existing) {
+        await ctx.db.ebaySettings.update({
+          where: { id: existing.id },
+          data: { listingTemplate: input.template },
+        });
+      } else {
+        await ctx.db.ebaySettings.create({
+          data: { listingTemplate: input.template },
+        });
+      }
+      return { success: true };
+    }),
   setTokenSet: adminProcedure
     .input(
       z.object({
@@ -309,23 +376,21 @@ export const ebayRouter = createTRPCRouter({
       console.log("CREATED INVENTORY ITEM");
       console.log("=====================================");
       console.log("CREATING OFFER");
+      // Build listing description from editable template
+      const settings = await ctx.db.ebaySettings.findFirst();
+      const template =
+        settings?.listingTemplate ?? DEFAULT_EBAY_LISTING_TEMPLATE;
+      const listingDescription = renderTemplate(template, {
+        DESCRIPTION: input.description,
+        PARTS_TABLE: input.partsTable.replaceAll(",", ""),
+      });
       const createOffer = await ebay.sell.inventory.createOffer({
         sku: `${input.listingId} ${random}`,
         marketplaceId: "EBAY_AU" as Marketplace,
         format: "FIXED_PRICE" as FormatType,
         availableQuantity: input.quantity,
         categoryId: input.categoryId, //id of vehicle parts and accs
-        listingDescription: `<div style="font-family: Arial; display:flex; flex-direction:column"><img style="width:500px" src="https://res.cloudinary.com/dzhmqfmzi/image/upload/v1681223001/Logo_PARTED_EURO_jmszpz.png"/><h3 style="text-decoration: underline;"> Product Description: </h3><p> ${
-          input.description
-        } </p>
-          <p>
-          Note: Some items sold through Parted Euro are 'generic items', meaning the images used <strong>may</strong> not be images of the exact item that you will receive. Cleanliness and condition of each item <strong> may </strong> vary. Rest assured, the item will definitely be in same quality condition.  For specific items such as painted bumpers or items with certain remarks / traits - this will be noted in the description above. If an item is damaged, it will be clearly highlighted and have it's own separate listing to it's undamaged variant. If you are unsure about the exact item you'll be receiving and want to confirm condition of the exact item prior to purchase, please message us directly and we will be happy to send you photos of it.
-          </p>
-            <h3 style="text-decoration: underline;"> Fitment:</h3>${input.partsTable.replaceAll(
-              ",",
-              "",
-            )}<p> Please note: It is the <b> BUYERS REPSONSIBILITY </b>  to ensure fitment is correct for their vehicle. If you are unsure, feel free to send us a message and we will do our best to assist. </p><p> <b> Refunds will not be issued </b> if the part is not suitable for your car.  </p><h3 style="text-decoration: underline;"> Payment: </h3><p> We only accept PayPal for sales via eBay that are being shipped. For in-store pickup, we can also accept Card (2.5% surcharge) or Cash. Please ensure you have selected the correct delivery method at checkout. </p><h3 style="text-decoration: underline;"> Shipping: </h3><p> Any item(s) purchased will be shipped within <b> 2-3 business days </b> of the sale, once payment has been received. </p><h3 style="text-decoration: underline"> Warranty / Returns: </h3><p> We offer a 30-Day return policy, if an item fails or is not in the expected condition. <b> </p>
-<p> Unfortunately due to safety concerns, all items that are airbag / brake / hydraulic related are exempt from this warranty, as we cannot ensure the longevity of these second hand parts. Buy at your own risk. </b> We aim to be as transparent as possible with the condition of second hand parts. </p><p> Refunds will not be issued for change of mind. </p><h3 style="text-decoration: underline;"> About Us: </h3><p> We are a small wrecking business located in Knoxfield, Victoria (Australia). We ship worldwide, or offer in-store pickup. </p><p> If you are chasing something that is not listed on eBay, please feel free to send us a message and we will do our best to assist. </p></div>`,
+        listingDescription,
         listingPolicies: {
           fulfillmentPolicyId: fulfillmentPolicy,
           paymentPolicyId: process.env.EBAY_PAYMENT_ID!,

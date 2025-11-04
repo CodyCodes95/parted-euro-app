@@ -283,3 +283,10 @@ model AnalyticsEvent {
     ipAddress String?
     userAgent String?
 }
+
+model EbaySettings {
+    id              String   @id @default(cuid())
+    listingTemplate String   @db.Text
+    createdAt       DateTime @default(now())
+    updatedAt       DateTime @updatedAt
+}
