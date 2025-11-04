@@ -11,8 +11,10 @@ import { Input } from "~/components/ui/input";
 import { Button } from "~/components/ui/button";
 import { Plus } from "lucide-react";
 import { useQueryState } from "nuqs";
+import { useAdminTitle } from "~/hooks/use-admin-title";
 
 export default function CategoriesAdminPage() {
+  useAdminTitle("Categories");
   const [isAddCategoryOpen, setIsAddCategoryOpen] = useState(false);
   const [isEditCategoryOpen, setIsEditCategoryOpen] = useState(false);
   const [isDeleteCategoryOpen, setIsDeleteCategoryOpen] = useState(false);

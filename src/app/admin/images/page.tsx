@@ -1,6 +1,7 @@
 "use client";
 
 import { useState, useMemo } from "react";
+import { useAdminTitle } from "~/hooks/use-admin-title";
 import { useForm } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
 import { z } from "zod";
@@ -50,6 +51,7 @@ type ExistingImage = {
 const { uploadFiles } = genUploader<OurFileRouter>();
 
 export default function MobileUploadPage() {
+  useAdminTitle("Images");
   const [currentPartNo, setCurrentPartNo] = useState<string>("");
   const [currentVariant, setCurrentVariant] = useState<string | null>(null);
   const [uploadedImages, setUploadedImages] = useState<

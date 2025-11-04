@@ -12,8 +12,10 @@ import { Plus } from "lucide-react";
 import { type AdminInventoryItem } from "~/trpc/shared";
 import { ListingForm } from "~/app/admin/listings/_components/listing-form";
 import { useQueryState } from "nuqs";
+import { useAdminTitle } from "~/hooks/use-admin-title";
 
 export default function InventoryPage() {
+  useAdminTitle("Inventory");
   const [isAddInventoryOpen, setIsAddInventoryOpen] = useState(false);
   const [isEditInventoryOpen, setIsEditInventoryOpen] = useState(false);
   const [isDeleteInventoryOpen, setIsDeleteInventoryOpen] = useState(false);

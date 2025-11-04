@@ -10,8 +10,10 @@ import { keepPreviousData } from "@tanstack/react-query";
 import { Button } from "~/components/ui/button";
 import { Plus } from "lucide-react";
 import { useQueryState } from "nuqs";
+import { useAdminTitle } from "~/hooks/use-admin-title";
 
 export default function PartsPage() {
+  useAdminTitle("Parts");
   const [isAddPartOpen, setIsAddPartOpen] = useState(false);
   const [isEditPartOpen, setIsEditPartOpen] = useState(false);
   const [isDeletePartOpen, setIsDeletePartOpen] = useState(false);

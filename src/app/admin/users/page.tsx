@@ -1,6 +1,5 @@
 "use client";
 
-import { useState } from "react";
 import { api } from "~/trpc/react";
 import { DataTable } from "~/components/data-table/data-table";
 import { getUserColumns } from "./_components/columns";
@@ -8,8 +7,10 @@ import { keepPreviousData } from "@tanstack/react-query";
 import { Input } from "~/components/ui/input";
 import { type SortingState } from "@tanstack/react-table";
 import { useQueryState } from "nuqs";
+import { useAdminTitle } from "~/hooks/use-admin-title";
 
 export default function UsersAdminPage() {
+  useAdminTitle("Users");
     const [globalFilter, setGlobalFilter] = useQueryState("search", {
       defaultValue: "",
     });

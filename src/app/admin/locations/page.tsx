@@ -12,6 +12,7 @@ import { type SortingState } from "@tanstack/react-table";
 import { Button } from "~/components/ui/button";
 import { Plus } from "lucide-react";
 import { useQueryState } from "nuqs";
+import { useAdminTitle } from "~/hooks/use-admin-title";
 
 interface LocationWithTimestamps extends Location {
   createdAt: Date;
@@ -19,6 +20,7 @@ interface LocationWithTimestamps extends Location {
 }
 
 export default function LocationsAdminPage() {
+  useAdminTitle("Inventory Locations");
   const [isAddLocationOpen, setIsAddLocationOpen] = useState(false);
   const [isEditLocationOpen, setIsEditLocationOpen] = useState(false);
   const [isDeleteLocationOpen, setIsDeleteLocationOpen] = useState(false);

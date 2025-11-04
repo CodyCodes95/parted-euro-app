@@ -13,8 +13,10 @@ import { Button } from "~/components/ui/button";
 import { Plus } from "lucide-react";
 import { type AdminCarItem } from "~/trpc/shared";
 import { useQueryState } from "nuqs";
+import { useAdminTitle } from "~/hooks/use-admin-title";
 
 export default function CarsAdminPage() {
+  useAdminTitle("Cars");
   const [isAddCarOpen, setIsAddCarOpen] = useState(false);
   const [isEditCarOpen, setIsEditCarOpen] = useState(false);
   const [isDeleteCarOpen, setIsDeleteCarOpen] = useState(false);

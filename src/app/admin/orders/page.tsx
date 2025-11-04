@@ -11,8 +11,10 @@ import { UpdateStatusDialog } from "./_components/update-status-dialog";
 import { type AdminOrdersItem } from "~/trpc/shared";
 import { toast } from "sonner";
 import { useQueryState } from "nuqs";
+import { useAdminTitle } from "~/hooks/use-admin-title";
 
 export default function OrdersAdminPage() {
+  useAdminTitle("Orders");
   const [selectedOrder, setSelectedOrder] = useState<AdminOrdersItem | null>(
     null,
   );

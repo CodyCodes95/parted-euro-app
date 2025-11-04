@@ -2,8 +2,10 @@
 import { Separator } from "~/components/ui/separator";
 import { HomepageImageManager } from "./homepage-images";
 import { Card } from "~/components/ui/card";
+import { useAdminTitle } from "~/hooks/use-admin-title";
 
 export default function ImagesSettingsPage() {
+  useAdminTitle("Settings - Images");
   return (
     <div className="p-6">
       <div className="flex items-center justify-between">

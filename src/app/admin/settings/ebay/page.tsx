@@ -13,8 +13,10 @@ import {
 import { Alert, AlertDescription, AlertTitle } from "~/components/ui/alert";
 import { CheckCircle, AlertCircle, Loader2 } from "lucide-react";
 import { useEffect, useState } from "react";
+import { useAdminTitle } from "~/hooks/use-admin-title";
 
 export default function EbaySettingsPage() {
+  useAdminTitle("Settings - eBay");
   const router = useRouter();
   const [isChecking, setIsChecking] = useState(true);
 

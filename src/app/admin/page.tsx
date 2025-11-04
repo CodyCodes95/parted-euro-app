@@ -11,8 +11,10 @@ import { api } from "~/trpc/react";
 import { Skeleton } from "~/components/ui/skeleton";
 import { useQueryState } from "nuqs";
 import { useEffect } from "react";
+import { useAdminTitle } from "~/hooks/use-admin-title";
 
 export default function AdminDashboardPage() {
+  useAdminTitle("Dashboard");
   const { data: stats, isLoading } = api.analytics.getDailyStats.useQuery();
   const [code, setCode] = useQueryState("code");
   const renewToken = api.xero.updateTokenset.useMutation();

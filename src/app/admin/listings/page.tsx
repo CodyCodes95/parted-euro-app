@@ -19,8 +19,10 @@ import {
 import { FinalizeOrderDialog } from "./_components/finalize-order-dialog";
 import { OrderToast } from "./_components/order-toast";
 import { toast } from "sonner";
+import { useAdminTitle } from "~/hooks/use-admin-title";
 
 export default function ListingsAdminPage() {
+  useAdminTitle("Listings");
   const [code, setCode] = useQueryState("code");
   const [isAddListingOpen, setIsAddListingOpen] = useState(false);
   const [isEditListingOpen, setIsEditListingOpen] = useState(false);

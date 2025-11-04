@@ -12,7 +12,10 @@ import { type SortingState } from "@tanstack/react-table";
 import { Button } from "~/components/ui/button";
 import { Plus } from "lucide-react";
 import { useQueryState } from "nuqs";
+import { useAdminTitle } from "~/hooks/use-admin-title";
+
 export default function DonorsAdminPage() {
+  useAdminTitle("Donors");
   const [isAddDonorOpen, setIsAddDonorOpen] = useState(false);
   const [isEditDonorOpen, setIsEditDonorOpen] = useState(false);
   const [isDeleteDonorOpen, setIsDeleteDonorOpen] = useState(false);
