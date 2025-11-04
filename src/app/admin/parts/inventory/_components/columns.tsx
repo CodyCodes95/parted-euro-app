@@ -22,7 +22,7 @@ import {
 import { Badge } from "~/components/ui/badge";
 import { type AdminInventoryItem } from "~/trpc/shared";
 import { DataTableColumnHeader } from "~/components/data-table/data-table-column-header";
-import { useState } from "react";
+import { useMemo, useState } from "react";
 import { cn } from "~/lib/utils";
 
 interface InventoryColumnsProps {
@@ -109,6 +109,82 @@ function StatusFilter({ column }: StatusFilterProps) {
   );
 }
 
+// Generic multi-select filter built from a column's faceted unique values
+function FacetedFilter({
+  column,
+  label,
+  normalize,
+}: {
+  column: Column<AdminInventoryItem, unknown>;
+  label: string;
+  normalize?: (value: unknown) => string | null; // return null to omit option
+}) {
+  const [open, setOpen] = useState(false);
+
+  const filterValue = column.getFilterValue() as string[] | undefined;
+
+  const options = useMemo(() => {
+    const faceted = column.getFacetedUniqueValues?.();
+    const rawValues = faceted ? Array.from(faceted.keys()) : [];
+    const normalized = rawValues
+      .map((v) => (normalize ? normalize(v) : (v as string | null)))
+      .filter((v): v is string => !!v);
+    // Unique + sorted
+    return Array.from(new Set(normalized)).sort((a, b) => a.localeCompare(b));
+  }, [column, normalize]);
+
+  const handleFilterChange = (value: string) => {
+    if (!filterValue) {
+      column.setFilterValue([value]);
+      return;
+    }
+
+    const updated = filterValue.includes(value)
+      ? filterValue.filter((item) => item !== value)
+      : [...filterValue, value];
+
+    column.setFilterValue(updated.length ? updated : null);
+  };
+
+  return (
+    <DropdownMenu open={open} onOpenChange={setOpen}>
+      <DropdownMenuTrigger asChild>
+        <Button
+          variant="ghost"
+          className="-ml-3 flex h-8 items-center gap-1 pl-1"
+        >
+          <div className="flex items-center gap-1.5">
+            <Filter
+              className={cn(
+                "h-4 w-4",
+                filterValue && filterValue.length > 0 ? "text-primary" : "",
+              )}
+            />
+            <span>{label}</span>
+          </div>
+          {filterValue && filterValue.length > 0 && (
+            <Badge variant="secondary" className="rounded-sm px-1 font-normal">
+              {filterValue.length}
+            </Badge>
+          )}
+        </Button>
+      </DropdownMenuTrigger>
+      <DropdownMenuContent align="start" className="w-56">
+        {options.map((value) => (
+          <DropdownMenuCheckboxItem
+            key={value}
+            checked={filterValue?.includes(value) ?? false}
+            onCheckedChange={() => handleFilterChange(value)}
+            className="capitalize"
+          >
+            {value}
+          </DropdownMenuCheckboxItem>
+        ))}
+      </DropdownMenuContent>
+    </DropdownMenu>
+  );
+}
+
 export function getInventoryColumns({
   onEdit,
   onDelete,
@@ -153,9 +229,22 @@ export function getInventoryColumns({
     {
       accessorKey: "inventoryLocation.name",
       header: ({ column }) => (
-        <DataTableColumnHeader column={column} title="Location" />
+        <FacetedFilter
+          column={column}
+          label="Location"
+          normalize={(v) =>
+            typeof v === "string" && v ? v : v == null ? "Not assigned" : null
+          }
+        />
       ),
+      enableColumnFilter: true,
       cell: ({ row }) => row.original.inventoryLocation?.name ?? "Not assigned",
+      filterFn: (row, _id, filterValue: string[]) => {
+        if (!filterValue?.length) return true;
+        const locationName =
+          row.original.inventoryLocation?.name ?? "Not assigned";
+        return filterValue.includes(locationName);
+      },
     },
     {
       accessorKey: "quantity",
@@ -171,9 +260,21 @@ export function getInventoryColumns({
     {
       accessorKey: "donorVin",
       header: ({ column }) => (
-        <DataTableColumnHeader column={column} title="Donor VIN" />
+        <FacetedFilter
+          column={column}
+          label="Donor VIN"
+          normalize={(v) =>
+            typeof v === "string" && v.trim() !== "" ? (v as string) : null
+          }
+        />
       ),
+      enableColumnFilter: true,
       cell: ({ row }) => row.original.donorVin ?? "",
+      filterFn: (row, _id, filterValue: string[]) => {
+        if (!filterValue?.length) return true;
+        const vin = row.original.donorVin ?? "";
+        return vin !== "" ? filterValue.includes(vin) : false;
+      },
     },
     {
       accessorKey: "createdAt",
